@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LetMeRent — Browse Listings</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="index.css">
+</head>
+
+<body>
+  <!-- Nav Bar -->
+  <nav class="nav">
+    <a class="nav-logo" href="index.html">
+      <div class="logo-icon">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+          <!-- Let-Me-Rent Logo -->
+          <path d="M2 8L9 2L16 8V16H11V12H7V16H2V8Z" fill="white"/>
+        </svg>
+      </div>
+      <p>LetMeRent</p>
+    </a>
+
+    <ul class="nav-links">
+      <li><a href="index.html" class="active">Browse</a></li>
+      <li><a href="map/map.html">Map View</a></li>
+      <li><a href="profile/profile.html">My Alerts</a></li>
+    </ul>
+
+    <div class="nav-right">
+      <div class="nav-bell">🔔</div>
+      <a href="profile/profile.html" class="nav-avatar">JL</a>
+    </div>
+  </nav>
+
+  <!-- Search Hero -->
+  <div class="hero">
+    <div class="hero-inner">
+      <h1>Find your room.</h1>
+      <h1>Beat the rush.</h1>
+      <p>All Dutch student housing in one place. Scored for your profile.</p>
+      
+      <!-- City -->
+      <div class="search-bar">
+        <div class="search-field">
+          <span class="search-field-icon">📍</span>
+          <div>
+            <p class="search-field-label">City</p>
+            <p class="search-field-val">Amsterdam</p>
+          </div>
+        </div>
+
+        <!-- Budget -->
+        <div class="search-field">
+          <span class="search-field-icon">💶</span>
+          <div>
+            <p class="search-field-label">Max Budget</p>
+            <p class="search-field-val">€950 / mo</p>
+          </div>
+        </div>
+
+        <!-- Move-in Date -->
+        <div class="search-field">
+          <span class="search-field-icon">📅</span>
+          <div>
+            <p class="search-field-label">Move-in</p>
+            <p class="search-field-val">Sep 1, 2025</p>
+          </div>
+        </div>
+
+        <!-- Distance from Campus -->
+        <div class="search-field">
+          <span class="search-field-icon">🚲</span>
+          <div>
+            <p class="search-field-label">Max from campus</p>
+            <p class="search-field-val">8 km</p>
+          </div>
+        </div>
+
+        <button class="search-submit">Search</button>
+      </div>
+
+      <div class="source-pills">
+        <div class="source-pill">HousingAnywhere</div>
+        <div class="source-pill">Funda</div>
+        <div class="source-pill">Pararius</div>
+        <div class="source-pill">Kamernet</div>
+        <div class="source-pill">Huurwoningen</div>
+        <div class="source-pill">iRentalize</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="filter-bar">
+    <div class="filter-chip active">
+      <p>All</p>
+      <span class="chev">▼</span>
+    </div>
+
+    <div class="filter-chip">
+      <p>Price</p>
+      <span class="chev">▼</span>
+    </div>
+
+    <div class="filter-chip">
+      <p>Rooms</p>
+      <span class="chev">▼</span>
+    </div>
+
+    <div class="filter-chip active">
+      <p>🐾 Pet-friendly</p>
+    </div>
+
+    <div class="filter-chip">
+      <p>🛋️ Furnished</p>
+    </div>
+
+    <div class="filter-chip">
+      <p>📅 Available now</p>
+    </div>
+
+    <div class="filter-chip">
+      <p>🏫 &lt;3 km campus</p>
+    </div>
+
+    <div class="filter-sort">
+      <p>Sort:</p>
+      <strong>Best match ▼</strong>
+    </div>
+  </div>
+
+  <!-- Results -->
+  <div class="results-bar">
+    <div class="results-count">
+      <strong>234</strong>
+      listings · Amsterdam · under €950
+    </div>
+    
+    <div class="results-actions">
+      <span class="profile-applied-label">● Your profile applied</span>
+      
+      <div class="view-toggle">
+        <button class="view-btn active">⊞</button>
+        <button class="view-btn" onclick="location.href='map/map.html'">🗺</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Listings -->
+
+  <!-- Placeholder Listing #1 -->
+  <div class="listings-grid">
+    <a class="listing-card" href="detail/detail.html">
+      <div class="card-img-wrap">
+        <!-- Placeholder AI generated code for a Photo -->
+        <svg viewBox="0 0 340 186" xmlns="http://www.w3.org/2000/svg">
+          <rect width="340" height="186" fill="#C7D2E0"/>
+          <rect x="0" y="100" width="340" height="86" fill="#B8C8D8"/>
+          <rect x="55" y="38" width="230" height="130" fill="#8FA3B5" rx="2"/>
+          <rect x="82" y="58" width="58" height="62" fill="#7A90A5" rx="1"/>
+          <rect x="200" y="58" width="58" height="62" fill="#7A90A5" rx="1"/>
+          <rect x="148" y="118" width="44" height="52" fill="#6A8095" rx="2"/>
+          <path d="M148 118 Q170 98 192 118" stroke="#6A8095" stroke-width="2" fill="none"/>
+          <rect x="0" y="0" width="340" height="52" fill="#BFDBFE"/>
+          <ellipse cx="35" cy="172" rx="32" ry="18" fill="#8AAE70" opacity="0.6"/>
+        </svg>
+
+        <div class="new-tag">
+          <p>NEW</p>
+        </div>
+        
+        <div class="card-source card-source--shifted">
+          <p>HousingAnywhere</p>
+        </div>
+        <div class="card-save">🤍</div>
+
+        <div class="card-badge">
+          <span class="badge hi">94%</span>
+        </div>
+      </div>
+
+      <div class="card-body">
+        <div class="card-price">
+          €875 <span>/ mo</span>
+        </div>
+
+        <div class="card-title">
+          <p>Modern studio with balcony near UvA</p>
+        </div>
+
+        <div class="card-meta">
+          <span class="card-tag">🛏️ Studio</span>
+          <span class="card-tag">🛋️ Furnished</span>
+          <span class="card-tag">🐾 Pets ok</span>
+        </div>
+      </div>
+
+      <div class="card-footer">
+        <span class="card-loc">📍 De Pijp, Amsterdam</span>
+        <span class="card-time">🚲 14 min</span>
+      </div>
+    </a>
+
+    <!-- Placeholder Listing #2 -->
+    <a class="listing-card" href="detail/detail.html">
+      <div class="card-img-wrap">
+        <!-- Placeholder AI generated code for a Photo -->
+        <svg viewBox="0 0 340 186" xmlns="http://www.w3.org/2000/svg">
+          <rect width="340" height="186" fill="#D4C5B0"/>
+          <rect x="0" y="108" width="340" height="78" fill="#C4B5A0"/>
+          <rect x="38" y="28" width="264" height="138" fill="#B09080" rx="2"/>
+          <rect x="62" y="50" width="76" height="56" fill="#9A7A6A" rx="1"/>
+          <rect x="202" y="50" width="76" height="56" fill="#9A7A6A" rx="1"/>
+          <rect x="145" y="106" width="50" height="62" fill="#8A6A5A"/>
+          <rect x="0" y="0" width="340" height="44" fill="#B8D4E8"/>
+        </svg>
+
+        <div class="card-source">
+          <p>Pararius</p>
+        </div>
+
+        <div class="card-save">🤍</div>
+
+        <div class="card-badge">
+          <span class="badge md">71%</span>
+        </div>
+      </div>
+
+      <div class="card-body">
+        <div class="card-price">
+          €920 <span>/ mo</span>
+        </div>
+
+        <div class="card-title">
+          <p>Bright 1-bedroom in Jordaan district</p>
+        </div>
+
+        <div class="card-meta">
+          <span class="card-tag">🛏️ 1-bed</span>
+          <span class="card-tag">🛋️ Unfurnished</span>
+        </div>
+      </div>
+
+      <div class="card-footer">
+        <span class="card-loc">📍 Jordaan, Amsterdam</span>
+        <span class="card-time">🚲 22 min</span>
+      </div>
+    </a>
+
+    <!-- Placeholder Listing #3 -->
+    <a class="listing-card" href="detail/detail.html">
+      <div class="card-img-wrap">
+        <!-- Placeholder AI generated code for a Photo -->
+        <svg viewBox="0 0 340 186" xmlns="http://www.w3.org/2000/svg">
+          <rect width="340" height="186" fill="#E2D8C8"/>
+          <rect x="0" y="118" width="340" height="68" fill="#D2C8B8"/>
+          <rect x="28" y="18" width="284" height="152" fill="#C8B8A4" rx="1"/>
+          <rect x="50" y="38" width="88" height="78" fill="#B8A894"/>
+          <rect x="202" y="38" width="88" height="78" fill="#B8A894"/>
+          <rect x="140" y="116" width="60" height="70" fill="#A89880" rx="1"/>
+          <rect x="0" y="0" width="340" height="38" fill="#BFDBFE"/>
+        </svg>
+
+        <div class="card-source">Kamernet</div>
+        <div class="card-save">❤️</div>
+
+        <div class="card-badge">
+          <span class="badge hi">88%</span>
+        </div>
+      </div>
+
+      <div class="card-body">
+        <div class="card-price">€790
+          <span>/ mo</span>
+        </div>
+
+        <div class="card-title">Cosy room in student house, all incl.</div>
+        
+        <div class="card-meta"><span class="card-tag">🛏️ Room</span><span class="card-tag">🛋️ Furnished</span><span class="card-tag">👥 Shared</span></div>
+      </div>
+      <div class="card-footer"><span class="card-loc">📍 Bos en Lommer</span><span class="card-time">🚲 9 min</span></div>
+    </a>
+
+    <!-- Placeholder Listing #4 -->
+    <a class="listing-card" href="detail/detail.html">
+      <div class="card-img-wrap">
+        <!-- Placeholder AI generated code for a Photo -->
+        <svg viewBox="0 0 340 186" xmlns="http://www.w3.org/2000/svg">
+          <rect width="340" height="186" fill="#CDD5E0"/>
+          <rect x="0" y="103" width="340" height="83" fill="#BDC5D0"/>
+          <rect x="48" y="28" width="244" height="138" fill="#9AAAB8" rx="1"/>
+          <rect x="70" y="48" width="66" height="62" fill="#8A9AA8"/>
+          <rect x="204" y="48" width="66" height="62" fill="#8A9AA8"/>
+          <rect x="140" y="110" width="60" height="56" fill="#7A8A98"/>
+        </svg>
+
+        <div class="card-source">
+          <p>Funda</p>
+        </div>
+
+        <div class="card-save">🤍</div>
+
+        <div class="card-badge">
+          <span class="badge md">66%</span>
+        </div>
+      </div>
+
+      <div class="card-body">
+        <div class="card-price">
+          €945 <span>/ mo</span>
+        </div>
+
+        <div class="card-title">
+          <p>Spacious apartment, great transport links</p>
+        </div>
+
+        <div class="card-meta">
+          <span class="card-tag">🛏️ 2-bed</span>
+          <span class="card-tag">🐾 Pets ok</span>
+        </div>
+      </div>
+
+      <div class="card-footer">
+        <span class="card-loc">📍 Oost, Amsterdam</span>
+        <span class="card-time">🚌 18 min</span>
+      </div>
+    </a>
+
+    <!-- Placeholder Listing #5 -->
+    <a class="listing-card" href="detail/detail.html">
+      <div class="card-img-wrap">
+        <!-- Placeholder AI generated code for a Photo -->
+        <svg viewBox="0 0 340 186" xmlns="http://www.w3.org/2000/svg">
+          <rect width="340" height="186" fill="#D8E4C8"/>
+          <rect x="0" y="112" width="340" height="74" fill="#C8D4B8"/>
+          <rect x="38" y="22" width="264" height="155" fill="#B4C4A0" rx="1"/>
+          <rect x="62" y="42" width="82" height="72" fill="#A0B08C"/>
+          <rect x="196" y="42" width="82" height="72" fill="#A0B08C"/>
+          <rect x="138" y="114" width="64" height="63" fill="#90A07C"/>
+          <rect x="0" y="0" width="340" height="36" fill="#BFDBFE"/>
+        </svg>
+
+        <div class="new-tag">
+          <p>NEW</p>
+        </div>
+
+        <div class="card-source card-source--shifted">
+          <p>iRentalize</p>
+        </div>
+
+        <div class="card-save">🤍</div>
+
+        <div class="card-badge">
+          <span class="badge hi">91%</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="card-price">
+          €850 <span>/ mo</span>
+        </div>
+
+        <div class="card-title">
+          <p>Renovated studio, 5 min cycle to VU</p>
+        </div>
+
+        <div class="card-meta">
+          <span class="card-tag">🛏️ Studio</span>
+          <span class="card-tag">🛋️ Furnished</span>
+        </div>
+      </div>
+      
+      <div class="card-footer">
+        <span class="card-loc">📍 Zuidas, Amsterdam</span>
+        <span class="card-time">🚲 5 min</span>
+      </div>
+    </a>
+
+    <!-- Placeholder Listing #6 -->
+    <a class="listing-card" href="detail/detail.html">
+      <div class="card-img-wrap">
+        <!-- Placeholder AI generated code for a Photo -->
+        <svg viewBox="0 0 340 186" xmlns="http://www.w3.org/2000/svg">
+          <rect width="340" height="186" fill="#E8D8D0"/>
+          <rect x="0" y="108" width="340" height="78" fill="#D8C8C0"/>
+          <rect x="52" y="28" width="236" height="142" fill="#C8B0A4" rx="1"/>
+          <rect x="72" y="52" width="72" height="60" fill="#B8A094"/>
+          <rect x="196" y="52" width="72" height="60" fill="#B8A094"/>
+          <rect x="138" y="112" width="64" height="58" fill="#A89080"/>
+        </svg>
+
+        <div class="card-source">
+          <p>Huurwoningen</p>
+        </div>
+
+        <div class="card-save">🤍</div>
+
+        <div class="card-badge">
+          <span class="badge lo">42%</span>
+        </div>
+      </div>
+
+      <div class="card-body">
+        <div class="card-price">
+          €890 <span>/ mo</span>
+        </div>
+
+        <div class="card-title">
+          Classic apartment, canal views
+        </div>
+
+        <div class="card-meta">
+          <span class="card-tag">🛏️ 1-bed</span>
+          <span class="card-tag">🚫 No pets</span>
+        </div>
+      </div>
+
+      <div class="card-footer">
+        <span class="card-loc">📍 Centrum, Amsterdam</span>
+        <span class="card-time">🚲 31 min</span>
+      </div>
+    </a>
+  </div>
+</body>
+</html>
