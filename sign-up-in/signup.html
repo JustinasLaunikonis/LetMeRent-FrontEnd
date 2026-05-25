@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LetMeRent — Sign up</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="signUpIn.css" />
+  </head>
+  <body>
+    <div class="page">
+      <header class="topbar">
+        <a class="brand nav-logo" href="./LetMeRent-FrontEnd/index.html">
+          <div class="logo-icon" aria-hidden="true">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
+              <path d="M2 8L9 2L16 8V16H11V12H7V16H2V8Z" fill="white"/>
+            </svg>
+          </div>
+          <p>LetMeRent</p>
+        </a>
+        <p class="topbar-copy">Already have an account? <a href="./signin.html">Sign in</a></p>
+      </header>
+
+      <main class="content">
+        <section class="hero-panel">
+          <div>
+            <h1>Find student<br />housing <span>faster.</span></h1>
+            <p>Search apartments from multiple housing platforms in one place and receive instant notifications.</p>
+          </div>
+
+          <article class="listing-card">
+            <div class="listing-photo">
+              <img class="listing-image" src="../img/apartment.png" alt="Apartment interior" />
+            </div>
+          </article>
+        </section>
+
+        <section class="auth-panel">
+          <div class="auth-card">
+            <p class="eyebrow">Welcome back</p>
+            <h2>Sign up to LetMeRent</h2>
+
+            <form class="auth-form">
+              <label>
+                <span>First name</span>
+                <input type="text" placeholder="Enter your first name" />
+              </label>
+
+              <label>
+                <span>Last name</span>
+                <input type="text" placeholder="Enter your last name" />
+              </label>
+
+              <label>
+                <span>Email address</span>
+                <input type="email" placeholder="Enter your email" />
+              </label>
+
+              <label>
+                <span>Password</span>
+                <input type="password" placeholder="Enter your password" />
+              </label>
+
+              <button type="submit">Sign up</button>
+
+              <p class="bottom-text">
+                <span>Already have an account?</span>
+                <a href="./signin.html">Sign in</a>
+              </p>
+            </form>
+          </div>
+        </section>
+      </main>
+    </div>
+  </body>
+</html>
