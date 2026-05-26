@@ -8,20 +8,21 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="signupin.css" />
+    <link href="../styles.css" rel="stylesheet" />
   </head>
   <body>
-    <div class="page">
-      <header class="topbar">
-        <a class="brand nav-logo" href="#">
-          <div class="logo-icon" aria-hidden="true">
-            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
-              <path d="M2 8L9 2L16 8V16H11V12H7V16H2V8Z" fill="white"/>
-            </svg>
-          </div>
-          <p>LetMeRent</p>
-        </a>
-        <p class="topbar-copy">Already have an account? <a href="./signin.html">Sign in</a></p>
-      </header>
+    <nav class="nav">
+    <a class="nav-logo" href="../index.html">
+      <div class="logo-icon">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+          <!-- Let-Me-Rent Logo -->
+          <path d="M2 8L9 2L16 8V16H11V12H7V16H2V8Z" fill="white"/>
+        </svg>
+      </div>
+      <p>LetMeRent</p>
+    </a>
+    <div>Already have an account?<a href="./signin.html" class="gap">Sign in</a></div>
+  </nav>
 
       <main class="content">
         <section class="hero-panel">
@@ -44,13 +45,8 @@
 
             <form class="auth-form">
               <label>
-                <span>First name</span>
-                <input type="text" placeholder="Enter your first name" />
-              </label>
-
-              <label>
-                <span>Last name</span>
-                <input type="text" placeholder="Enter your last name" />
+                <span>Username</span>
+                <input type="text" placeholder="Enter your username" />
               </label>
 
               <label>
