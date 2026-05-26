@@ -123,63 +123,141 @@
   font-weight: 500;
 }
 
-.filter-bar {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 12px 32px;
-  background: var(--white);
-  border-bottom: 1px solid var(--border);
-  overflow-x: auto;
-}
+  :root {
+    --white: #fff;
+    --border: #ddd;
+    --ink-2: #555;
+    --blue: #007bff;
+    --blue-light: #e0f0ff;
+    --muted: #999;
+  }
 
-.filter-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 6px 14px;
-  background: var(--white);
-  border: 1.5px solid var(--border);
-  border-radius: 20px;
-  color: var(--ink-2);
-  font-size: 12px;
-  font-weight: 500;
-  white-space: nowrap;
-  flex-shrink: 0;
-  cursor: pointer;
-  transition: all .15s;
-}
+  .filter-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 32px;
+    background: var(--white);
+    border-bottom: 1px solid var(--border);
+    /* Remove overflow-x: auto; to allow expansion */
+    flex-wrap: wrap; /* allow wrapping if needed */
+    max-height: none; /* remove max-height to allow expansion */
+  }
 
-.filter-chip:hover {
-  border-color: var(--blue);
-  color: var(--blue);
-}
+  /* Styles for dropdown */
+  .dropdown {
+    position: relative;
+    display: inline-block;
+  }
 
-.filter-chip.active {
-  background: var(--blue-light);
-  border-color: var(--blue);
-  color: var(--blue);
-  font-weight: 600;
-}
+  .dropdown-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 6px 14px;
+    background: var(--white);
+    border: 1.5px solid var(--border);
+    border-radius: 20px;
+    color: var(--ink-2);
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    min-width: 80px;
+    white-space: nowrap;
+  }
 
-.filter-chip .chev {
-  font-size: 10px;
-  color: var(--muted);
-}
+  .dropdown-toggle:hover {
+    border-color: var(--blue);
+    color: var(--blue);
+  }
 
-.filter-sort {
-  margin-left: auto;
-  color: var(--muted);
-  font-size: 12px;
-  white-space: nowrap;
-  flex-shrink: 0;
-  cursor: pointer;
-}
+  .dropdown-toggle.active {
+    background: var(--blue-light);
+    border-color: var(--blue);
+    color: var(--blue);
+    font-weight: 600;
+  }
 
-.filter-sort strong {
-  color: var(--ink);
-  font-weight: 600;
-}
+  .dropdown-options {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background: var(--white);
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    min-width: 100%;
+    z-index: 1000;
+    display: none;
+    flex-direction: column;
+  }
+
+  .dropdown-options.show {
+    display: flex;
+  }
+
+  .dropdown-option {
+    padding: 8px 14px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: background 0.2s;
+  }
+
+  .dropdown-option:hover {
+    background: var(--blue-light);
+  }
+
+  #dropdown-price .dropdown-options {
+    min-width: 150px; /* wider options list */
+  }
+
+  /* Existing styles for other chips */
+  .filter-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 6px 14px;
+    background: var(--white);
+    border: 1.5px solid var(--border);
+    border-radius: 20px;
+    color: var(--ink-2);
+    font-size: 12px;
+    font-weight: 500;
+    white-space: nowrap;
+    flex-shrink: 0;
+    cursor: pointer;
+    transition: all .15s;
+  }
+
+  .filter-chip:hover {
+    border-color: var(--blue);
+    color: var(--blue);
+  }
+
+  .filter-chip.active {
+    background: var(--blue-light);
+    border-color: var(--blue);
+    color: var(--blue);
+    font-weight: 600;
+  }
+
+  .filter-chip .chev {
+    font-size: 10px;
+    color: var(--muted);
+  }
+
+  .filter-sort {
+    margin-left: auto;
+    color: var(--muted);
+    font-size: 12px;
+    white-space: nowrap;
+    flex-shrink: 0;
+    cursor: pointer;
+  }
+
+  .filter-sort strong {
+    color: var(--ink);
+    font-weight: 600;
+  }
 
 .results-bar {
   display: flex;

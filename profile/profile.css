@@ -264,54 +264,74 @@
 
 .toggle-row {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 13px 0;
-  border-bottom: 1px solid var(--border);
-}
-
-.toggle-row:last-child {
-  border-bottom: none;
+  align-items: center; /* Vertical align */
+  justify-content: space-between; /* Optional: space between toggle and text */
+  padding: 10px 0; /* Optional: spacing around the row */
 }
 
 .toggle-title {
+  margin: 0;
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 500;
   color: var(--ink);
+  /* Optional: add max-width or flex properties if needed */
 }
 
 .toggle-sub {
-  margin-top: 2px;
-  font-size: 11px;
-  color: var(--muted);
+  margin-top: 4px; /* space between title and sub */
+  font-size: 12px;
+  color: #555; /* or your desired color */
 }
 
+/* Optional: style the toggle switch for better appearance */
 .toggle {
+  /* Existing toggle styles */
   position: relative;
-  width: 42px;
+  width: 50px;
   height: 24px;
-  border-radius: 12px;
-  flex-shrink: 0;
-  cursor: pointer;
+  display: inline-block;
 }
 
-.toggle.on  { background: var(--blue); }
-.toggle.off { background: var(--border); }
-
-.toggle-knob {
+/* Hide the default checkbox */
+.toggle input {
+  opacity: 0;
+  width: 0;
+  height: 0;
   position: absolute;
-  top: 3px;
-  width: 18px;
-  height: 18px;
-  background: white;
-  border-radius: 50%;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, .18);
-  transition: left .2s;
 }
 
-.toggle.on  .toggle-knob { left: 21px; }
-.toggle.off .toggle-knob { left:  3px; }
+/* Style the slider */
+.toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  border-radius: 34px;
+  transition: background-color 0.4s;
+}
 
+.toggle-slider::before {
+  content: "";
+  position: absolute;
+  height: 20px;
+  width: 20px;
+  left: 2px;
+  top: 2px;
+  background-color: white;
+  border-radius: 50%;
+  transition: transform 0.4s;
+}
+
+.toggle input:checked + .toggle-slider {
+  background-color: darkblue;
+}
+
+.toggle input:checked + .toggle-slider::before {
+  transform: translateX(26px);
+}
 .form-footer {
   display: flex;
   justify-content: flex-end;
