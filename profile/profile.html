@@ -190,6 +190,77 @@
             </div>
           </div>
 
+          <script>
+            const sliderGroup = document.querySelector('.slider-group');
+            const sliderTrack = sliderGroup.querySelector('.slider-track');
+            const sliderFill = sliderGroup.querySelector('.slider-fill');
+            const sliderThumb = sliderGroup.querySelector('.slider-thumb');
+            const sliderValue = sliderGroup.querySelector('.slider-value');
+
+            let isDragging = false;
+
+            const min = 0;
+            const max = 20;
+            const step = 1; // optional, for discrete steps
+
+            // Initialize slider
+            function setSliderPosition(percent) {
+              // Clamp percent between 0 and 1
+              percent = Math.max(0, Math.min(1, percent));
+              // Calculate value based on percent
+              const value = Math.round(min + percent * (max - min));
+              // Update fill width
+              sliderFill.style.width = `${percent * 100}%`;
+              // Update thumb position
+              sliderThumb.style.left = `${percent * 100}%`;
+              // Update displayed value
+              sliderValue.textContent = `${value} km`;
+            }
+
+            // Convert mouse/touch position to percentage
+            function getPercentFromEvent(e) {
+              const rect = sliderTrack.getBoundingClientRect();
+              const x = e.clientX !== undefined ? e.clientX : e.touches[0].clientX;
+              const percent = (x - rect.left) / rect.width;
+              return percent;
+            }
+
+            // Mouse down / touch start
+            sliderThumb.addEventListener('mousedown', () => {
+              isDragging = true;
+            });
+            document.addEventListener('mouseup', () => {
+              isDragging = false;
+            });
+            document.addEventListener('mousemove', (e) => {
+              if (isDragging) {
+                const percent = getPercentFromEvent(e);
+                setSliderPosition(percent);
+              }
+            });
+            sliderTrack.addEventListener('click', (e) => {
+              const percent = getPercentFromEvent(e);
+              setSliderPosition(percent);
+            });
+            sliderThumb.addEventListener('touchstart', () => {
+              isDragging = true;
+            });
+            document.addEventListener('touchend', () => {
+              isDragging = false;
+            });
+            document.addEventListener('touchmove', (e) => {
+              if (isDragging) {
+                const percent = getPercentFromEvent(e);
+                setSliderPosition(percent);
+              }
+            });
+
+            // Initialize position
+            setSliderPosition(0.53);
+
+          </script>
+          
+
           <!-- Room Type Selection -->
           <div class="form-row">
             <div class="form-group">
@@ -246,6 +317,7 @@
       </div>
 
       <!-- Alert Settings -->
+            ```html
       <div class="form-card">
         <div class="form-head">
           <div class="form-head-title">
@@ -254,6 +326,8 @@
         </div>
 
         <div class="form-body">
+
+          <!-- Instant Alerts -->
           <div class="toggle-row">
             <div>
               <div class="toggle-title">
@@ -264,12 +338,14 @@
                 <p>Email the moment a listing matching your profile goes live</p>
               </div>
             </div>
-            
-            <div class="toggle on">
-              <div class="toggle-knob"></div>
-            </div>
+
+            <label class="toggle">
+              <input type="checkbox" checked>
+              <span class="toggle-slider"></span>
+            </label>
           </div>
 
+          <!-- Daily Digest -->
           <div class="toggle-row">
             <div>
               <div class="toggle-title">
@@ -281,11 +357,13 @@
               </div>
             </div>
 
-            <div class="toggle on">
-              <div class="toggle-knob"></div>
-            </div>
+            <label class="toggle">
+              <input type="checkbox" checked>
+              <span class="toggle-slider"></span>
+            </label>
           </div>
 
+          <!-- Price Drop Alerts -->
           <div class="toggle-row">
             <div>
               <div class="toggle-title">
@@ -297,11 +375,13 @@
               </div>
             </div>
 
-            <div class="toggle off">
-              <div class="toggle-knob"></div>
-            </div>
+            <label class="toggle">
+              <input type="checkbox">
+              <span class="toggle-slider"></span>
+            </label>
           </div>
-          
+
+          <!-- Fraud Warnings -->
           <div class="toggle-row">
             <div>
               <div class="toggle-title">
@@ -313,16 +393,20 @@
               </div>
             </div>
 
-            <div class="toggle on">
-              <div class="toggle-knob"></div>
-            </div>
+            <label class="toggle">
+              <input type="checkbox" checked>
+              <span class="toggle-slider"></span>
+            </label>
           </div>
+
         </div>
 
         <div class="form-footer">
           <button class="btn-primary">Save alert settings</button>
         </div>
       </div>
+      ```
+
     </div>
   </div>
 </body>
