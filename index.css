@@ -121,6 +121,21 @@
   color: rgba(255, 255, 255, .85);
   font-size: 11px;
   font-weight: 500;
+  cursor: pointer;
+  transition: background .15s, border-color .15s, color .15s;
+}
+
+.source-pill:hover {
+  background: rgba(255, 255, 255, .25);
+  border-color: rgba(255, 255, 255, .45);
+  color: white;
+}
+
+.source-pill.active {
+  background: white;
+  border-color: white;
+  color: var(--blue-dark);
+  font-weight: 700;
 }
 
 /* Keep the original filter-bar styles unchanged */
@@ -285,6 +300,12 @@
   background: var(--white);
   color: var(--blue);
   box-shadow: var(--shadow-sm);
+}
+
+.api-error {
+  padding: 1rem 32px;
+  color: var(--red, #c0392b);
+  font-size: .875rem;
 }
 
 .listings-grid {
