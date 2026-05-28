@@ -44,13 +44,39 @@ if (!empty($_GET['source'])) {
 // How many listings to show per page
 $limit = 9;
 
+// Which page are we on? Default to page 1.
+if (isset($_GET['page']) && is_numeric($_GET['page']) && (int)$_GET['page'] > 0) {
+    $page = (int)$_GET['page'];
+} else {
+    $page = 1;
+}
+
+// Calculate how many listings to skip based on the current page
+$offset = ($page - 1) * $limit;
+
+// Read sort preference from URL
+$sort = '';
+if (isset($_GET['sort'])) {
+    $sort = trim($_GET['sort']);
+}
+
+// When sorting or multiple sources are active, we need to fetch everything
+// and do pagination in PHP ourselves. Otherwise, let the API paginate.
+$usePhpPagination = ($sort !== '' || !empty($sources));
+
 // -------------------------------------------------------------------------
 // Build the base parameters to send to the API
 // -------------------------------------------------------------------------
 // These are added to every API request. Filters are only added if they have a value.
 
 $baseParams = [];
-$baseParams['limit'] = $limit;
+
+if ($usePhpPagination) {
+    $baseParams['limit'] = 500;
+} else {
+    $baseParams['limit'] = $limit;
+    $baseParams['skip']  = $offset;
+}
 
 if ($city !== '') {
     $baseParams['city'] = $city;
@@ -132,9 +158,26 @@ if (empty($sources)) {
         $totalListings = $result['count'];
     }
 } else {
-    // One or more sources selected: fetch each one separately and combine what was received
+    // One or more sources selected: fetch all listings from each source first,
+    // then combine them and paginate in PHP
+    $allListings = [];
+
     foreach ($sources as $source) {
-        $paramsWithSource = array_merge($baseParams, ['source' => $source]);
+        $paramsWithSource = [];
+        $paramsWithSource['limit']  = 500; // fetch as many as possible per source
+        $paramsWithSource['skip']   = 0;   // always start from the beginning
+        $paramsWithSource['source'] = $source;
+
+        if ($city !== '') {
+            $paramsWithSource['city'] = $city;
+        }
+        if ($min_price !== '') {
+            $paramsWithSource['min_price'] = $min_price;
+        }
+        if ($max_price !== '') {
+            $paramsWithSource['max_price'] = $max_price;
+        }
+
         $result = fetchFromApi($paramsWithSource);
 
         if (isset($result['error'])) {
@@ -142,12 +185,21 @@ if (empty($sources)) {
             break;
         }
 
-        $listings      = array_merge($listings, $result['data']);
-        $totalListings = $totalListings + $result['count'];
+        $allListings = array_merge($allListings, $result['data']);
     }
 
-    // cut the combined results to the page limit
-    $listings = array_slice($listings, 0, $limit);
+    // Total is the actual number of combined listings we received
+    $totalListings = count($allListings);
+
+    // Slice out just the listings for the current page
+    $listings = array_slice($allListings, $offset, $limit);
+}
+
+// Calculate how many pages exist in total
+if ($totalListings > 0) {
+    $totalPages = (int)ceil($totalListings / $limit);
+} else {
+    $totalPages = 1;
 }
 
 // Load the function which renders a listing card
