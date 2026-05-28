@@ -53,6 +53,9 @@ for (var i = 0; i < pills.length; i++) {
       newParams.delete('source');
     }
 
+    // Reset to page 1 whenever a filter changes
+    newParams.delete('page');
+
     // Reload the page with the new filters applied
     location.href = '?' + newParams.toString();
   });
