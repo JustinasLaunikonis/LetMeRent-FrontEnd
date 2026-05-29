@@ -123,141 +123,114 @@
   font-weight: 500;
 }
 
-  :root {
-    --white: #fff;
-    --border: #ddd;
-    --ink-2: #555;
-    --blue: #007bff;
-    --blue-light: #e0f0ff;
-    --muted: #999;
-  }
+/* Keep the original filter-bar styles unchanged */
+.filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 32px;
+  background: var(--white);
+  border-bottom: 1px solid var(--border);
+  overflow-x: auto; /* keep original for small screens */
+}
 
-  .filter-bar {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 12px 32px;
-    background: var(--white);
-    border-bottom: 1px solid var(--border);
-    /* Remove overflow-x: auto; to allow expansion */
-    flex-wrap: wrap; /* allow wrapping if needed */
-    max-height: none; /* remove max-height to allow expansion */
-  }
+/* Keep existing chip styles unchanged */
+.filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 14px;
+  background: var(--white);
+  border: 1.5px solid var(--border);
+  border-radius: 20px;
+  color: var(--ink-2);
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  flex-shrink: 0;
+  cursor: pointer;
+  transition: all .15s;
+}
 
-  /* Styles for dropdown */
-  .dropdown {
-    position: relative;
-    display: inline-block;
-  }
+/* Keep existing filter-sort styles unchanged */
+.filter-sort {
+  margin-left: auto;
+  color: var(--muted);
+  font-size: 12px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  cursor: pointer;
+}
 
-  .dropdown-toggle {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    padding: 6px 14px;
-    background: var(--white);
-    border: 1.5px solid var(--border);
-    border-radius: 20px;
-    color: var(--ink-2);
-    font-size: 12px;
-    font-weight: 500;
-    cursor: pointer;
-    min-width: 80px;
-    white-space: nowrap;
-  }
+/* Append new dropdown styles after the existing filter styles */
 
-  .dropdown-toggle:hover {
-    border-color: var(--blue);
-    color: var(--blue);
-  }
+.dropdown {
+  position: relative;
+  display: inline-block;
+}
 
-  .dropdown-toggle.active {
-    background: var(--blue-light);
-    border-color: var(--blue);
-    color: var(--blue);
-    font-weight: 600;
-  }
+/* Style for the dropdown toggle button */
+.dropdown-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 14px;
+  background: var(--white);
+  border: 1.5px solid var(--border);
+  border-radius: 20px;
+  color: var(--ink-2);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  min-width: 80px;
+  white-space: nowrap;
+}
 
-  .dropdown-options {
-    position: absolute;
-    top: 100%;
-    left: 0;
-    background: var(--white);
-    border: 1.5px solid var(--border);
-    border-radius: 8px;
-    min-width: 100%;
-    z-index: 1000;
-    display: none;
-    flex-direction: column;
-  }
+/* Hover state for toggle */
+.dropdown-toggle:hover {
+  border-color: var(--blue);
+  color: var(--blue);
+}
 
-  .dropdown-options.show {
-    display: flex;
-  }
+/* Active state for toggle */
+.dropdown-toggle.active {
+  background: var(--blue-light);
+  border-color: var(--blue);
+  color: var(--blue);
+  font-weight: 600;
+}
 
-  .dropdown-option {
-    padding: 8px 14px;
-    cursor: pointer;
-    font-size: 12px;
-    transition: background 0.2s;
-  }
+/* Dropdown options list */
+.dropdown-options {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background: var(--white);
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  min-width: 150px; /* wider options list */
+  max-width: 90vw;  /* prevent overflow on small screens */
+  z-index: 1000;
+  display: none; /* toggle via class */
+  flex-direction: column;
+}
 
-  .dropdown-option:hover {
-    background: var(--blue-light);
-  }
+/* Show dropdown options when active */
+.dropdown-options.show {
+  display: flex;
+}
 
-  #dropdown-price .dropdown-options {
-    min-width: 150px; /* wider options list */
-  }
+/* Individual dropdown options */
+.dropdown-option {
+  padding: 8px 14px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: background 0.2s;
+}
 
-  /* Existing styles for other chips */
-  .filter-chip {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    padding: 6px 14px;
-    background: var(--white);
-    border: 1.5px solid var(--border);
-    border-radius: 20px;
-    color: var(--ink-2);
-    font-size: 12px;
-    font-weight: 500;
-    white-space: nowrap;
-    flex-shrink: 0;
-    cursor: pointer;
-    transition: all .15s;
-  }
-
-  .filter-chip:hover {
-    border-color: var(--blue);
-    color: var(--blue);
-  }
-
-  .filter-chip.active {
-    background: var(--blue-light);
-    border-color: var(--blue);
-    color: var(--blue);
-    font-weight: 600;
-  }
-
-  .filter-chip .chev {
-    font-size: 10px;
-    color: var(--muted);
-  }
-
-  .filter-sort {
-    margin-left: auto;
-    color: var(--muted);
-    font-size: 12px;
-    white-space: nowrap;
-    flex-shrink: 0;
-    cursor: pointer;
-  }
-
-  .filter-sort strong {
-    color: var(--ink);
-    font-weight: 600;
-  }
+.dropdown-option:hover {
+  background: var(--blue-light);
+}
 
 .results-bar {
   display: flex;
