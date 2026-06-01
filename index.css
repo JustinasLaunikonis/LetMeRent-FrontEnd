@@ -121,6 +121,21 @@
   color: rgba(255, 255, 255, .85);
   font-size: 11px;
   font-weight: 500;
+  cursor: pointer;
+  transition: background .15s, border-color .15s, color .15s;
+}
+
+.source-pill:hover {
+  background: rgba(255, 255, 255, .25);
+  border-color: rgba(255, 255, 255, .45);
+  color: white;
+}
+
+.source-pill.active {
+  background: white;
+  border-color: white;
+  color: var(--blue-dark);
+  font-weight: 700;
 }
 
 /* Keep the original filter-bar styles unchanged */
@@ -287,6 +302,12 @@
   box-shadow: var(--shadow-sm);
 }
 
+.api-error {
+  padding: 1rem 32px;
+  color: var(--red, #c0392b);
+  font-size: .875rem;
+}
+
 .listings-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -442,4 +463,75 @@
   font-size: 11px;
   font-weight: 600;
   color: var(--blue);
+}
+
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 32px 48px;
+  flex-wrap: wrap;
+}
+
+.pagination-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+  height: 36px;
+  padding: 0 14px;
+  background: var(--white);
+  border: 1.5px solid var(--border);
+  border-radius: 20px;
+  color: var(--ink-2);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all .15s;
+  white-space: nowrap;
+}
+
+.pagination-btn:hover {
+  border-color: var(--blue);
+  color: var(--blue);
+}
+
+.pagination-btn--active {
+  background: var(--blue-light);
+  border-color: var(--blue);
+  color: var(--blue);
+  font-weight: 700;
+  cursor: default;
+}
+
+.pagination-btn--active:hover {
+  background: var(--blue-light);
+  border-color: var(--blue);
+  color: var(--blue);
+}
+
+.pagination-btn--disabled {
+  background: var(--surface);
+  border-color: var(--border);
+  color: var(--muted);
+  cursor: default;
+  opacity: 0.5;
+}
+
+.pagination-btn--disabled:hover {
+  border-color: var(--border);
+  color: var(--muted);
+}
+
+.pagination-ellipsis {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+  height: 36px;
+  color: var(--muted);
+  font-size: 13px;
 }
