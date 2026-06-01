@@ -3,16 +3,16 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>LetMeRent — Sign up</title>
+    <title>LetMeRent - Sign in</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
     <link rel="stylesheet" href="../styles.css"/>
     <link rel="stylesheet" href="signupin.css" />
   </head>
   <body>
     <nav class="nav">
-    <a class="nav-logo" href="../index.html">
+    <a class="nav-logo" href="../index.php">
       <div class="logo-icon">
         <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
           <!-- Let-Me-Rent Logo -->
@@ -21,14 +21,17 @@
       </div>
       <p>LetMeRent</p>
     </a>
-    <div class="right-nav">Already have an account?<a href="./signin.html" class="gap">Sign in</a></div>
+    <div class="right-nav">Don't have an account yet?<a href="./signup.php" class="gap">Sign up</a></div>
   </nav>
 
       <main class="content">
         <section class="hero-panel">
           <div>
-            <h1>Find student<br />housing <span>faster.</span></h1>
-            <p>Search apartments from multiple housing platforms in one place and receive instant notifications.</p>
+            <h1>Find student <br>housing <span>faster.</span><br></h1>
+            <p>
+              Search apartments from multiple housing platforms in one place and
+              receive instant notifications.
+            </p>
           </div>
 
           <article class="listing-card">
@@ -40,15 +43,10 @@
 
         <section class="auth-panel">
           <div class="auth-card">
-            <p class="eyebrow">Welcome to LetMeRent</p>
-            <h2>Sign up to LetMeRent</h2>
+            <p class="eyebrow">Welcome back</p>
+            <h2>Sign in to LetMeRent</h2>
 
             <form class="auth-form">
-              <label>
-                <span>Username</span>
-                <input type="text" placeholder="Enter your username" />
-              </label>
-
               <label>
                 <span>Email address</span>
                 <input type="email" placeholder="Enter your email" />
@@ -59,11 +57,19 @@
                 <input type="password" placeholder="Enter your password" />
               </label>
 
-              <button type="submit">Sign up</button>
+              <div class="form-row">
+                <label class="check">
+                  <input type="checkbox" />
+                  <span>Remember me</span>
+                </label>
+                <a href="#">Forgot password?</a>
+              </div>
+
+              <button type="submit">Sign in</button>
 
               <p class="bottom-text">
-                <span>Already have an account?</span>
-                <a href="./signin.html">Sign in</a>
+                <span>Don't have an account?</span>
+                <a href="./signup.php">Sign up</a>
               </p>
             </form>
           </div>
