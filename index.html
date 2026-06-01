@@ -91,23 +91,46 @@
     </div>
   </div>
 
-  <!-- Filters -->
   <div class="filter-bar">
-    <div class="filter-chip active">
-      <p>All</p>
-      <span class="chev">▼</span>
+    <!-- Dropdown for 'All' -->
+    <div class="dropdown" id="dropdown-all">
+      <div class="dropdown-toggle active" id="dropdown-all-toggle">
+        <p>All</p>
+        <span class="chev">▼</span>
+      </div>
+      <div class="dropdown-options" id="dropdown-all-options">
+        <div class="dropdown-option">All</div>
+        <div class="dropdown-option">Room</div>
+        <div class="dropdown-option">Studio</div>
+      </div>
     </div>
 
-    <div class="filter-chip">
-      <p>Price</p>
-      <span class="chev">▼</span>
+    <!-- Dropdown for 'Price' -->
+    <div class="dropdown" id="dropdown-price">
+      <div class="dropdown-toggle" id="dropdown-price-toggle">
+        <p>Sort by</p>
+        <span class="chev">▼</span>
+      </div>
+      <div class="dropdown-options" id="dropdown-price-options">
+        <div class="dropdown-option">Price Low-High</div>
+        <div class="dropdown-option">Price High-Low</div>
+      </div>
     </div>
 
-    <div class="filter-chip">
-      <p>Rooms</p>
-      <span class="chev">▼</span>
+    <!-- Dropdown for 'Rooms' -->
+    <div class="dropdown" id="dropdown-rooms">
+      <div class="dropdown-toggle" id="dropdown-rooms-toggle">
+        <p>Rooms</p>
+        <span class="chev">▼</span>
+      </div>
+      <div class="dropdown-options" id="dropdown-rooms-options">
+        <div class="dropdown-option">1+</div>
+        <div class="dropdown-option">2+</div>
+        <div class="dropdown-option">3+</div>
+      </div>
     </div>
 
+    <!-- Existing static filter chips -->
     <div class="filter-chip active">
       <p>🐾 Pet-friendly</p>
     </div>
@@ -129,6 +152,39 @@
       <strong>Best match ▼</strong>
     </div>
   </div>
+
+  <script>
+    // Function to toggle dropdown options
+    document.querySelectorAll('.dropdown').forEach(dropdown => {
+      const toggle = dropdown.querySelector('.dropdown-toggle');
+      const options = dropdown.querySelector('.dropdown-options');
+
+      toggle.addEventListener('click', () => {
+        options.classList.toggle('show');
+        toggle.classList.toggle('active');
+      });
+
+      // Close dropdown when clicking outside
+      document.addEventListener('click', (e) => {
+        if (!dropdown.contains(e.target)) {
+          options.classList.remove('show');
+          toggle.classList.remove('active');
+        }
+      });
+    });
+
+    // Optional: handle selecting an option
+    document.querySelectorAll('.dropdown-option').forEach(option => {
+      option.addEventListener('click', () => {
+        const parentDropdown = option.closest('.dropdown');
+        const toggle = parentDropdown.querySelector('.dropdown-toggle');
+        toggle.querySelector('p').textContent = option.textContent;
+        // Close dropdown after selection
+        parentDropdown.querySelector('.dropdown-options').classList.remove('show');
+        toggle.classList.remove('active');
+      });
+    });
+  </script>
 
   <!-- Results -->
   <div class="results-bar">
