@@ -121,8 +121,24 @@
   color: rgba(255, 255, 255, .85);
   font-size: 11px;
   font-weight: 500;
+  cursor: pointer;
+  transition: background .15s, border-color .15s, color .15s;
 }
 
+.source-pill:hover {
+  background: rgba(255, 255, 255, .25);
+  border-color: rgba(255, 255, 255, .45);
+  color: white;
+}
+
+.source-pill.active {
+  background: white;
+  border-color: white;
+  color: var(--blue-dark);
+  font-weight: 700;
+}
+
+/* Keep the original filter-bar styles unchanged */
 .filter-bar {
   display: flex;
   align-items: center;
@@ -130,9 +146,10 @@
   padding: 12px 32px;
   background: var(--white);
   border-bottom: 1px solid var(--border);
-  overflow-x: auto;
+  overflow-x: auto; /* keep original for small screens */
 }
 
+/* Keep existing chip styles unchanged */
 .filter-chip {
   display: inline-flex;
   align-items: center;
@@ -150,23 +167,7 @@
   transition: all .15s;
 }
 
-.filter-chip:hover {
-  border-color: var(--blue);
-  color: var(--blue);
-}
-
-.filter-chip.active {
-  background: var(--blue-light);
-  border-color: var(--blue);
-  color: var(--blue);
-  font-weight: 600;
-}
-
-.filter-chip .chev {
-  font-size: 10px;
-  color: var(--muted);
-}
-
+/* Keep existing filter-sort styles unchanged */
 .filter-sort {
   margin-left: auto;
   color: var(--muted);
@@ -176,9 +177,74 @@
   cursor: pointer;
 }
 
-.filter-sort strong {
-  color: var(--ink);
+/* Append new dropdown styles after the existing filter styles */
+
+.dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+/* Style for the dropdown toggle button */
+.dropdown-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 14px;
+  background: var(--white);
+  border: 1.5px solid var(--border);
+  border-radius: 20px;
+  color: var(--ink-2);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  min-width: 80px;
+  white-space: nowrap;
+}
+
+/* Hover state for toggle */
+.dropdown-toggle:hover {
+  border-color: var(--blue);
+  color: var(--blue);
+}
+
+/* Active state for toggle */
+.dropdown-toggle.active {
+  background: var(--blue-light);
+  border-color: var(--blue);
+  color: var(--blue);
   font-weight: 600;
+}
+
+/* Dropdown options list */
+.dropdown-options {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background: var(--white);
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  min-width: 150px; /* wider options list */
+  max-width: 90vw;  /* prevent overflow on small screens */
+  z-index: 1000;
+  display: none; /* toggle via class */
+  flex-direction: column;
+}
+
+/* Show dropdown options when active */
+.dropdown-options.show {
+  display: flex;
+}
+
+/* Individual dropdown options */
+.dropdown-option {
+  padding: 8px 14px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: background 0.2s;
+}
+
+.dropdown-option:hover {
+  background: var(--blue-light);
 }
 
 .results-bar {
@@ -234,6 +300,12 @@
   background: var(--white);
   color: var(--blue);
   box-shadow: var(--shadow-sm);
+}
+
+.api-error {
+  padding: 1rem 32px;
+  color: var(--red, #c0392b);
+  font-size: .875rem;
 }
 
 .listings-grid {
@@ -391,4 +463,75 @@
   font-size: 11px;
   font-weight: 600;
   color: var(--blue);
+}
+
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 32px 48px;
+  flex-wrap: wrap;
+}
+
+.pagination-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+  height: 36px;
+  padding: 0 14px;
+  background: var(--white);
+  border: 1.5px solid var(--border);
+  border-radius: 20px;
+  color: var(--ink-2);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all .15s;
+  white-space: nowrap;
+}
+
+.pagination-btn:hover {
+  border-color: var(--blue);
+  color: var(--blue);
+}
+
+.pagination-btn--active {
+  background: var(--blue-light);
+  border-color: var(--blue);
+  color: var(--blue);
+  font-weight: 700;
+  cursor: default;
+}
+
+.pagination-btn--active:hover {
+  background: var(--blue-light);
+  border-color: var(--blue);
+  color: var(--blue);
+}
+
+.pagination-btn--disabled {
+  background: var(--surface);
+  border-color: var(--border);
+  color: var(--muted);
+  cursor: default;
+  opacity: 0.5;
+}
+
+.pagination-btn--disabled:hover {
+  border-color: var(--border);
+  color: var(--muted);
+}
+
+.pagination-ellipsis {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+  height: 36px;
+  color: var(--muted);
+  font-size: 13px;
 }

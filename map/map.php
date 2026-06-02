@@ -1,3 +1,10 @@
+<?php
+// Load all listings needed for the map page.
+require '../components/mapListings.php';
+
+// Load the function that renders one listing in the map sidebar.
+require '../components/renderMapListItem.php';
+?>
 <!DOCTYPE html>
 <html lang="en" class="map-page">
 <head>
@@ -11,7 +18,7 @@
 <body>
   <!-- Nav Bar -->
   <nav class="nav">
-    <a class="nav-logo" href="../index.html">
+    <a class="nav-logo" href="../index.php">
       <div class="logo-icon">
         <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
           <!-- Let-Me-Rent Logo -->
@@ -22,8 +29,8 @@
     </a>
 
     <ul class="nav-links">
-      <li><a href="../index.html">Browse</a></li>
-      <li><a href="map.html" class="active">Map View</a></li>
+      <li><a href="../index.php">Browse</a></li>
+      <li><a href="map.php" class="active">Map View</a></li>
       <li><a href="../profile/profile.html">My Alerts</a></li>
     </ul>
 
@@ -39,7 +46,7 @@
         <div class="map-search">
           <input type="text" value="Amsterdam" placeholder="Search…">
         </div>
-        <div class="map-count">234 listings <span>· profile applied</span></div>
+        <div class="map-count"><?php echo htmlspecialchars($totalListings); ?> listings <span>· profile applied</span></div>
         <div class="map-filter-pills">
           <div class="map-pill active">All</div>
           <div class="map-pill">≥80% match</div>
@@ -48,87 +55,29 @@
           <div class="map-pill">🐾 Pets ok</div>
         </div>
       </div>
-
-      <!-- Placeholder #1 -->
       <div class="map-list">
-        <a class="map-list-item selected" href="../detail/detail.html">
-          <div class="map-thumb">🏠</div>
-          <div class="map-item-info">
-            <div class="map-item-price">€875<span>/mo</span></div>
-            <div class="map-item-title">Modern studio with balcony — De Pijp</div>
-            <div class="map-item-tags"><span class="badge-sm hi">94%</span><span class="tag">🚲 14min</span><span class="tag">🛋️ Furn.</span></div>
-          </div>
-        </a>
+        <?php
+        // Show an API error if something went wrong while fetching listings.
+        if ($apiError) {
+          echo '<div class="api-error">API error: ' . htmlspecialchars($apiError) . '</div>';
+        } else if (!empty($listings)) {
+          // Loop through every listing and print one sidebar item for each listing.
+          $index = 0;
+          foreach ($listings as $listing) {
+            // Make only the first listing selected.
+            if ($index == 0) {
+              echo renderMapListItem($listing, true);
+            } else {
+              echo renderMapListItem($listing, false);
+            }
 
-        <!-- Placeholder #2 -->
-        <a class="map-list-item" href="../detail/detail.html">
-          <div class="map-thumb">🏡</div>
-          <div class="map-item-info">
-            <div class="map-item-price">€850<span>/mo</span></div>
-            <div class="map-item-title">Renovated studio — Zuidas</div>
-            <div class="map-item-tags"><span class="badge-sm hi">91%</span><span class="tag">🚲 5min</span><span class="tag">🛋️ Furn.</span></div>
-          </div>
-        </a>
-
-        <!-- Placeholder #3 -->
-        <a class="map-list-item" href="../detail/detail.html">
-          <div class="map-thumb">🏢</div>
-          <div class="map-item-info">
-            <div class="map-item-price">€790<span>/mo</span></div>
-            <div class="map-item-title">Room in student house — Bos en Lommer</div>
-            <div class="map-item-tags"><span class="badge-sm hi">88%</span><span class="tag">🚲 9min</span><span class="tag">👥 Shared</span></div>
-          </div>
-        </a>
-
-        <!-- Placeholder #4 -->
-        <a class="map-list-item" href="../detail/detail.html">
-          <div class="map-thumb">🏠</div>
-          <div class="map-item-info">
-            <div class="map-item-price">€810<span>/mo</span></div>
-            <div class="map-item-title">Room in house — Westerpark</div>
-            <div class="map-item-tags"><span class="badge-sm hi">82%</span><span class="tag">🚲 12min</span><span class="tag">🛋️ Furn.</span></div>
-          </div>
-        </a>
-
-        <!-- Placeholder #5 -->
-        <a class="map-list-item" href="../detail/detail.html">
-          <div class="map-thumb">🏡</div>
-          <div class="map-item-info">
-            <div class="map-item-price">€680<span>/mo</span></div>
-            <div class="map-item-title">Compact studio — Noord</div>
-            <div class="map-item-tags"><span class="badge-sm md">76%</span><span class="tag">⛴ 18min</span></div>
-          </div>
-        </a>
-
-        <!-- Placeholder #6 -->
-        <a class="map-list-item" href="../detail/detail.html">
-          <div class="map-thumb">🏠</div>
-          <div class="map-item-info">
-            <div class="map-item-price">€920<span>/mo</span></div>
-            <div class="map-item-title">1-bed apartment — Jordaan</div>
-            <div class="map-item-tags"><span class="badge-sm md">71%</span><span class="tag">🚲 22min</span></div>
-          </div>
-        </a>
-
-        <!-- Placeholder #7 -->
-        <a class="map-list-item" href="../detail/detail.html">
-          <div class="map-thumb">🏢</div>
-          <div class="map-item-info">
-            <div class="map-item-price">€945<span>/mo</span></div>
-            <div class="map-item-title">Spacious apartment — Oost</div>
-            <div class="map-item-tags"><span class="badge-sm md">66%</span><span class="tag">🚌 18min</span><span class="tag">🐾 Pets</span></div>
-          </div>
-        </a>
-
-        <!-- Placeholder #8 -->
-        <a class="map-list-item" href="../detail/detail.html">
-          <div class="map-thumb">🏠</div>
-          <div class="map-item-info">
-            <div class="map-item-price">€890<span>/mo</span></div>
-            <div class="map-item-title">Canal-view apartment — Centrum</div>
-            <div class="map-item-tags"><span class="badge-sm lo">42%</span><span class="tag">🚲 31min</span></div>
-          </div>
-        </a>
+            // Increase the counter so the next listing is not treated as the first one.
+            $index = $index + 1;
+          }
+        } else {
+          echo '<div class="no-results">No listings found. Try a different source or filter.</div>';
+        }
+        ?>
       </div>
     </div>
 
@@ -219,3 +168,5 @@
   </div>
 </body>
 </html>
+
+
