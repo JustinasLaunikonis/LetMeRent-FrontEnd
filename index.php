@@ -26,13 +26,13 @@ require 'components/listings.php';
 
     <ul class="nav-links">
       <li><a href="index.php" class="active">Browse</a></li>
-      <li><a href="map/map.html">Map View</a></li>
-      <li><a href="profile/profile.html">My Alerts</a></li>
+      <li><a href="map/map.php">Map View</a></li>
+      <li><a href="profile/profile.php">My Alerts</a></li>
     </ul>
 
     <div class="nav-right">
       <div class="nav-bell">🔔</div>
-      <a href="profile/profile.html" class="nav-avatar">JL</a>
+      <a href="profile/profile.php" class="nav-avatar">JL</a>
     </div>
   </nav>
 
@@ -135,7 +135,7 @@ require 'components/listings.php';
       <span class="profile-applied-label">● Your profile applied</span>
       <div class="view-toggle">
         <button class="view-btn active">⊞</button>
-        <button class="view-btn" onclick="location.href='map/map.html'">🗺</button>
+        <button class="view-btn" onclick="location.href='map/map.php'">🗺</button>
       </div>
     </div>
   </div>

@@ -47,9 +47,9 @@ storeAuthData($result['data']);
 if (wantsJsonResponse()) {
     jsonResponse([
         'ok' => true,
-        'redirect' => '../profile/profile.html',
+        'redirect' => '../profile/profile.php',
         'data' => $result['data'],
     ]);
 }
 
-redirectTo('../profile/profile.html');
+redirectTo('../profile/profile.php');

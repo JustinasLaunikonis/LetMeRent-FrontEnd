@@ -31,12 +31,12 @@ require '../components/renderMapListItem.php';
     <ul class="nav-links">
       <li><a href="../index.php">Browse</a></li>
       <li><a href="map.php" class="active">Map View</a></li>
-      <li><a href="../profile/profile.html">My Alerts</a></li>
+      <li><a href="../profile/profile.php">My Alerts</a></li>
     </ul>
 
     <div class="nav-right">
       <div class="nav-bell">🔔</div>
-      <a href="../profile/profile.html" class="nav-avatar">JL</a>
+      <a href="../profile/profile.php" class="nav-avatar">JL</a>
     </div>
   </nav>
 
@@ -168,5 +168,4 @@ require '../components/renderMapListItem.php';
   </div>
 </body>
 </html>
-
 

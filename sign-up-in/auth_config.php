@@ -1,7 +1,50 @@
 <?php
 declare(strict_types=1);
 
-const AUTH_API_BASE_URL = 'http://178.238.226.221:5000';
+function appEnv(string $key, ?string $fallback = null): ?string
+{
+    $serverValue = getenv($key);
+
+    if ($serverValue !== false && trim($serverValue) !== '') {
+        return trim($serverValue);
+    }
+
+    $envPath = __DIR__ . '/../.env';
+
+    if (!is_readable($envPath)) {
+        return $fallback;
+    }
+
+    $envLines = file($envPath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+
+    foreach ($envLines as $line) {
+        $line = trim($line);
+
+        if ($line === '' || str_starts_with($line, '#')) {
+            continue;
+        }
+
+        $parts = explode('=', $line, 2);
+
+        if (count($parts) === 2 && trim($parts[0]) === $key) {
+            return trim($parts[1]);
+        }
+    }
+
+    return $fallback;
+}
+
+function authApiBaseUrl(): string
+{
+    return rtrim((string) appEnv('AUTH_API_BASE_URL', ''), '/');
+}
+
+function chronoApiBaseUrl(): string
+{
+    $baseUrl = appEnv('CHRONO_API_BASE_URL', authApiBaseUrl());
+
+    return rtrim((string) $baseUrl, '/');
+}
 
 function startAuthSession(): void
 {
