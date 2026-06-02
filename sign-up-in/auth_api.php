@@ -5,7 +5,7 @@ require_once __DIR__ . '/auth_config.php';
 
 function callAuthApi(string $endpoint, array $payload): array
 {
-    $ch = curl_init(AUTH_API_BASE_URL . $endpoint);
+    $ch = curl_init(authApiBaseUrl() . $endpoint);
 
     curl_setopt_array($ch, [
         CURLOPT_POST => true,
@@ -92,7 +92,7 @@ function authHeaders(): array
 
 function callApiWithAuth(string $method, string $endpoint, ?array $payload = null): array
 {
-    $ch = curl_init(AUTH_API_BASE_URL . $endpoint);
+    $ch = curl_init(authApiBaseUrl() . $endpoint);
     $method = strtoupper($method);
 
     curl_setopt_array($ch, [

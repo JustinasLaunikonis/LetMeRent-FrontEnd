@@ -86,7 +86,7 @@ document.querySelectorAll('[data-auth-form]').forEach((form) => {
         message.classList.add('success');
       }
 
-      window.location.href = result.redirect || '../profile/profile.html';
+      window.location.href = result.redirect || '../profile/profile.php';
     } catch (error) {
       if (message) {
         message.textContent = error.message;
