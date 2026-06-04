@@ -6,7 +6,7 @@ require_once __DIR__ . '/auth_api.php';
 startAuthSession();
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    redirectTo('./signin.html');
+    redirectTo('./signin.php');
 }
 
 $requestData = $_POST;
@@ -25,7 +25,7 @@ if ($email === '' || $password === '') {
     }
 
     $_SESSION['auth_error'] = 'Email and password are required.';
-    redirectTo('./signin.html');
+    redirectTo('./signin.php');
 }
 
 $result = callAuthApi('/auth/login', [
@@ -39,7 +39,7 @@ if (!$result['ok']) {
     }
 
     $_SESSION['auth_error'] = $result['error'];
-    redirectTo('./signin.html');
+    redirectTo('./signin.php');
 }
 
 storeAuthData($result['data']);

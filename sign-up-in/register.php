@@ -6,7 +6,7 @@ require_once __DIR__ . '/auth_api.php';
 startAuthSession();
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    redirectTo('./signup.html');
+    redirectTo('./signup.php');
 }
 
 $requestData = $_POST;
@@ -26,7 +26,7 @@ if ($username === '' || $email === '' || $password === '') {
     }
 
     $_SESSION['auth_error'] = 'Username, email, and password are required.';
-    redirectTo('./signup.html');
+    redirectTo('./signup.php');
 }
 
 $result = callAuthApi('/auth/register', [
@@ -41,7 +41,7 @@ if (!$result['ok']) {
     }
 
     $_SESSION['auth_error'] = $result['error'];
-    redirectTo('./signup.html');
+    redirectTo('./signup.php');
 }
 
 storeAuthData($result['data']);

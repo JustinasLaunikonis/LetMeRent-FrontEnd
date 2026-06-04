@@ -7,5 +7,4 @@ startAuthSession();
 $_SESSION = [];
 session_destroy();
 
-redirectTo('./signin.html');
-
+redirectTo('./signup.php');
