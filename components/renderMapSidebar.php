@@ -1,6 +1,6 @@
 <?php
 
-function renderMapSidebarList($apiError, array $listings, array $listingMapIndexes): void {
+function renderMapSidebarList(?string $apiError, array $listings, array $listingMapIndexes): void {
     // Stop early if the API failed.
     if ($apiError) {
         echo '<div class="api-error">API error: ' . htmlspecialchars($apiError) . '</div>';
