@@ -1,11 +1,33 @@
 <?php
 
-function renderMapListItem(array $listing, bool $selected) {
-    // The first listing gets an extra CSS class so it appears selected.
+function renderMapListItem(array $listing, bool $selected, $mapIndex = null): string {
+    // Add the selected class when the map page wants this listing highlighted.
     if ($selected) {
-        $class = 'map-list-item selected';
+        $class = 'map-list-item js-map-listing selected';
     } else {
-        $class = 'map-list-item';
+        $class = 'map-list-item js-map-listing';
+    }
+
+    // These attributes let JavaScript connect the sidebar item to Google Maps.
+    $lat = null;
+    $lng = null;
+
+    if (isset($listing['lat']) && isset($listing['lng'])) {
+        $lat = $listing['lat'];
+        $lng = $listing['lng'];
+    } else if (isset($listing['latitude']) && isset($listing['longitude'])) {
+        $lat = $listing['latitude'];
+        $lng = $listing['longitude'];
+    }
+
+    $mapAttributes = '';
+    if (is_numeric($lat) && is_numeric($lng)) {
+        $mapAttributes = ' data-lat="' . htmlspecialchars((string)$lat) . '" data-lng="' . htmlspecialchars((string)$lng) . '"';
+    }
+
+    // mapIndex is the marker number inside the JavaScript marker list.
+    if ($mapIndex !== null) {
+        $mapAttributes .= ' data-map-index="' . htmlspecialchars((string)$mapIndex) . '"';
     }
 
     // Set default values first. Then replace them if the listing has real values.
@@ -70,7 +92,7 @@ function renderMapListItem(array $listing, bool $selected) {
 
     // Return one complete clickable listing item.
     return '
-        <a class="' . $class . '" href="' . $url . '" target="_blank" rel="noopener">
+        <a class="' . $class . '" href="#google-map" data-listing-url="' . $url . '"' . $mapAttributes . '>
           ' . $thumb . '
           <div class="map-item-info">
             <div class="map-item-price">' . $price . '<span>/mo</span></div>
