@@ -43,23 +43,24 @@
             <p class="eyebrow">Welcome to LetMeRent</p>
             <h2>Sign up to LetMeRent</h2>
 
-            <form class="auth-form">
+            <form class="auth-form" action="./register.php" method="post" data-auth-form>
               <label>
                 <span>Username</span>
-                <input type="text" placeholder="Enter your username" />
+                <input type="text" name="username" placeholder="Enter your username" required />
               </label>
 
               <label>
                 <span>Email address</span>
-                <input type="email" placeholder="Enter your email" />
+                <input type="email" name="email" placeholder="Enter your email" required />
               </label>
 
               <label>
                 <span>Password</span>
-                <input type="password" placeholder="Enter your password" />
+                <input type="password" name="password" placeholder="Enter your password" required />
               </label>
 
               <button type="submit">Sign up</button>
+              <p class="form-message" data-auth-message role="status"></p>
 
               <p class="bottom-text">
                 <span>Already have an account?</span>
@@ -69,5 +70,6 @@
           </div>
         </section>
       </main>
+      <script src="./auth.js"></script>
   </body>
 </html>
