@@ -166,44 +166,114 @@ function preferenceValue(array $preferences, string $key, mixed $fallback): mixe
     return array_key_exists($key, $preferences) && $preferences[$key] !== null ? $preferences[$key] : $fallback;
 }
 
-function extractPreferences(array $taskData): array
+function normalizePreferences(array $data): array
 {
-    foreach (['data', 'task', 'preferences'] as $key) {
-        if (isset($taskData[$key]) && is_array($taskData[$key])) {
-            $taskData = $taskData[$key];
-            break;
+    $keyMap = [
+        'spider' => 'spider',
+        'city' => 'city',
+        'time_between_scrap' => 'time_between_scrap',
+        'timeBetweenScrap' => 'time_between_scrap',
+        'scrape_interval' => 'time_between_scrap',
+        'scrapeInterval' => 'time_between_scrap',
+        'university_campus' => 'university_campus',
+        'universityCampus' => 'university_campus',
+        'campus' => 'university_campus',
+        'min_budget' => 'min_budget',
+        'minBudget' => 'min_budget',
+        'max_budget' => 'max_budget',
+        'maxBudget' => 'max_budget',
+        'move_in_date' => 'move_in_date',
+        'moveInDate' => 'move_in_date',
+        'min_lease_length' => 'min_lease_length',
+        'minLeaseLength' => 'min_lease_length',
+        'max_distance_from_campus' => 'max_distance_from_campus',
+        'maxDistanceFromCampus' => 'max_distance_from_campus',
+        'room_type' => 'room_type',
+        'roomType' => 'room_type',
+        'furnishing' => 'furnishing',
+        'pet_friendly' => 'pet_friendly',
+        'petFriendly' => 'pet_friendly',
+        'minimum_match_score' => 'minimum_match_score',
+        'minimumMatchScore' => 'minimum_match_score',
+    ];
+
+    $preferences = [];
+
+    foreach ($keyMap as $sourceKey => $targetKey) {
+        if (array_key_exists($sourceKey, $data)) {
+            $preferences[$targetKey] = $data[$sourceKey];
         }
     }
 
-    if (isset($taskData['tasks']) && is_array($taskData['tasks'])) {
-        $taskData = $taskData['tasks'];
+    return $preferences;
+}
+
+function extractComparableTime(array $data): int
+{
+    foreach (['updated_at', 'updatedAt', 'created_at', 'createdAt', 'created', 'date'] as $key) {
+        if (!empty($data[$key])) {
+            $timestamp = strtotime((string) $data[$key]);
+
+            if ($timestamp !== false) {
+                return $timestamp;
+            }
+        }
     }
 
-    if (isset($taskData[0]) && is_array($taskData[0])) {
-        $taskData = $taskData[0];
+    foreach (['id', '_id'] as $key) {
+        if (isset($data[$key]) && is_numeric($data[$key])) {
+            return (int) $data[$key];
+        }
     }
 
-    $preferenceKeys = [
-        'spider',
-        'city',
-        'time_between_scrap',
-        'university_campus',
-        'min_budget',
-        'max_budget',
-        'move_in_date',
-        'min_lease_length',
-        'max_distance_from_campus',
-        'room_type',
-        'furnishing',
-        'pet_friendly',
-        'minimum_match_score',
-    ];
+    return 0;
+}
 
-    return array_filter(
-        $taskData,
-        static fn ($key): bool => in_array((string) $key, $preferenceKeys, true),
-        ARRAY_FILTER_USE_KEY
+function collectPreferenceCandidates(array $data, array &$candidates): void
+{
+    if (array_is_list($data)) {
+        foreach ($data as $item) {
+            if (is_array($item)) {
+                collectPreferenceCandidates($item, $candidates);
+            }
+        }
+
+        return;
+    }
+
+    $preferences = normalizePreferences($data);
+
+    if ($preferences !== []) {
+        $candidates[] = [
+            'preferences' => $preferences,
+            'time' => extractComparableTime($data),
+            'index' => count($candidates),
+        ];
+    }
+
+    foreach ($data as $value) {
+        if (is_array($value)) {
+            collectPreferenceCandidates($value, $candidates);
+        }
+    }
+}
+
+function extractPreferences(array $taskData): array
+{
+    $candidates = [];
+
+    collectPreferenceCandidates($taskData, $candidates);
+
+    if ($candidates === []) {
+        return [];
+    }
+
+    usort(
+        $candidates,
+        static fn (array $a, array $b): int => ($a['time'] <=> $b['time']) ?: ($a['index'] <=> $b['index'])
     );
+
+    return $candidates[count($candidates) - 1]['preferences'];
 }
 
 function boolPreferenceValue(mixed $value): bool
@@ -251,6 +321,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['form'] ?? '') === 'prefere
 
         if ($saveResult['ok']) {
             $preferences = $preferencesPayload;
+            $_SESSION['preferences'] = $preferencesPayload;
             $preferenceNotice = 'Preferences saved.';
         } else {
             $preferences = $preferencesPayload;
@@ -266,11 +337,18 @@ if ($preferences === [] && $email !== '') {
         $taskData = $taskResult['data'];
 
         $preferences = extractPreferences($taskData);
+        if ($preferences !== []) {
+            $_SESSION['preferences'] = $preferences;
+        }
     } elseif ($taskResult['status'] !== 404) {
         $preferenceError = $taskResult['error'] ?? 'Could not load preferences.';
     }
 } elseif ($email === '') {
     $preferenceError = 'Could not load preferences because /me did not return an email.';
+}
+
+if ($preferences === [] && is_array($_SESSION['preferences'] ?? null)) {
+    $preferences = $_SESSION['preferences'];
 }
 
 $hasPreferences = $preferences !== [];
