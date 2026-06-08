@@ -115,7 +115,14 @@ if ($min_price !== '') {
 }
 
 if ($max_price !== '') {
-    $baseParams['max_price'] = $max_price;
+    // 5000 = "5000+" option, so it should not cap results.
+    if (is_numeric($max_price)) {
+        if ((int)$max_price < 5000) {
+            $baseParams['max_price'] = $max_price;
+        }
+    } else {
+        $baseParams['max_price'] = $max_price;
+    }
 }
 
 if ($min_rooms !== '') {
@@ -146,7 +153,7 @@ if ($sort !== '') {
 
 function fetchFromApi(array $params) {
     // read API base URL from .env file
-    $envPath  = __DIR__ . '/../.env';
+    $envPath  = __DIR__ . '/../../.env';
     $envLines = file($envPath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
     $apiBase  = '';
 

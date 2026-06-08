@@ -20,10 +20,12 @@ function featureValue(array $listing, $key) {
 // Call this function by passing one listing array
 
 function renderCard(array $listing) {
-    // iRentalize is spelt with a small "i"
+    // Some source names have special capital letters.
     if (isset($listing['source'])) {
         if (strtolower($listing['source']) === 'irentalize') {
             $source = 'iRentalize';
+        } else if (strtolower($listing['source']) === 'housinganywhere') {
+            $source = 'HousingAnywhere';
         } else {
             $source = ucfirst($listing['source']);
         }

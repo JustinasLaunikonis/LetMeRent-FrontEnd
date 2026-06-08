@@ -2,7 +2,7 @@
 // Price sort dropdown. The user picks how the listings are ordered by price.
 // Selecting an option puts ?sort=price and ?order=asc/desc in the URL and reloads the page
 // "Default" clears the price sort
-// The variables $sort and $order come from components/listings.php.
+// The variables $sort and $order come from components/listings/listings.php.
 
 // Work out which option is selected and the label to show on the button.
 $priceLabel = 'Price';

@@ -1,6 +1,6 @@
 <?php
 // Show the listings as cards. The variables $apiError and $listings come from
-// components/listings.php, and renderCard() comes from renderCard.php.
+// components/listings/listings.php, and renderCard() comes from renderCard.php.
 
 if ($apiError) {
     echo '<div class="api-error">API error: ' . htmlspecialchars($apiError) . '</div>';
