@@ -1,6 +1,6 @@
 <?php
 // Page navigation buttons. The variables $totalPages, $page come from
-// components/listings.php.
+// components/listings/listings.php.
 
 if ($totalPages > 1) {
     // Build the URL

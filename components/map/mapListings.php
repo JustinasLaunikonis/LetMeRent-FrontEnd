@@ -1,5 +1,5 @@
 <?php
-require __DIR__ . '/listings.php';
+require __DIR__ . '/../listings/listings.php';
 
 if (!isset($city)) {
     $city = '';
@@ -49,7 +49,13 @@ if (!$apiError) {
             $mapParams['min_price'] = $min_price;
         }
         if ($max_price !== '') {
-            $mapParams['max_price'] = $max_price;
+            if (is_numeric($max_price)) {
+                if ((int)$max_price < 5000) {
+                    $mapParams['max_price'] = $max_price;
+                }
+            } else {
+                $mapParams['max_price'] = $max_price;
+            }
         }
 
         $mapResult = fetchFromApi($mapParams);
@@ -77,7 +83,13 @@ if (!$apiError) {
                 $mapParams['min_price'] = $min_price;
             }
             if ($max_price !== '') {
-                $mapParams['max_price'] = $max_price;
+                if (is_numeric($max_price)) {
+                    if ((int)$max_price < 5000) {
+                        $mapParams['max_price'] = $max_price;
+                    }
+                } else {
+                    $mapParams['max_price'] = $max_price;
+                }
             }
 
             $mapResult = fetchFromApi($mapParams);
