@@ -1,6 +1,4 @@
-<?php
-require 'components/listings.php';
-?>
+<?php include 'components/listings.php'; ?>
 
 <!DOCTYPE html>
 <html lang="en">
@@ -87,48 +85,22 @@ require 'components/listings.php';
 
   <!-- Filters -->
   <div class="filter-bar">
-    <div class="filter-chip active">
-      <p>All</p>
-      <span class="chev">▼</span>
-    </div>
-    <div class="filter-chip">
-      <p>Price</p>
-      <span class="chev">▼</span>
-    </div>
-    <div class="filter-chip">
-      <p>Rooms</p>
-      <span class="chev">▼</span>
-    </div>
-    <div class="filter-chip active">
-      <p>🐾 Pet-friendly</p>
-    </div>
-    <div class="filter-chip">
-      <p>🛋️ Furnished</p>
-    </div>
-    <div class="filter-chip">
-      <p>📅 Available now</p>
-    </div>
-    <div class="filter-chip">
-      <p>🏫 &lt;3 km campus</p>
-    </div>
-    <div class="filter-sort">
-      <p>Sort:</p>
-      <strong>Best match ▼</strong>
-    </div>
+    <?php include 'components/resetFilters.php'; ?>
+
+    <?php include 'components/priceChip.php'; ?>
+
+    <?php include 'components/roomsDropdown.php'; ?>
+
+    <?php include 'components/energyDropdown.php'; ?>
+
+    <?php include 'components/tagFilters.php'; ?>
+    
   </div>
 
   <!-- Results -->
   <div class="results-bar">
     <div class="results-count">
-      <strong>
-      <?php
-        if ($totalListings > 0) {
-          echo $totalListings;
-        } else {
-          echo 0;
-        }
-      ?>
-      </strong>
+      <strong><?php include 'components/resultsCount.php'; ?></strong>
       listings · Amsterdam · under €950
     </div>
     <div class="results-actions">
@@ -140,77 +112,13 @@ require 'components/listings.php';
     </div>
   </div>
 
-  <!-- Listings -->
-  <?php
-  if ($apiError) {
-    echo '<div class="api-error">API error: ' . htmlspecialchars($apiError) . '</div>';
-  }
+  <?php include 'components/listingsGrid.php'; ?>
 
-  echo '<div class="listings-grid">';
-
-  if (!empty($listings)) {
-    foreach ($listings as $listing) {
-      echo renderCard($listing);
-    }
-  } else {
-    echo '<div class="no-results">No listings found. Try a different source or filter.</div>';
-  }
-
-  echo '</div>';
-  ?>
-  
-  <!-- Pagination -->
-  <?php
-  if ($totalPages > 1) {
-      // Build the URL
-      $queryParams = $_GET;
-      unset($queryParams['page']);
-
-      if (!empty($queryParams)) {
-          $baseUrl = '?' . http_build_query($queryParams) . '&page=';
-      } else {
-          $baseUrl = '?page=';
-      }
-
-      echo '<nav class="pagination">';
-
-      // Previous button
-      if ($page > 1) {
-          $prevPage = $page - 1;
-          echo '<a href="' . $baseUrl . $prevPage . '" class="pagination-btn">&#8592; Prev</a>';
-      } else {
-          echo '<span class="pagination-btn pagination-btn--disabled">&#8592; Prev</span>';
-      }
-
-      // Page number buttons with ellipsis form for long page counts (34414 for example)
-      for ($i = 1; $i <= $totalPages; $i++) {
-          $isFirst   = ($i === 1);
-          $isLast    = ($i === $totalPages);
-          $isNearCurrent = ($i >= $page - 2 && $i <= $page + 2);
-
-          if ($isFirst || $isLast || $isNearCurrent) {
-              if ($i === $page) {
-                  echo '<span class="pagination-btn pagination-btn--active">' . $i . '</span>';
-              } else {
-                  echo '<a href="' . $baseUrl . $i . '" class="pagination-btn">' . $i . '</a>';
-              }
-          } else if ($i === $page - 3 || $i === $page + 3) {
-              echo '<span class="pagination-ellipsis">…</span>';
-          }
-      }
-
-      // Next button
-      if ($page < $totalPages) {
-          $nextPage = $page + 1;
-          echo '<a href="' . $baseUrl . $nextPage . '" class="pagination-btn">Next &#8594;</a>';
-      } else {
-          echo '<span class="pagination-btn pagination-btn--disabled">Next &#8594;</span>';
-      }
-
-      echo '</nav>';
-  }
-  ?>
+  <?php include 'components/pagination.php'; ?>
 
   <script src="components/filterSources.js"></script>
+  <script src="components/filterRooms.js"></script>
+  <script src="components/filterPrice.js"></script>
+  <script src="components/filterEnergy.js"></script>
 </body>
 </html>
