@@ -28,6 +28,30 @@ if (isset($_GET['max_price'])) {
     $max_price = '';
 }
 
+if (isset($_GET['min_rooms'])) {
+    $min_rooms = trim($_GET['min_rooms']);
+} else {
+    $min_rooms = '';
+}
+
+if (isset($_GET['max_rooms'])) {
+    $max_rooms = trim($_GET['max_rooms']);
+} else {
+    $max_rooms = '';
+}
+
+if (isset($_GET['has'])) {
+    $has = trim($_GET['has']);
+} else {
+    $has = '';
+}
+
+if (isset($_GET['energy_label'])) {
+    $energy_label = trim($_GET['energy_label']);
+} else {
+    $energy_label = '';
+}
+
 // Read the selected sources from the URL (?source=kamernet,funda)
 // and split them into a list. If nothing is selected, the list stays empty.
 $sources = [];
@@ -60,26 +84,30 @@ if (isset($_GET['sort'])) {
     $sort = trim($_GET['sort']);
 }
 
-// When sorting or multiple sources are active, we need to fetch everything
-// and do pagination in PHP ourselves. Otherwise, let the API paginate.
-$usePhpPagination = ($sort !== '' || !empty($sources));
+// Read sort direction from URL (asc or desc). Anything else defaults to asc.
+$order = 'asc';
+if (isset($_GET['order']) && strtolower(trim($_GET['order'])) === 'desc') {
+    $order = 'desc';
+}
 
 // -------------------------------------------------------------------------
-// Build the base parameters to send to the API
+// Build the parameters to send to the API
 // -------------------------------------------------------------------------
-// These are added to every API request. Filters are only added if they have a value.
+// The API handles filtering, sorting and pagination in a single request, even
+// across multiple sources, so there is no PHP-side merging or pagination. (Thank you Andrii)
+// Filters are only added if they have a value.
 
 $baseParams = [];
-
-if ($usePhpPagination) {
-    $baseParams['limit'] = 500;
-} else {
-    $baseParams['limit'] = $limit;
-    $baseParams['skip']  = $offset;
-}
+$baseParams['limit'] = $limit;
+$baseParams['skip']  = $offset;
 
 if ($city !== '') {
     $baseParams['city'] = $city;
+}
+
+// Pass every selected source in one request (?source=funda,kamernet,...).
+if (!empty($sources)) {
+    $baseParams['source'] = implode(',', $sources);
 }
 
 if ($min_price !== '') {
@@ -87,7 +115,35 @@ if ($min_price !== '') {
 }
 
 if ($max_price !== '') {
-    $baseParams['max_price'] = $max_price;
+    // 5000 = "5000+" option, so it should not cap results.
+    if (is_numeric($max_price)) {
+        if ((int)$max_price < 5000) {
+            $baseParams['max_price'] = $max_price;
+        }
+    } else {
+        $baseParams['max_price'] = $max_price;
+    }
+}
+
+if ($min_rooms !== '') {
+    $baseParams['min_rooms'] = $min_rooms;
+}
+
+if ($max_rooms !== '') {
+    $baseParams['max_rooms'] = $max_rooms;
+}
+
+if ($has !== '') {
+    $baseParams['has'] = $has;
+}
+
+if ($energy_label !== '') {
+    $baseParams['energy_label'] = $energy_label;
+}
+
+if ($sort !== '') {
+    $baseParams['sort']  = $sort;
+    $baseParams['order'] = $order;
 }
 
 // -------------------------------------------------------------------------
@@ -97,7 +153,7 @@ if ($max_price !== '') {
 
 function fetchFromApi(array $params) {
     // read API base URL from .env file
-    $envPath  = __DIR__ . '/../.env';
+    $envPath  = __DIR__ . '/../../.env';
     $envLines = file($envPath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
     $apiBase  = '';
 
@@ -144,55 +200,17 @@ function fetchFromApi(array $params) {
 }
 
 // -------------------------------------------------------------------------
-// Fetch listings. one request if no source filter, else one per source
+// Fetch listings. The API does all filtering, sorting and pagination, across
+// every selected source, in a single request.
 // -------------------------------------------------------------------------
 
-if (empty($sources)) {
-    // No source selected, fetch all listings in one request
-    $result = fetchFromApi($baseParams);
+$result = fetchFromApi($baseParams);
 
-    if (isset($result['error'])) {
-        $apiError = $result['error'];
-    } else {
-        $listings      = $result['data'];
-        $totalListings = $result['count'];
-    }
+if (isset($result['error'])) {
+    $apiError = $result['error'];
 } else {
-    // One or more sources selected: fetch all listings from each source first,
-    // then combine them and paginate in PHP
-    $allListings = [];
-
-    foreach ($sources as $source) {
-        $paramsWithSource = [];
-        $paramsWithSource['limit']  = 500; // fetch as many as possible per source
-        $paramsWithSource['skip']   = 0;   // always start from the beginning
-        $paramsWithSource['source'] = $source;
-
-        if ($city !== '') {
-            $paramsWithSource['city'] = $city;
-        }
-        if ($min_price !== '') {
-            $paramsWithSource['min_price'] = $min_price;
-        }
-        if ($max_price !== '') {
-            $paramsWithSource['max_price'] = $max_price;
-        }
-
-        $result = fetchFromApi($paramsWithSource);
-
-        if (isset($result['error'])) {
-            $apiError = $result['error'];
-            break;
-        }
-
-        $allListings = array_merge($allListings, $result['data']);
-    }
-
-    // Total is the actual number of combined listings we received
-    $totalListings = count($allListings);
-
-    // Slice out just the listings for the current page
-    $listings = array_slice($allListings, $offset, $limit);
+    $listings      = $result['data'];
+    $totalListings = $result['count'];
 }
 
 // Calculate how many pages exist in total
