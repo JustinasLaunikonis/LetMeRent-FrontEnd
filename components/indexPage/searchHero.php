@@ -6,8 +6,6 @@
     <p>All Dutch student housing in one place. Scored for your profile.</p>
 
     <form class="search-bar" method="get" action="index.php">
-      <input type="hidden" name="city" value="Amsterdam">
-
       <?php if (!empty($sources)) { ?>
         <input type="hidden" name="source" value="<?= htmlspecialchars(implode(',', $sources)) ?>">
       <?php } ?>
@@ -17,11 +15,26 @@
         <input type="hidden" name="order" value="<?= htmlspecialchars($order) ?>">
       <?php } ?>
 
-      <div class="search-field">
+      <div class="search-field city-search-field" id="city-search-field" tabindex="0">
         <span class="search-field-icon">&#128205;</span>
-        <div>
+        <div class="city-field-body">
           <p class="search-field-label">City</p>
-          <p class="search-field-val">Amsterdam</p>
+          <p class="search-field-val" id="city-display"><?= htmlspecialchars($selectedCityText) ?></p>
+
+          <div class="city-card" id="city-card">
+            <label class="city-card-label" for="city-input">City</label>
+            <input
+              class="city-input"
+              id="city-input"
+              type="text"
+              name="city"
+              value="<?= htmlspecialchars($selectedCity) ?>"
+              autocomplete="off"
+            >
+            <div class="city-options">
+              <p class="city-loading" id="city-loading">Loading cities...</p>
+            </div>
+          </div>
         </div>
       </div>
 

@@ -7,7 +7,14 @@ if (roomsToggle && roomsOptions) {
   // Show or hide the options when the button is clicked.
   roomsToggle.addEventListener('click', function (event) {
     event.stopPropagation();
-    roomsOptions.classList.toggle('show');
+    var roomsWasOpen = roomsOptions.classList.contains('show');
+    closeFilterDropdowns(roomsOptions);
+
+    if (roomsWasOpen) {
+      roomsOptions.classList.remove('show');
+    } else {
+      roomsOptions.classList.add('show');
+    }
   });
 
   // Close the menu when the user clicks anywhere else on the page.

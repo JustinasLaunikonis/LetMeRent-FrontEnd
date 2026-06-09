@@ -84,6 +84,100 @@
   display: block;
 }
 
+.city-search-field {
+  position: relative;
+}
+
+.city-field-body {
+  width: 100%;
+  min-width: 120px;
+}
+
+.city-card {
+  position: absolute;
+  top: calc(100% + 10px);
+  left: 10px;
+  width: 240px;
+  padding: 14px;
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-lg);
+  cursor: default;
+  display: none;
+  z-index: 20;
+}
+
+.city-card.show {
+  display: block;
+}
+
+.city-card-label {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .06em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.city-input {
+  width: 100%;
+  padding: 8px 10px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--ink);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  outline: none;
+}
+
+.city-input:focus {
+  border-color: var(--blue);
+  background: var(--white);
+}
+
+.city-options {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 10px;
+  max-height: 260px;
+  overflow-y: auto;
+}
+
+.city-loading {
+  margin: 0;
+  padding: 8px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.city-option {
+  display: block;
+  width: 100%;
+  padding: 7px 8px;
+  background: transparent;
+  border: 0;
+  border-radius: 6px;
+  color: var(--ink-2);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+
+.city-option:hover {
+  background: var(--blue-light);
+  color: var(--blue);
+}
+
 .budget-search-field {
   position: relative;
   flex: 1;
@@ -294,8 +388,15 @@
   font-size: 12px;
   font-weight: 500;
   cursor: pointer;
-  min-width: 80px;
   white-space: nowrap;
+}
+
+.dropdown-toggle p {
+  margin: 0;
+}
+
+.chev {
+  line-height: 1;
 }
 
 .dropdown-toggle:hover {
