@@ -23,7 +23,20 @@ if (budgetSearchField && budgetCard && maxBudgetDisplay && maxBudgetInput && max
   }
 
   function showBudgetCard() {
+    var cityCard = document.getElementById('city-card');
+    if (cityCard) {
+      cityCard.classList.remove('show');
+    }
+
     budgetCard.classList.add('show');
+  }
+
+  function toggleBudgetCard() {
+    if (budgetCard.classList.contains('show')) {
+      hideBudgetCard();
+    } else {
+      showBudgetCard();
+    }
   }
 
   function hideBudgetCard() {
@@ -32,7 +45,7 @@ if (budgetSearchField && budgetCard && maxBudgetDisplay && maxBudgetInput && max
 
   budgetSearchField.addEventListener('click', function (event) {
     event.stopPropagation();
-    showBudgetCard();
+    toggleBudgetCard();
   });
 
   budgetSearchField.addEventListener('keydown', function (event) {

@@ -1,5 +1,6 @@
 <?php
 include 'components/listings/listings.php';
+include 'components/indexPage/cityValues.php';
 include 'components/indexPage/budgetValues.php';
 ?>
 
@@ -43,10 +44,12 @@ include 'components/indexPage/budgetValues.php';
   <?php include 'components/listings/listingsGrid.php'; ?>
   <?php include 'components/listings/pagination.php'; ?>
 
+  <script src="components/filters/filterDropdowns.js"></script>
   <script src="components/filters/filterSources.js"></script>
   <script src="components/filters/filterRooms.js"></script>
   <script src="components/filters/filterPrice.js"></script>
   <script src="components/filters/filterEnergy.js"></script>
+  <script src="components/indexPage/searchCity.js"></script>
   <script src="components/indexPage/searchBudget.js"></script>
 </body>
 </html>

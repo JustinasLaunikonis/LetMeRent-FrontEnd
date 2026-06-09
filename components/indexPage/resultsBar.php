@@ -3,13 +3,16 @@
   <div class="results-count">
     <strong><?php include 'components/listings/resultsCount.php'; ?></strong>
 
-    listings &middot; Amsterdam &middot;
+    listings &middot; <?= htmlspecialchars($selectedCityText) ?> &middot;
 
-    <?php if ($selectedMaxBudget >= 5000) { ?>
-      budget &euro;5000+
-    <?php } else { ?>
-      under &euro;<?= htmlspecialchars((string) $selectedMaxBudget) ?>
-    <?php } ?>
+    <?php
+    if ($selectedMaxBudget >= 5000) {
+      echo "budget &euro;5000+";
+    } else {
+      echo "under &euro;" . htmlspecialchars((string) $selectedMaxBudget);
+    }
+    ?>
+    
   </div>
   <div class="results-actions">
     <span class="profile-applied-label">&#9679; Your profile applied</span>
