@@ -1,16 +1,35 @@
 <?php
-// Load all listings needed for the map page.
-require '../components/map/mapListings.php';
-
-// Load the function that renders one listing in the map sidebar.
-require '../components/map/renderMapListItem.php';
+// This file prepares the listings, markers, API key, and other map variables.
+require '../components/mapPageData.php';
+// These defaults prevent warnings if something goes wrong while loading the data file.
+if (!isset($mapCenterQuery)) {
+  $mapCenterQuery = 'Amsterdam';
+}
+if (!isset($totalListings)) {
+  $totalListings = 0;
+}
+if (!isset($apiError)) {
+  $apiError = null;
+}
+if (!isset($listings) || !is_array($listings)) {
+  $listings = array();
+}
+if (!isset($listingMapIndexes) || !is_array($listingMapIndexes)) {
+  $listingMapIndexes = array();
+}
+if (!isset($mapMarkers) || !is_array($mapMarkers)) {
+  $mapMarkers = array();
+}
+if (!isset($googleMapsApiKey)) {
+  $googleMapsApiKey = '';
+}
 ?>
 <!DOCTYPE html>
 <html lang="en" class="map-page">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>LetMeRent — Map View</title>
+  <title>LetMeRent - Map View</title>
   <link rel="stylesheet" href="../styles.css">
   <link rel="stylesheet" href="map.css">
 </head>
@@ -35,8 +54,8 @@ require '../components/map/renderMapListItem.php';
     </ul>
 
     <div class="nav-right">
-      <div class="nav-bell">🔔</div>
-      <a href="../profile/profile.php" class="nav-avatar">JL</a>
+      <div class="nav-bell">&#128276;</div>
+      <a href="../profile/profile.html" class="nav-avatar">JL</a>
     </div>
   </nav>
 
@@ -44,9 +63,9 @@ require '../components/map/renderMapListItem.php';
     <div class="map-sidebar">
       <div class="map-sidebar-head">
         <div class="map-search">
-          <input type="text" value="Amsterdam" placeholder="Search…">
+          <input type="text" value="<?php echo htmlspecialchars($mapCenterQuery); ?>" placeholder="Search...">
         </div>
-        <div class="map-count"><?php echo htmlspecialchars($totalListings); ?> listings <span>· profile applied</span></div>
+        <div class="map-count"><?php echo htmlspecialchars($totalListings); ?> listings <span>- profile applied</span></div>
         <div class="map-filter-pills">
           <div class="map-pill active">All</div>
           <div class="map-pill">≥80% match</div>
@@ -56,116 +75,36 @@ require '../components/map/renderMapListItem.php';
         </div>
       </div>
       <div class="map-list">
-        <?php
-        // Show an API error if something went wrong while fetching listings.
-        if ($apiError) {
-          echo '<div class="api-error">API error: ' . htmlspecialchars($apiError) . '</div>';
-        } else if (!empty($listings)) {
-          // Loop through every listing and print one sidebar item for each listing.
-          $index = 0;
-          foreach ($listings as $listing) {
-            // Make only the first listing selected.
-            if ($index == 0) {
-              echo renderMapListItem($listing, true);
-            } else {
-              echo renderMapListItem($listing, false);
-            }
-
-            // Increase the counter so the next listing is not treated as the first one.
-            $index = $index + 1;
-          }
-        } else {
-          echo '<div class="no-results">No listings found. Try a different source or filter.</div>';
-        }
-        ?>
+        <?php renderMapSidebarList($apiError, $listings, $listingMapIndexes); ?>
       </div>
     </div>
 
     <!-- Map -->
     <div class="map-canvas">
-      <div class="fake-map">
-
-        <!-- Roads -->
-        <div class="map-road h road-h-1"></div>
-        <div class="map-road h road-h-2"></div>
-        <div class="map-road h road-h-3"></div>
-        <div class="map-road h road-h-4"></div>
-        <div class="map-road v road-v-1"></div>
-        <div class="map-road v road-v-2"></div>
-        <div class="map-road v road-v-3"></div>
-        <div class="map-road v road-v-4"></div>
-
-        <!-- Blocks -->
-        <div class="map-block block-1"></div>
-        <div class="map-block block-2"></div>
-        <div class="map-block block-3"></div>
-        <div class="map-block block-4"></div>
-        <div class="map-block block-5"></div>
-        <div class="map-block block-6"></div>
-        <div class="map-block block-7"></div>
-        <div class="map-block block-8"></div>
-        <div class="map-block block-9"></div>
-        <div class="map-block block-10"></div>
-        <div class="map-block block-11"></div>
-        <div class="map-block block-12"></div>
-        <div class="map-block block-13"></div>
-        <div class="map-block block-14"></div>
-        <div class="map-block block-15"></div>
-        <div class="map-block block-16"></div>
-        <div class="map-block block-17"></div>
-        <div class="map-block block-18"></div>
-        <div class="map-block block-19"></div>
-
-        <!-- Distance rings -->
-        <div class="distance-ring ring-outer"></div>
-        <div class="distance-ring ring-inner"></div>
-
-        <!-- Campus -->
-        <div class="campus-pin">
-          <div class="campus-circle">
-            <div class="campus-label">NHL Stenden Emmen Campus</div>
-            🏛️
-          </div>
+      <div id="google-map" class="google-map"></div>
+      <?php if ($googleMapsApiKey === '') { ?>
+        <div class="map-key-warning">
+          Add GOOGLE_MAPS_API_KEY to your .env file to load the interactive Google map.
         </div>
-
-        <!-- Pins -->
-        <div class="map-pin pin-pos-1"><div class="pin-bubble pin-dark">€875 · 94%</div></div>
-        <div class="map-pin pin-pos-2"><div class="pin-bubble pin-green">€850 · 91%</div></div>
-        <div class="map-pin pin-pos-3"><div class="pin-bubble pin-green">€790 · 88%</div></div>
-        <div class="map-pin pin-pos-4"><div class="pin-bubble pin-green">€810 · 82%</div></div>
-        <div class="map-pin pin-pos-5"><div class="pin-bubble pin-amber">€680 · 76%</div></div>
-        <div class="map-pin pin-pos-6"><div class="pin-bubble pin-amber">€920 · 71%</div></div>
-        <div class="map-pin pin-pos-7"><div class="pin-bubble pin-amber">€945 · 66%</div></div>
-        <div class="map-pin pin-pos-8"><div class="pin-bubble pin-grey">€890 · 42%</div></div>
-
-        <!-- Selected popup -->
-        <div class="map-popup">
-          <div class="popup-img">🏠</div>
-          <div>
-            <div class="popup-price">€875<span>/mo</span></div>
-            <div class="popup-title">Modern studio with balcony — De Pijp</div>
-            <div class="popup-tags">
-              <span class="badge-sm hi">94%</span>
-              <span class="tag">🚲 14min</span>
-              <span class="tag">🛋️ Furn.</span>
-              <span class="tag">🐾 Pets</span>
-            </div>
-          </div>
-          <a href="../detail/detail.html" class="popup-view">View</a>
-        </div>
-
-        <!-- Legend -->
-        <div class="map-legend">
-          <div class="legend-title">Match score</div>
-          <div class="legend-row"><div class="legend-dot dot-green"></div> 80-100% — great</div>
-          <div class="legend-row"><div class="legend-dot dot-amber"></div> 60-79% — ok</div>
-          <div class="legend-row"><div class="legend-dot dot-grey"></div> &lt;60% — low</div>
-          <div class="legend-row"><div class="legend-dot dot-dark dot-round"></div> Selected</div>
-          <div class="legend-row"><div class="legend-ring-dot"></div> 5/8 km rings</div>
-        </div>
+      <?php } ?>
+      <div id="map-load-error" class="map-load-error" hidden>
+        Google Maps rejected the API key. Check that billing is enabled, the Maps JavaScript API is enabled, and your key allows this website URL.
       </div>
     </div>
   </div>
+
+  <script>
+    // PHP sends the marker data to JavaScript here.
+    // map.js uses this data to place pins on Google Maps.
+    window.letMeRentMapConfig = {
+      centerQuery: <?php echo json_encode($mapCenterQuery . ', Netherlands'); ?>,
+      markers: <?php echo json_encode($mapMarkers); ?>
+    };
+  </script>
+  <script src="../components/map.js"></script>
+
+  <?php if ($googleMapsApiKey !== '') { ?>
+    <script src="https://maps.googleapis.com/maps/api/js?key=<?php echo htmlspecialchars(rawurlencode($googleMapsApiKey)); ?>&callback=initLetMeRentMap" async defer onerror="showMapLoadError()"></script>
+  <?php } ?>
 </body>
 </html>
-
