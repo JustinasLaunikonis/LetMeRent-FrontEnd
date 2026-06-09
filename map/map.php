@@ -1,9 +1,9 @@
 <?php
 // Load all listings needed for the map page.
-require '../components/mapListings.php';
+require '../components/map/mapListings.php';
 
 // Load the function that renders one listing in the map sidebar.
-require '../components/renderMapListItem.php';
+require '../components/map/renderMapListItem.php';
 ?>
 <!DOCTYPE html>
 <html lang="en" class="map-page">
