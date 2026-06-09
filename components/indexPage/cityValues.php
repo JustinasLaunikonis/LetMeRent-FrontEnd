@@ -1,6 +1,6 @@
 <?php
 // Shared city values used by the search bar and results summary.
-$selectedCity = 'Emmen';
+$selectedCity = '';
 
 if (isset($_GET['city'])) {
     $selectedCity = $city;
