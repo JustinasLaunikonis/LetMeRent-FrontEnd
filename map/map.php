@@ -1,11 +1,6 @@
 <?php
-// Load all listings needed for the map page.
-require '../components/map/mapListings.php';
 // This file prepares the listings, markers, API key, and other map variables.
 require '../components/mapPageData.php';
-
-// Load the function that renders one listing in the map sidebar.
-require '../components/map/renderMapListItem.php';
 // These defaults prevent warnings if something goes wrong while loading the data file.
 if (!isset($mapCenterQuery)) {
   $mapCenterQuery = 'Amsterdam';
@@ -73,10 +68,10 @@ if (!isset($googleMapsApiKey)) {
         <div class="map-count"><?php echo htmlspecialchars($totalListings); ?> listings <span>- profile applied</span></div>
         <div class="map-filter-pills">
           <div class="map-pill active">All</div>
-          <div class="map-pill">80%+ match</div>
+          <div class="map-pill">≥80% match</div>
           <div class="map-pill">&lt;5 km</div>
-          <div class="map-pill">Furnished</div>
-          <div class="map-pill">Pets ok</div>
+          <div class="map-pill">🛋️ Furnished</div>
+          <div class="map-pill">🐾 Pets ok</div>
         </div>
       </div>
       <div class="map-list">

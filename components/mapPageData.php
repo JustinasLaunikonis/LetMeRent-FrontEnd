@@ -2,10 +2,10 @@
 
 // This file prepares everything map/map.php needs before the HTML starts.
 
-require __DIR__ . '/mapListings.php';
-require __DIR__ . '/renderMapListItem.php';
-require __DIR__ . '/renderMapSidebar.php';
-require __DIR__ . '/mapMarkers.php';
+require_once __DIR__ . '/map/mapListings.php';
+require_once __DIR__ . '/map/renderMapListItem.php';
+require_once __DIR__ . '/renderMapSidebar.php';
+require_once __DIR__ . '/mapMarkers.php';
 
 function readEnvValue(string $key): string {
     $envPath = __DIR__ . '/../.env';
