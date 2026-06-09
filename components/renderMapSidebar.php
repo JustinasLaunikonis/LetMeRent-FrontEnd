@@ -1,5 +1,6 @@
 <?php
 
+// ?string means $apiError can be a string message or null when there is no error.
 function renderMapSidebarList(?string $apiError, array $listings, array $listingMapIndexes): void {
     // Stop early if the API failed.
     if ($apiError) {
