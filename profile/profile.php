@@ -150,6 +150,43 @@ function nullableStringFromPost(string $key): ?string
     return $value === '' ? null : $value;
 }
 
+function spiderLabels(): array
+{
+    return [
+        'kamernet' => 'Kamernet',
+        'funda' => 'Funda',
+        'housinganywhere' => 'HousingAnywhere',
+        'huurwoningen' => 'Huurwoningen',
+        'irentalize' => 'iRentalize',
+    ];
+}
+
+function nullableStringListFromPost(string $key, array $defaultValues = []): ?string
+{
+    $rawValue = $_POST[$key] ?? null;
+
+    if ($rawValue === null) {
+        return $defaultValues === [] ? null : implode(',', $defaultValues);
+    }
+
+    $values = is_array($rawValue) ? $rawValue : explode(',', (string) $rawValue);
+    $normalizedValues = [];
+
+    foreach ($values as $value) {
+        $value = trim((string) $value);
+
+        if ($value !== '' && !in_array($value, $normalizedValues, true)) {
+            $normalizedValues[] = $value;
+        }
+    }
+
+    if ($normalizedValues === []) {
+        return $defaultValues === [] ? null : implode(',', $defaultValues);
+    }
+
+    return implode(',', $normalizedValues);
+}
+
 function nullableBoolFromPost(string $key): ?bool
 {
     $value = nullableStringFromPost($key);
@@ -166,44 +203,112 @@ function preferenceValue(array $preferences, string $key, mixed $fallback): mixe
     return array_key_exists($key, $preferences) && $preferences[$key] !== null ? $preferences[$key] : $fallback;
 }
 
-function extractPreferences(array $taskData): array
+function normalizePreferences(array $data): array
 {
-    foreach (['data', 'task', 'preferences'] as $key) {
-        if (isset($taskData[$key]) && is_array($taskData[$key])) {
-            $taskData = $taskData[$key];
-            break;
+    $keyMap = [
+        'spider' => 'spider',
+        'city' => 'city',
+        'time_between_scrap' => 'time_between_scrap',
+        'timeBetweenScrap' => 'time_between_scrap',
+        'scrape_interval' => 'time_between_scrap',
+        'scrapeInterval' => 'time_between_scrap',
+        'university_campus' => 'university_campus',
+        'universityCampus' => 'university_campus',
+        'campus' => 'university_campus',
+        'min_budget' => 'min_budget',
+        'minBudget' => 'min_budget',
+        'max_budget' => 'max_budget',
+        'maxBudget' => 'max_budget',
+        'move_in_date' => 'move_in_date',
+        'moveInDate' => 'move_in_date',
+        'min_lease_length' => 'min_lease_length',
+        'minLeaseLength' => 'min_lease_length',
+        'max_distance_from_campus' => 'max_distance_from_campus',
+        'maxDistanceFromCampus' => 'max_distance_from_campus',
+        'room_type' => 'room_type',
+        'roomType' => 'room_type',
+        'furnishing' => 'furnishing',
+        'pet_friendly' => 'pet_friendly',
+        'petFriendly' => 'pet_friendly',
+    ];
+
+    $preferences = [];
+
+    foreach ($keyMap as $sourceKey => $targetKey) {
+        if (array_key_exists($sourceKey, $data)) {
+            $preferences[$targetKey] = $data[$sourceKey];
         }
     }
 
-    if (isset($taskData['tasks']) && is_array($taskData['tasks'])) {
-        $taskData = $taskData['tasks'];
+    return $preferences;
+}
+
+function extractComparableTime(array $data): int
+{
+    foreach (['updated_at', 'updatedAt', 'created_at', 'createdAt', 'created', 'date'] as $key) {
+        if (!empty($data[$key])) {
+            $timestamp = strtotime((string) $data[$key]);
+
+            if ($timestamp !== false) {
+                return $timestamp;
+            }
+        }
     }
 
-    if (isset($taskData[0]) && is_array($taskData[0])) {
-        $taskData = $taskData[0];
+    foreach (['id', '_id'] as $key) {
+        if (isset($data[$key]) && is_numeric($data[$key])) {
+            return (int) $data[$key];
+        }
     }
 
-    $preferenceKeys = [
-        'spider',
-        'city',
-        'time_between_scrap',
-        'university_campus',
-        'min_budget',
-        'max_budget',
-        'move_in_date',
-        'min_lease_length',
-        'max_distance_from_campus',
-        'room_type',
-        'furnishing',
-        'pet_friendly',
-        'minimum_match_score',
-    ];
+    return 0;
+}
 
-    return array_filter(
-        $taskData,
-        static fn ($key): bool => in_array((string) $key, $preferenceKeys, true),
-        ARRAY_FILTER_USE_KEY
+function collectPreferenceCandidates(array $data, array &$candidates): void
+{
+    if (array_is_list($data)) {
+        foreach ($data as $item) {
+            if (is_array($item)) {
+                collectPreferenceCandidates($item, $candidates);
+            }
+        }
+
+        return;
+    }
+
+    $preferences = normalizePreferences($data);
+
+    if ($preferences !== []) {
+        $candidates[] = [
+            'preferences' => $preferences,
+            'time' => extractComparableTime($data),
+            'index' => count($candidates),
+        ];
+    }
+
+    foreach ($data as $value) {
+        if (is_array($value)) {
+            collectPreferenceCandidates($value, $candidates);
+        }
+    }
+}
+
+function extractPreferences(array $taskData): array
+{
+    $candidates = [];
+
+    collectPreferenceCandidates($taskData, $candidates);
+
+    if ($candidates === []) {
+        return [];
+    }
+
+    usort(
+        $candidates,
+        static fn (array $a, array $b): int => ($a['time'] <=> $b['time']) ?: ($a['index'] <=> $b['index'])
     );
+
+    return $candidates[count($candidates) - 1]['preferences'];
 }
 
 function boolPreferenceValue(mixed $value): bool
@@ -222,6 +327,28 @@ function selectedAttr(mixed $actual, mixed $expected): string
     return (string) $actual === (string) $expected ? ' selected' : '';
 }
 
+function preferenceListValue(array $preferences, string $key): array
+{
+    $value = preferenceValue($preferences, $key, []);
+    $values = is_array($value) ? $value : explode(',', (string) $value);
+    $normalizedValues = [];
+
+    foreach ($values as $item) {
+        $item = trim((string) $item);
+
+        if ($item !== '' && !in_array($item, $normalizedValues, true)) {
+            $normalizedValues[] = $item;
+        }
+    }
+
+    return $normalizedValues;
+}
+
+function checkedAttr(array $actual, string $expected): string
+{
+    return in_array($expected, $actual, true) ? ' checked' : '';
+}
+
 $preferenceNotice = null;
 $preferenceError = null;
 $preferences = [];
@@ -232,9 +359,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['form'] ?? '') === 'prefere
     } else {
         $preferencesPayload = [
             'user' => $email,
-            'spider' => nullableStringFromPost('spider'),
+            'spider' => nullableStringListFromPost('spider', array_keys(spiderLabels())),
             'city' => nullableStringFromPost('city'),
-            'time_between_scrap' => nullableIntFromPost('time_between_scrap'),
             'university_campus' => nullableStringFromPost('university_campus'),
             'min_budget' => nullableIntFromPost('min_budget'),
             'max_budget' => nullableIntFromPost('max_budget'),
@@ -244,13 +370,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['form'] ?? '') === 'prefere
             'room_type' => nullableStringFromPost('room_type'),
             'furnishing' => nullableStringFromPost('furnishing'),
             'pet_friendly' => nullableBoolFromPost('pet_friendly'),
-            'minimum_match_score' => nullableIntFromPost('minimum_match_score'),
         ];
 
         $saveResult = callChronoApi('POST', '/chrono/tasks', $preferencesPayload);
 
         if ($saveResult['ok']) {
             $preferences = $preferencesPayload;
+            $_SESSION['preferences'] = $preferencesPayload;
             $preferenceNotice = 'Preferences saved.';
         } else {
             $preferences = $preferencesPayload;
@@ -266,6 +392,9 @@ if ($preferences === [] && $email !== '') {
         $taskData = $taskResult['data'];
 
         $preferences = extractPreferences($taskData);
+        if ($preferences !== []) {
+            $_SESSION['preferences'] = $preferences;
+        }
     } elseif ($taskResult['status'] !== 404) {
         $preferenceError = $taskResult['error'] ?? 'Could not load preferences.';
     }
@@ -273,8 +402,28 @@ if ($preferences === [] && $email !== '') {
     $preferenceError = 'Could not load preferences because /me did not return an email.';
 }
 
+if ($preferences === [] && is_array($_SESSION['preferences'] ?? null)) {
+    $preferences = $_SESSION['preferences'];
+}
+
 $hasPreferences = $preferences !== [];
-$selectedSpider = preferenceValue($preferences, 'spider', '');
+$selectedSpiders = preferenceListValue($preferences, 'spider');
+$spiderLabels = spiderLabels();
+$selectedSpiderLabel = 'Any source';
+
+if ($selectedSpiders !== []) {
+    $selectedSpiderLabels = [];
+
+    foreach ($selectedSpiders as $spider) {
+        if (isset($spiderLabels[$spider])) {
+            $selectedSpiderLabels[] = $spiderLabels[$spider];
+        }
+    }
+
+    if ($selectedSpiderLabels !== []) {
+        $selectedSpiderLabel = implode(', ', $selectedSpiderLabels);
+    }
+}
 $selectedCity = preferenceValue($preferences, 'city', '');
 $selectedCampus = preferenceValue($preferences, 'university_campus', '');
 $selectedMinBudget = preferenceValue($preferences, 'min_budget', '');
@@ -286,8 +435,6 @@ $selectedRoomType = preferenceValue($preferences, 'room_type', '');
 $selectedFurnishing = preferenceValue($preferences, 'furnishing', '');
 $selectedPetFriendlyRaw = preferenceValue($preferences, 'pet_friendly', '');
 $selectedPetFriendly = $selectedPetFriendlyRaw === '' ? '' : (boolPreferenceValue($selectedPetFriendlyRaw) ? 'true' : 'false');
-$selectedMatchScore = preferenceValue($preferences, 'minimum_match_score', '');
-$selectedScrapInterval = preferenceValue($preferences, 'time_between_scrap', '');
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -427,25 +574,41 @@ $selectedScrapInterval = preferenceValue($preferences, 'time_between_scrap', '')
           <div class="form-row">
             <div class="form-group">
               <label class="form-label">City</label>
-              <select class="form-input form-select" name="city">
-                <option value=""<?php echo selectedAttr($selectedCity, ''); ?>></option>
-                <option value="Amsterdam"<?php echo selectedAttr($selectedCity, 'Amsterdam'); ?>>Amsterdam</option>
-                <option value="Utrecht"<?php echo selectedAttr($selectedCity, 'Utrecht'); ?>>Utrecht</option>
-                <option value="Emmen"<?php echo selectedAttr($selectedCity, 'Emmen'); ?>>Emmen</option>
-                <option value="Rotterdam"<?php echo selectedAttr($selectedCity, 'Rotterdam'); ?>>Rotterdam</option>
-                <option value="Groningen"<?php echo selectedAttr($selectedCity, 'Groningen'); ?>>Groningen</option>
-              </select>
+              <div class="city-combobox">
+                <input
+                  class="form-input"
+                  type="text"
+                  id="city-search"
+                  value="<?php echo htmlspecialchars((string) $selectedCity); ?>"
+                  autocomplete="off"
+                  placeholder="Type a city"
+                  role="combobox"
+                  aria-autocomplete="list"
+                  aria-expanded="false"
+                  aria-controls="city-options"
+                  aria-busy="true"
+                >
+                <input type="hidden" name="city" id="city-select" value="<?php echo htmlspecialchars((string) $selectedCity); ?>">
+                <div class="city-options" id="city-options" role="listbox"></div>
+              </div>
             </div>
 
             <!-- Uni Selection -->
             <div class="form-group">
               <label class="form-label">University / Campus</label>
-              <select class="form-input form-select" name="university_campus">
+              <select
+                class="form-input form-select"
+                name="university_campus"
+                id="campus-select"
+                data-selected-campus="<?php echo htmlspecialchars((string) $selectedCampus); ?>"
+                aria-busy="true"
+              >
                 <option value=""<?php echo selectedAttr($selectedCampus, ''); ?>></option>
-                <option value="University of Amsterdam"<?php echo selectedAttr($selectedCampus, 'University of Amsterdam'); ?>>University of Amsterdam</option>
-                <option value="NHL Stenden"<?php echo selectedAttr($selectedCampus, 'NHL Stenden'); ?>>NHL Stenden</option>
-                <option value="VU Amsterdam"<?php echo selectedAttr($selectedCampus, 'VU Amsterdam'); ?>>VU Amsterdam</option>
-                <option value="TU Delft"<?php echo selectedAttr($selectedCampus, 'TU Delft'); ?>>TU Delft</option>
+                <?php if ($selectedCampus !== ''): ?>
+                  <option value="<?php echo htmlspecialchars((string) $selectedCampus); ?>" selected>
+                    <?php echo htmlspecialchars((string) $selectedCampus); ?>
+                  </option>
+                <?php endif; ?>
               </select>
             </div>
           </div>
@@ -453,18 +616,30 @@ $selectedScrapInterval = preferenceValue($preferences, 'time_between_scrap', '')
           <div class="form-row">
             <div class="form-group">
               <label class="form-label">Source</label>
-              <select class="form-input form-select" name="spider">
-                <option value=""<?php echo selectedAttr($selectedSpider, ''); ?>></option>
-                <option value="kamernet"<?php echo selectedAttr($selectedSpider, 'kamernet'); ?>>Kamernet</option>
-                <option value="funda"<?php echo selectedAttr($selectedSpider, 'funda'); ?>>Funda</option>
-                <option value="housinganywhere"<?php echo selectedAttr($selectedSpider, 'housinganywhere'); ?>>HousingAnywhere</option>
-                <option value="huurwoningen"<?php echo selectedAttr($selectedSpider, 'huurwoningen'); ?>>Huurwoningen</option>
-              </select>
+              <details class="source-dropdown">
+                <summary>
+                  <span class="source-dropdown-label" data-empty-label="Any source">
+                    <?php echo htmlspecialchars($selectedSpiderLabel); ?>
+                  </span>
+                </summary>
+                <div class="source-options" role="group" aria-label="Source">
+                  <?php foreach ($spiderLabels as $spiderValue => $spiderLabel): ?>
+                    <label class="source-option">
+                      <input type="checkbox" name="spider[]" value="<?php echo htmlspecialchars($spiderValue); ?>"<?php echo checkedAttr($selectedSpiders, $spiderValue); ?>>
+                      <span><?php echo htmlspecialchars($spiderLabel); ?></span>
+                    </label>
+                  <?php endforeach; ?>
+                </div>
+              </details>
             </div>
 
             <div class="form-group">
-              <label class="form-label">Scrape interval (seconds)</label>
-              <input class="form-input" type="number" name="time_between_scrap" min="10" step="1" value="<?php echo htmlspecialchars((string) $selectedScrapInterval); ?>">
+              <label class="form-label">Pet-friendly</label>
+              <select class="form-input form-select" name="pet_friendly">
+                <option value=""<?php echo selectedAttr($selectedPetFriendly, ''); ?>></option>
+                <option value="true"<?php echo selectedAttr($selectedPetFriendly, 'true'); ?>>Required</option>
+                <option value="false"<?php echo selectedAttr($selectedPetFriendly, 'false'); ?>>Not needed</option>
+              </select>
             </div>
           </div>
 
@@ -634,30 +809,6 @@ $selectedScrapInterval = preferenceValue($preferences, 'time_between_scrap', '')
             </div>
           </div>
 
-          <!-- Pet-Friendlyness Selection -->
-          <div class="form-row">
-            <div class="form-group">
-              <label class="form-label">Pet-friendly</label>
-              <select class="form-input form-select" name="pet_friendly">
-                <option value=""<?php echo selectedAttr($selectedPetFriendly, ''); ?>></option>
-                <option value="true"<?php echo selectedAttr($selectedPetFriendly, 'true'); ?>>Required</option>
-                <option value="false"<?php echo selectedAttr($selectedPetFriendly, 'false'); ?>>Not needed</option>
-              </select>
-            </div>
-
-            <!-- Minimum Match Score Selection -->
-            <div class="form-group">
-              <label class="form-label">Minimum match score</label>
-              <select class="form-input form-select" name="minimum_match_score">
-                <option value=""<?php echo selectedAttr($selectedMatchScore, ''); ?>></option>
-                <option value="60"<?php echo selectedAttr($selectedMatchScore, 60); ?>>60% and above</option>
-                <option value="70"<?php echo selectedAttr($selectedMatchScore, 70); ?>>70% and above</option>
-                <option value="75"<?php echo selectedAttr($selectedMatchScore, 75); ?>>75% and above</option>
-                <option value="80"<?php echo selectedAttr($selectedMatchScore, 80); ?>>80% and above</option>
-                <option value="0"<?php echo selectedAttr($selectedMatchScore, 0); ?>>Show all</option>
-              </select>
-            </div>
-          </div>
         </div>
 
         <div class="form-footer">
@@ -756,5 +907,374 @@ $selectedScrapInterval = preferenceValue($preferences, 'time_between_scrap', '')
       </div>
     </div>
   </div>
+  <script>
+    (() => {
+      const dropdown = document.querySelector('.source-dropdown');
+
+      if (!dropdown) {
+        return;
+      }
+
+      const label = dropdown.querySelector('.source-dropdown-label');
+      const inputs = [...dropdown.querySelectorAll('input[type="checkbox"]')];
+      const emptyLabel = label?.dataset.emptyLabel || 'Any source';
+
+      const updateLabel = () => {
+        const selectedLabels = inputs
+          .filter((input) => input.checked)
+          .map((input) => input.closest('label')?.textContent.trim())
+          .filter(Boolean);
+
+        label.textContent = selectedLabels.length > 0 ? selectedLabels.join(', ') : emptyLabel;
+      };
+
+      inputs.forEach((input) => {
+        input.addEventListener('change', updateLabel);
+      });
+
+      document.addEventListener('click', (event) => {
+        if (!dropdown.contains(event.target)) {
+          dropdown.open = false;
+        }
+      });
+
+      updateLabel();
+    })();
+
+    (() => {
+      const campusSelect = document.getElementById('campus-select');
+      const citySelect = document.getElementById('city-select');
+      const citySearch = document.getElementById('city-search');
+
+      if (!campusSelect || !citySelect) {
+        return;
+      }
+
+      const selectedCampus = campusSelect.dataset.selectedCampus || '';
+      const fallbackCampuses = [
+        { name: 'Amsterdam University of Applied Sciences', city: 'Amsterdam' },
+        { name: 'ArtEZ University of the Arts', city: 'Arnhem' },
+        { name: 'Avans University of Applied Sciences', city: 'Breda' },
+        { name: 'Breda University of Applied Sciences', city: 'Breda' },
+        { name: 'Codarts Rotterdam', city: 'Rotterdam' },
+        { name: 'Delft University of Technology', city: 'Delft' },
+        { name: 'Design Academy Eindhoven', city: 'Eindhoven' },
+        { name: 'Eindhoven University of Technology', city: 'Eindhoven' },
+        { name: 'Erasmus University Rotterdam', city: 'Rotterdam' },
+        { name: 'Fontys University of Applied Sciences', city: 'Eindhoven' },
+        { name: 'Gerrit Rietveld Academie', city: 'Amsterdam' },
+        { name: 'Hanze University of Applied Sciences', city: 'Groningen' },
+        { name: 'Hotelschool The Hague', city: 'Den Haag' },
+        { name: 'Inholland University of Applied Sciences', city: 'Amsterdam' },
+        { name: 'Leiden University', city: 'Leiden' },
+        { name: 'Maastricht University', city: 'Maastricht' },
+        { name: 'NHL Stenden University of Applied Sciences - Emmen', city: 'Emmen' },
+        { name: 'NHL Stenden University of Applied Sciences', city: 'Leeuwarden' },
+        { name: 'Radboud University', city: 'Nijmegen' },
+        { name: 'Rotterdam University of Applied Sciences', city: 'Rotterdam' },
+        { name: 'Saxion University of Applied Sciences', city: 'Enschede' },
+        { name: 'The Hague University of Applied Sciences', city: 'Den Haag' },
+        { name: 'Tilburg University', city: 'Tilburg' },
+        { name: 'University of Amsterdam', city: 'Amsterdam' },
+        { name: 'University of Groningen', city: 'Groningen' },
+        { name: 'University of Twente', city: 'Enschede' },
+        { name: 'Utrecht University', city: 'Utrecht' },
+        { name: 'Vrije Universiteit Amsterdam', city: 'Amsterdam' },
+        { name: 'Wageningen University & Research', city: 'Wageningen' },
+        { name: 'Windesheim University of Applied Sciences', city: 'Zwolle' },
+        { name: 'Zuyd University of Applied Sciences', city: 'Maastricht' }
+      ];
+      const cityAliases = new Map([
+        ['the hague', 'den haag'],
+        ['den haag', 'den haag'],
+        ["'s-gravenhage", 'den haag'],
+        ['s-gravenhage', 'den haag'],
+        ['s gravenhage', 'den haag']
+      ]);
+      const campusEndpoint = 'https://api.openalex.org/institutions?filter=country_code:NL,type:education&per-page=200&select=display_name,geo';
+
+      let campuses = fallbackCampuses;
+
+      const normalizeCity = (city) => {
+        const normalized = city
+          .toLowerCase()
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '')
+          .replace(/\s+/g, ' ')
+          .trim();
+
+        return cityAliases.get(normalized) || normalized;
+      };
+
+      const selectedCityValue = () => citySelect.value || '';
+
+      const uniqueCampuses = (items) => {
+        const campusMap = new Map();
+
+        items.forEach((item) => {
+          const name = (item.name || '').trim();
+          const city = (item.city || '').trim();
+
+          if (name === '') {
+            return;
+          }
+
+          campusMap.set(`${name.toLowerCase()}|${city.toLowerCase()}`, { name, city });
+        });
+
+        return [...campusMap.values()].sort((left, right) => {
+          const citySort = left.city.localeCompare(right.city, 'nl', { sensitivity: 'base' });
+
+          return citySort !== 0 ? citySort : left.name.localeCompare(right.name, 'nl', { sensitivity: 'base' });
+        });
+      };
+
+      const setCampusOptions = () => {
+        const selectedCity = selectedCityValue();
+        const selectedCityKey = normalizeCity(selectedCity);
+        const filteredCampuses = uniqueCampuses(campuses).filter((campus) => {
+          return selectedCity === '' || normalizeCity(campus.city) === selectedCityKey;
+        });
+        let activeCampus = campusSelect.value || selectedCampus;
+        const hasActiveCampus = filteredCampuses.some((campus) => campus.name === activeCampus);
+
+        if (activeCampus !== '' && !hasActiveCampus) {
+          if (selectedCity === '') {
+            filteredCampuses.unshift({ name: activeCampus, city: '' });
+          } else {
+            activeCampus = '';
+          }
+        }
+
+        campusSelect.replaceChildren(new Option('', '', activeCampus === '', activeCampus === ''));
+
+        filteredCampuses.forEach((campus) => {
+          const label = selectedCity === '' && campus.city !== '' ? `${campus.name} - ${campus.city}` : campus.name;
+
+          campusSelect.add(new Option(label, campus.name, false, campus.name === activeCampus));
+        });
+
+        campusSelect.setAttribute('aria-busy', 'false');
+      };
+
+      const loadCampuses = async () => {
+        const response = await fetch(campusEndpoint);
+
+        if (!response.ok) {
+          throw new Error(`OpenAlex campus request failed with ${response.status}`);
+        }
+
+        const data = await response.json();
+        const apiCampuses = (data.results || []).map((institution) => ({
+          name: institution.display_name || '',
+          city: institution.geo?.city || ''
+        }));
+
+        campuses = uniqueCampuses([...fallbackCampuses, ...apiCampuses]);
+        setCampusOptions();
+      };
+
+      citySelect.addEventListener('change', setCampusOptions);
+      setCampusOptions();
+      loadCampuses().catch(setCampusOptions);
+    })();
+
+    (() => {
+      const citySelect = document.getElementById('city-select');
+      const citySearch = document.getElementById('city-search');
+      const cityOptions = document.getElementById('city-options');
+
+      if (!citySelect || !citySearch || !cityOptions) {
+        return;
+      }
+
+      const selectedCity = citySelect.value || '';
+      const fallbackCities = [
+        'Amsterdam',
+        'Rotterdam',
+        'Den Haag',
+        'Utrecht',
+        'Eindhoven',
+        'Emmen',
+        'Groningen',
+        'Tilburg',
+        'Almere',
+        'Breda',
+        'Nijmegen',
+        'Enschede',
+        'Haarlem',
+        'Arnhem',
+        'Amersfoort',
+        'Apeldoorn',
+        'Leiden',
+        'Dordrecht',
+        'Zoetermeer',
+        'Zwolle',
+        'Maastricht'
+      ];
+
+      const endpoint = 'https://api.pdok.nl/bzk/locatieserver/search/v3_1/free';
+      const maxVisibleOptions = 12;
+
+      const naturalSort = (left, right) => left.localeCompare(right, 'nl', { sensitivity: 'base' });
+      let cities = fallbackCities;
+      let activeOptionIndex = -1;
+
+      const closeOptions = () => {
+        cityOptions.classList.remove('show');
+        citySearch.setAttribute('aria-expanded', 'false');
+        activeOptionIndex = -1;
+      };
+
+      const selectCity = (city) => {
+        citySearch.value = city;
+        citySelect.value = city;
+        closeOptions();
+        citySelect.dispatchEvent(new Event('change'));
+      };
+
+      const renderCityOptions = () => {
+        const query = citySearch.value.trim().toLowerCase();
+        const selectedValue = citySelect.value;
+        const matchingCities = cities
+          .filter((city) => query === '' || city.toLowerCase().includes(query))
+          .slice(0, maxVisibleOptions);
+
+        cityOptions.replaceChildren();
+
+        if (matchingCities.length === 0) {
+          closeOptions();
+          return;
+        }
+
+        matchingCities.forEach((city, index) => {
+          const option = document.createElement('button');
+          option.type = 'button';
+          option.className = `city-option${city === selectedValue ? ' active' : ''}`;
+          option.id = `city-option-${index}`;
+          option.setAttribute('role', 'option');
+          option.setAttribute('aria-selected', city === selectedValue ? 'true' : 'false');
+          option.textContent = city;
+          option.addEventListener('mousedown', (event) => {
+            event.preventDefault();
+            selectCity(city);
+          });
+
+          cityOptions.append(option);
+        });
+
+        cityOptions.classList.add('show');
+        citySearch.setAttribute('aria-expanded', 'true');
+      };
+
+      const clearCityIfNotExactMatch = () => {
+        const typedCity = citySearch.value.trim();
+        const exactCity = cities.find((city) => city.toLowerCase() === typedCity.toLowerCase());
+
+        citySelect.value = exactCity || '';
+
+        if (exactCity !== undefined && citySearch.value !== exactCity) {
+          citySearch.value = exactCity;
+        }
+
+        citySelect.dispatchEvent(new Event('change'));
+      };
+
+      const setCityOptions = (loadedCities) => {
+        const uniqueCities = [...new Set(loadedCities.filter(Boolean))].sort(naturalSort);
+
+        if (selectedCity !== '' && !uniqueCities.includes(selectedCity)) {
+          uniqueCities.unshift(selectedCity);
+        }
+
+        cities = uniqueCities;
+        citySearch.setAttribute('aria-busy', 'false');
+        clearCityIfNotExactMatch();
+        citySelect.dispatchEvent(new Event('change'));
+      };
+
+      const fetchCityPage = async (start) => {
+        const params = new URLSearchParams({
+          q: '*',
+          fq: 'type:woonplaats',
+          rows: '100',
+          start: String(start),
+          fl: 'woonplaatsnaam'
+        });
+        const response = await fetch(`${endpoint}?${params.toString()}`);
+
+        if (!response.ok) {
+          throw new Error(`PDOK city request failed with ${response.status}`);
+        }
+
+        return response.json();
+      };
+
+      const loadCities = async () => {
+        const firstPage = await fetchCityPage(0);
+        const total = Number(firstPage?.response?.numFound || 0);
+        const starts = [];
+
+        for (let start = 100; start < total; start += 100) {
+          starts.push(start);
+        }
+
+        const pages = await Promise.all(starts.map(fetchCityPage));
+        const docs = [firstPage, ...pages].flatMap((page) => page?.response?.docs || []);
+
+        setCityOptions(docs.map((doc) => doc.woonplaatsnaam));
+      };
+
+      loadCities().catch(() => {
+        setCityOptions(fallbackCities);
+      });
+
+      citySearch.addEventListener('input', () => {
+        citySelect.value = '';
+        citySelect.dispatchEvent(new Event('change'));
+        renderCityOptions();
+      });
+
+      citySearch.addEventListener('focus', renderCityOptions);
+
+      citySearch.addEventListener('blur', () => {
+        clearCityIfNotExactMatch();
+        window.setTimeout(closeOptions, 120);
+      });
+
+      citySearch.addEventListener('keydown', (event) => {
+        if (event.key === 'ArrowDown') {
+          event.preventDefault();
+          renderCityOptions();
+          const options = [...cityOptions.querySelectorAll('.city-option')];
+          activeOptionIndex = Math.min(activeOptionIndex + 1, options.length - 1);
+          options.forEach((option, index) => {
+            option.classList.toggle('active', index === activeOptionIndex);
+          });
+        } else if (event.key === 'ArrowUp') {
+          event.preventDefault();
+          const options = [...cityOptions.querySelectorAll('.city-option')];
+          activeOptionIndex = Math.max(activeOptionIndex - 1, 0);
+          options.forEach((option, index) => {
+            option.classList.toggle('active', index === activeOptionIndex);
+          });
+        } else if (event.key === 'Enter') {
+          const options = [...cityOptions.querySelectorAll('.city-option')];
+
+          if (activeOptionIndex >= 0 && options[activeOptionIndex]) {
+            event.preventDefault();
+            selectCity(options[activeOptionIndex].textContent);
+          }
+
+          return;
+        } else if (event.key === 'Escape') {
+          closeOptions();
+          return;
+        } else {
+          return;
+        }
+      });
+    })();
+  </script>
 </body>
 </html>
