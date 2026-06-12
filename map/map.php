@@ -90,6 +90,16 @@ if (!isset($googleMapsApiKey)) {
       <div id="map-load-error" class="map-load-error" hidden>
         Google Maps rejected the API key. Check that billing is enabled, the Maps JavaScript API is enabled, and your key allows this website URL.
       </div>
+      <div id="map-listing-bar" class="map-popup" hidden aria-live="polite">
+        <div id="map-listing-image" class="popup-img"></div>
+        <div class="popup-body">
+          <div id="map-listing-price" class="popup-price"></div>
+          <div id="map-listing-title" class="popup-title"></div>
+          <div id="map-listing-tags" class="popup-tags"></div>
+        </div>
+        <a id="map-listing-link" class="popup-view" href="../detail/detail.html" target="_blank" rel="noopener">View listing</a>
+        <button id="map-listing-close" class="popup-close" type="button" aria-label="Close listing details">&times;</button>
+      </div>
     </div>
   </div>
 
