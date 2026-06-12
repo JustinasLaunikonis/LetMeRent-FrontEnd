@@ -10,6 +10,77 @@ $listingNeighbourhood = firstString($listing, ['neighbourhood'], '');
 $listingAvailability = firstString($listing, ['availability'], '');
 $listingScrapedAt = formatDateValue(listingValue($listing, ['scraped_at'], ''));
 $listingDescription = buildDescription($listing);
+$locationParts = [];
+if ($listingNeighbourhood !== '') {
+    $locationParts[] = $listingNeighbourhood;
+}
+if ($listingCity !== '') {
+    $locationParts[] = $listingCity;
+}
+if ($listingAddress !== '') {
+    $locationParts[] = $listingAddress;
+}
+$listingLocationLine = trim(implode(' - ', $locationParts));
+
+$listingLatitudeValue = listingValue($listing, ['lat', 'latitude'], '');
+$listingLongitudeValue = listingValue($listing, ['lng', 'longitude'], '');
+
+if (is_numeric($listingLatitudeValue) && is_numeric($listingLongitudeValue)) {
+    $detailMapHasCoordinates = true;
+    $detailMapLatitude = (float) $listingLatitudeValue;
+    $detailMapLongitude = (float) $listingLongitudeValue;
+} else {
+    $detailMapHasCoordinates = false;
+    $detailMapLatitude = 52.3676;
+    $detailMapLongitude = 4.9041;
+}
+
+if ($detailMapLatitude < 50.5) {
+    $detailMapLatitude = 50.5;
+}
+if ($detailMapLatitude > 53.7) {
+    $detailMapLatitude = 53.7;
+}
+if ($detailMapLongitude < 3.3) {
+    $detailMapLongitude = 3.3;
+}
+if ($detailMapLongitude > 7.3) {
+    $detailMapLongitude = 7.3;
+}
+
+$detailMapLeft = (($detailMapLongitude - 3.3) / (7.3 - 3.3)) * 100;
+$detailMapTop = (1 - (($detailMapLatitude - 50.5) / (53.7 - 50.5))) * 100;
+
+if ($detailMapLeft < 8) {
+    $detailMapLeft = 8;
+}
+if ($detailMapLeft > 92) {
+    $detailMapLeft = 92;
+}
+if ($detailMapTop < 10) {
+    $detailMapTop = 10;
+}
+if ($detailMapTop > 90) {
+    $detailMapTop = 90;
+}
+
+$detailMapLocationText = $listingLocationLine;
+if ($detailMapLocationText === '') {
+    $detailMapLocationText = $listingCity;
+}
+if ($detailMapLocationText === '') {
+    $detailMapLocationText = 'Listing location';
+}
+
+$detailMapApiKey = readEnvValue('GOOGLE_MAPS_API_KEY');
+if ($detailMapApiKey === '') {
+    $detailMapApiKey = readEnvValue('GOOGLE_MAPS_KEY');
+}
+
+$detailMapZoom = 14;
+if ($detailMapHasCoordinates === false) {
+    $detailMapZoom = 12;
+}
 
 if ($pageError === null) {
     $listingScore = listingScore($listing);
@@ -22,18 +93,6 @@ if ($pageError === null) {
     $listingScoreLabel = 'Unavailable';
     $listingScoreHint = 'No listing data could be loaded';
 }
-
-$locationParts = [];
-if ($listingNeighbourhood !== '') {
-    $locationParts[] = $listingNeighbourhood;
-}
-if ($listingCity !== '') {
-    $locationParts[] = $listingCity;
-}
-if ($listingAddress !== '') {
-    $locationParts[] = $listingAddress;
-}
-$listingLocationLine = trim(implode(' - ', $locationParts));
 
 $listingImages = [];
 if (!empty($listing['images']) && is_array($listing['images'])) {
@@ -64,6 +123,7 @@ if (isset($listingImages[2])) {
 }
 
 $hasSingleGalleryImage = count($listingImages) === 1;
+$galleryHasCarousel = count($listingImages) > 1;
 $chips = buildListingChips($listing);
 
 if ($listingUrl !== '') {
@@ -158,12 +218,6 @@ if ($listingCity !== '') {
     $landlordCityText = $listingCity;
 } else {
     $landlordCityText = 'No city set';
-}
-
-if (count($listingImages) > 3) {
-    $extraPhotoCount = count($listingImages) - 3;
-} else {
-    $extraPhotoCount = 0;
 }
 
 $landlordName = firstString($listing, ['landlord', 'agent', 'contact_name'], $listingSource);
