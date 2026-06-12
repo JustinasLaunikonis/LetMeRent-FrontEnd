@@ -2,6 +2,14 @@
 
 function esc($value)
 {
+    if ($value === null) {
+        return '';
+    }
+
+    if (is_array($value)) {
+        $value = implode(', ', $value);
+    }
+
     return htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
 }
 
