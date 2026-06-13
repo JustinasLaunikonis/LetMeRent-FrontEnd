@@ -74,11 +74,23 @@
         </div>
       </div>
 
-      <div class="search-field">
+      <div class="search-field move-in-search-field" id="move-in-search-field" tabindex="0">
         <span class="search-field-icon">&#128197;</span>
-        <div>
+        <div class="move-in-field-body">
           <p class="search-field-label">Move-in</p>
-          <p class="search-field-val">Sep 1, 2025</p>
+          <p class="search-field-val" id="move-in-display"><?= htmlspecialchars($selectedMoveInText) ?></p>
+
+          <div class="move-in-card" id="move-in-card">
+            <label class="move-in-card-label" for="move-in-input">Move in by</label>
+            <input
+              class="move-in-input"
+              id="move-in-input"
+              type="date"
+              name="available_by"
+              value="<?= htmlspecialchars($selectedMoveIn) ?>"
+            >
+            <button class="move-in-clear" id="move-in-clear" type="button">Any date</button>
+          </div>
         </div>
       </div>
 

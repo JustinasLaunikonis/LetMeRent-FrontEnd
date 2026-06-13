@@ -178,6 +178,85 @@
   color: var(--blue);
 }
 
+.move-in-search-field {
+  position: relative;
+  cursor: pointer;
+}
+
+.move-in-field-body {
+  width: 100%;
+  min-width: 120px;
+}
+
+.move-in-card {
+  position: absolute;
+  top: calc(100% + 10px);
+  left: 10px;
+  width: 240px;
+  padding: 14px;
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-lg);
+  cursor: default;
+  display: none;
+  z-index: 20;
+}
+
+.move-in-card.show {
+  display: block;
+}
+
+.move-in-card-label {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .06em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.move-in-input {
+  width: 100%;
+  padding: 8px 10px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--ink);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  outline: none;
+}
+
+.move-in-input:focus {
+  border-color: var(--blue);
+  background: var(--white);
+}
+
+.move-in-clear {
+  display: block;
+  width: 100%;
+  margin-top: 10px;
+  padding: 7px 8px;
+  background: transparent;
+  border: 0;
+  border-radius: 6px;
+  color: var(--ink-2);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+
+.move-in-clear:hover {
+  background: var(--blue-light);
+  color: var(--blue);
+}
+
 .budget-search-field {
   position: relative;
   flex: 1;
@@ -506,7 +585,7 @@
 
 .listings-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 20px;
   padding: 0 32px 40px;
 }
@@ -574,21 +653,6 @@
 
 .card-source--shifted {
   top: 34px;
-}
-
-.card-save {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  background: white;
-  border-radius: 50%;
-  box-shadow: var(--shadow-sm);
-  font-size: 16px;
 }
 
 .card-badge {

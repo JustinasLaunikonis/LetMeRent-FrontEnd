@@ -28,6 +28,11 @@ if (budgetSearchField && budgetCard && maxBudgetDisplay && maxBudgetInput && max
       cityCard.classList.remove('show');
     }
 
+    var moveInCard = document.getElementById('move-in-card');
+    if (moveInCard) {
+      moveInCard.classList.remove('show');
+    }
+
     budgetCard.classList.add('show');
   }
 

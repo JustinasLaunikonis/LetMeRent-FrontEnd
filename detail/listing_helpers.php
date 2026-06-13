@@ -138,10 +138,16 @@ function buildDescription($listing)
         $detailParts[] = 'floor ' . $floor;
     }
     if ($availability !== '') {
-        if (strtolower($availability) === 'available now') {
+        // formatAvailability() turns any value (clean or raw) into friendly
+        // text: "Available now", "From Aug 1, 2026", or a short phrase.
+        $availabilityText = formatAvailability($availability);
+        if ($availabilityText === 'Available now') {
             $detailParts[] = 'available now';
-        } else {
-            $detailParts[] = 'available ' . $availability;
+        } else if ($availabilityText !== '') {
+            // Lowercase the first letter so it reads inside the sentence, e.g.
+            // "From Aug 1, 2026" -> "available from Aug 1, 2026".
+            $lowerFirst = strtolower(substr($availabilityText, 0, 1)) . substr($availabilityText, 1);
+            $detailParts[] = 'available ' . $lowerFirst;
         }
     }
     if ($detailParts !== []) {
@@ -277,8 +283,9 @@ function buildListingChips($listing)
         $chips[] = '&#9889; ' . esc($energyLabel);
     }
 
-    if ($availability !== '') {
-        $chips[] = '&#128197; ' . esc($availability);
+    $availabilityText = formatAvailability($availability);
+    if ($availabilityText !== '') {
+        $chips[] = '&#128197; ' . esc($availabilityText);
     }
 
     if ($rentalPeriod !== '') {

@@ -12,7 +12,11 @@
       echo "under &euro;" . htmlspecialchars((string) $selectedMaxBudget);
     }
     ?>
-    
+
+    <?php if ($selectedMoveIn !== '') { ?>
+      &middot; move-in by <?= htmlspecialchars($selectedMoveInText) ?>
+    <?php } ?>
+
   </div>
   <div class="results-actions">
     <span class="profile-applied-label">&#9679; Your profile applied</span>
