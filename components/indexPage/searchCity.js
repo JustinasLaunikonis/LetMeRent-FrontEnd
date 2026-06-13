@@ -25,6 +25,11 @@ if (citySearchField && cityCard && cityDisplay && cityInput && cityOptionsBox) {
       budgetCard.classList.remove('show');
     }
 
+    var moveInCard = document.getElementById('move-in-card');
+    if (moveInCard) {
+      moveInCard.classList.remove('show');
+    }
+
     cityCard.classList.add('show');
     loadDutchCities();
   }

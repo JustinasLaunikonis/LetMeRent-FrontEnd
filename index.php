@@ -2,6 +2,7 @@
 include 'components/listings/listings.php';
 include 'components/indexPage/cityValues.php';
 include 'components/indexPage/budgetValues.php';
+include 'components/indexPage/moveInValues.php';
 ?>
 
 <!DOCTYPE html>
@@ -51,5 +52,6 @@ include 'components/indexPage/budgetValues.php';
   <script src="components/filters/filterEnergy.js"></script>
   <script src="components/indexPage/searchCity.js"></script>
   <script src="components/indexPage/searchBudget.js"></script>
+  <script src="components/indexPage/searchMoveIn.js"></script>
 </body>
 </html>

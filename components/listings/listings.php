@@ -52,6 +52,21 @@ if (isset($_GET['energy_label'])) {
     $energy_label = '';
 }
 
+// "Garage / Parking" chip. When switched on (?no_living_area=1) we only show
+// listings that have no living area, which are garages and parking spots.
+if (isset($_GET['no_living_area'])) {
+    $no_living_area = trim($_GET['no_living_area']);
+} else {
+    $no_living_area = '';
+}
+
+// The move-in date the user picked in the search bar (?available_by=2026-09-01).
+if (isset($_GET['available_by'])) {
+    $available_by = trim($_GET['available_by']);
+} else {
+    $available_by = '';
+}
+
 // Read the selected sources from the URL (?source=kamernet,funda)
 // and split them into a list. If nothing is selected, the list stays empty.
 $sources = [];
@@ -65,8 +80,8 @@ if (!empty($_GET['source'])) {
     }
 }
 
-// How many listings to show per page
-$limit = 9;
+// How many listings to show per page (4 columns x 3 rows = 12)
+$limit = 12;
 
 // Which page are we on? Default to page 1.
 if (isset($_GET['page']) && is_numeric($_GET['page']) && (int)$_GET['page'] > 0) {
@@ -139,6 +154,14 @@ if ($has !== '') {
 
 if ($energy_label !== '') {
     $baseParams['energy_label'] = $energy_label;
+}
+
+if ($no_living_area !== '') {
+    $baseParams['no_living_area'] = $no_living_area;
+}
+
+if ($available_by !== '') {
+    $baseParams['available_by'] = $available_by;
 }
 
 if ($sort !== '') {
