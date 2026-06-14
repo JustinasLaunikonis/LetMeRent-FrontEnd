@@ -14,6 +14,19 @@ if (!isset($apiError)) {
 if (!isset($listings) || !is_array($listings)) {
   $listings = array();
 }
+// These control how many listings the sidebar shows per page
+if (!isset($mapPerPage)) {
+  $mapPerPage = 10;
+}
+if (!isset($mapSkip)) {
+  $mapSkip = 0;
+}
+if (!isset($page)) {
+  $page = 1;
+}
+if (!isset($totalMapPages)) {
+  $totalMapPages = 1;
+}
 if (!isset($listingMapIndexes) || !is_array($listingMapIndexes)) {
   $listingMapIndexes = array();
 }
@@ -22,6 +35,15 @@ if (!isset($mapMarkers) || !is_array($mapMarkers)) {
 }
 if (!isset($googleMapsApiKey)) {
   $googleMapsApiKey = '';
+}
+if (!isset($selectedCity)) {
+  $selectedCity = '';
+}
+if (!isset($selectedMaxBudget)) {
+  $selectedMaxBudget = 950;
+}
+if (!isset($selectedMoveIn)) {
+  $selectedMoveIn = '';
 }
 ?>
 <!DOCTYPE html>
@@ -62,21 +84,168 @@ if (!isset($googleMapsApiKey)) {
   <div class="map-layout">
     <div class="map-sidebar">
       <div class="map-sidebar-head">
-        <div class="map-search">
-          <input type="text" value="<?php echo htmlspecialchars($mapCenterQuery); ?>" placeholder="Search...">
-        </div>
+        <?php
+        $panelFilterKeys = array(
+            'source',
+            'min_price',
+            'max_price',
+            'min_rooms',
+            'max_rooms',
+            'sort',
+            'energy_label',
+            'has',
+            'no_living_area',
+            'available_by',
+        );
+        $panelOpen = false;
+        for ($i = 0; $i < count($panelFilterKeys); $i++) {
+            $oneKey = $panelFilterKeys[$i];
+            if (isset($_GET[$oneKey]) && trim($_GET[$oneKey]) !== '') {
+                $panelOpen = true;
+            }
+        }
+
+        // When the user switches pages we do NOT want the panel to pop open again
+        if (isset($_GET['page'])) {
+            $panelOpen = false;
+        }
+        if ($panelOpen) {
+            $panelClass = 'map-filters-panel open';
+            $chevClass = 'chev open';
+        } else {
+            $panelClass = 'map-filters-panel';
+            $chevClass = 'chev';
+        }
+        ?>
+
+        <!-- City search form -->
+        <form class="map-search-form" method="get" action="map.php">
+          <?php
+          // Keep every filter that is already on, except the city (this form sets it) and the page number.
+          $searchSkipKeys = array('city', 'page');
+          foreach ($_GET as $paramName => $paramValue) {
+              $keepIt = true;
+              for ($i = 0; $i < count($searchSkipKeys); $i++) {
+                  if ($paramName === $searchSkipKeys[$i]) {
+                      $keepIt = false;
+                  }
+              }
+              // Only simple text values can be put in a hidden field.
+              if ($keepIt && is_string($paramValue)) {
+                  echo '<input type="hidden" name="' . htmlspecialchars($paramName) . '" value="' . htmlspecialchars($paramValue) . '">';
+              }
+          }
+          ?>
+
+          <!-- Type a city (suggestions drop down) and press Enter or click Search. The suggestions come from mapCity.js. -->
+          <div class="map-search">
+            <span class="map-search-icon">&#128269;</span>
+            <input type="text" id="map-city-input" name="city" value="<?php echo htmlspecialchars($selectedCity); ?>" placeholder="Search city..." autocomplete="off">
+            <button type="submit" class="map-search-btn">Search</button>
+            <div class="map-city-options" id="map-city-options"></div>
+          </div>
+        </form>
+
         <div class="map-count"><?php echo htmlspecialchars($totalListings); ?> listings <span>- profile applied</span></div>
-        <div class="map-filter-pills">
-          <div class="map-pill active">All</div>
-          <div class="map-pill">≥80% match</div>
-          <div class="map-pill">&lt;5 km</div>
-          <div class="map-pill">🛋️ Furnished</div>
-          <div class="map-pill">🐾 Pets ok</div>
-        </div>
+
+        <!-- Button that opens and closes the list of filter options. -->
+        <button type="button" class="map-filters-toggle" id="map-filters-toggle">
+          <span>&#9776; Filters</span>
+          <span class="<?php echo $chevClass; ?>" id="map-filters-chev">&#8595;</span>
+        </button>
+
+        <!-- Filters form: budget + move-in apply with the "Apply filters" button -->
+        <form class="map-filters-form" method="get" action="map.php">
+          <?php
+          $filtersSkipKeys = array('city', 'max_price', 'available_by', 'page');
+          foreach ($_GET as $paramName => $paramValue) {
+              $keepIt = true;
+              for ($i = 0; $i < count($filtersSkipKeys); $i++) {
+                  if ($paramName === $filtersSkipKeys[$i]) {
+                      $keepIt = false;
+                  }
+              }
+              // Only simple text values can be put in a hidden field.
+              if ($keepIt && is_string($paramValue)) {
+                  echo '<input type="hidden" name="' . htmlspecialchars($paramName) . '" value="' . htmlspecialchars($paramValue) . '">';
+              }
+          }
+          ?>
+          <input type="hidden" name="city" id="map-filters-city" value="<?php echo htmlspecialchars($selectedCity); ?>">
+
+          <div class="<?php echo $panelClass; ?>" id="map-filters-panel">
+            <!-- Sources -->
+            <p class="map-filter-label">Sources</p>
+            <?php include __DIR__ . '/../components/filters/sourcePills.php'; ?>
+
+            <!-- Max budget (number box stays in sync with the slider). -->
+            <p class="map-filter-label">Max budget</p>
+            <div class="map-budget">
+              <div class="map-budget-row">
+                <span class="map-budget-cur">&euro;</span>
+                <input
+                  class="map-budget-input"
+                  id="map-budget-input"
+                  type="number"
+                  name="max_price"
+                  min="0"
+                  max="5000"
+                  step="50"
+                  value="<?php echo htmlspecialchars((string) $selectedMaxBudget); ?>"
+                >
+                <?php
+                // When the budget is at the maximum (5000) it means
+                // "no limit", show a "+" to read it as "5000 +"
+                $budgetPlus = '';
+                if ((int) $selectedMaxBudget >= 5000) {
+                    $budgetPlus = '+';
+                }
+                ?>
+                <span class="map-budget-plus" id="map-budget-plus"><?php echo $budgetPlus; ?></span>
+                <span class="map-budget-per">/ mo</span>
+              </div>
+              <input
+                class="map-budget-slider"
+                id="map-budget-slider"
+                type="range"
+                min="0"
+                max="5000"
+                step="50"
+                value="<?php echo htmlspecialchars((string) $selectedMaxBudget); ?>"
+                aria-label="Max budget slider"
+              >
+            </div>
+
+            <!-- Move-in date -->
+            <p class="map-filter-label">Move-in by</p>
+            <div class="map-movein">
+              <input
+                class="map-movein-input"
+                id="map-movein-input"
+                type="date"
+                name="available_by"
+                value="<?php echo htmlspecialchars($selectedMoveIn); ?>"
+              >
+              <button class="map-movein-clear" id="map-movein-clear" type="button">Any date</button>
+            </div>
+
+            <!-- Sort, rooms, energy and tag chips: the same filter bar as the front page -->
+            <p class="map-filter-label">Sort &amp; more</p>
+            <?php include __DIR__ . '/../components/indexPage/filterBar.php'; ?>
+
+            <!-- Applies the city / budget / move-in fields above. -->
+            <button type="submit" class="map-apply-btn">Apply filters</button>
+          </div>
+        </form>
       </div>
       <div class="map-list">
-        <?php renderMapSidebarList($apiError, $listings, $listingMapIndexes); ?>
+        <?php renderMapSidebarList($apiError, $listings, $listingMapIndexes, $mapSkip, $mapPerPage); ?>
       </div>
+      <?php if ($totalMapPages > 1) { ?>
+        <div class="map-foot">
+          <?php include __DIR__ . '/../components/map/mapPagination.php'; ?>
+        </div>
+      <?php } ?>
     </div>
 
     <!-- Map -->
@@ -112,6 +281,14 @@ if (!isset($googleMapsApiKey)) {
     };
   </script>
   <script src="../components/map.js"></script>
+  <script src="../components/filters/filterDropdowns.js"></script>
+  <script src="../components/filters/filterRooms.js"></script>
+  <script src="../components/filters/filterPrice.js"></script>
+  <script src="../components/filters/filterEnergy.js"></script>
+  <script src="../components/map/mapFilters.js"></script>
+  <script src="../components/map/mapStagedFilters.js"></script>
+  <script src="../components/indexPage/cityGeoData.js"></script>
+  <script src="../components/map/mapCity.js"></script>
 
   <?php if ($googleMapsApiKey !== '') { ?>
     <script src="https://maps.googleapis.com/maps/api/js?key=<?php echo htmlspecialchars(rawurlencode($googleMapsApiKey)); ?>&callback=initLetMeRentMap" async defer onerror="showMapLoadError()"></script>

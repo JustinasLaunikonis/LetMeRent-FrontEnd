@@ -50,6 +50,7 @@ include 'components/indexPage/moveInValues.php';
   <script src="components/filters/filterRooms.js"></script>
   <script src="components/filters/filterPrice.js"></script>
   <script src="components/filters/filterEnergy.js"></script>
+  <script src="components/indexPage/cityGeoData.js"></script>
   <script src="components/indexPage/searchCity.js"></script>
   <script src="components/indexPage/searchBudget.js"></script>
   <script src="components/indexPage/searchMoveIn.js"></script>

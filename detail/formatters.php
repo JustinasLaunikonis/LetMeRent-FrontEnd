@@ -1,6 +1,5 @@
 <?php
 
-// Shared helper that turns the normalised availability value into friendly text.
 require_once __DIR__ . '/../components/availabilityFormat.php';
 
 function esc($value)

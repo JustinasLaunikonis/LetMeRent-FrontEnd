@@ -138,7 +138,6 @@ function buildDescription($listing)
         $detailParts[] = 'floor ' . $floor;
     }
     if ($availability !== '') {
-        // formatAvailability() turns any value (clean or raw) into friendly
         // text: "Available now", "From Aug 1, 2026", or a short phrase.
         $availabilityText = formatAvailability($availability);
         if ($availabilityText === 'Available now') {
