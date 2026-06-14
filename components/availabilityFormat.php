@@ -1,8 +1,6 @@
 <?php
 
 // Month names (and the common short forms) mapped to their number.
-// This matches MONTHS in the scraper's city_utils.py so the frontend reads
-// dates the same way the scraper does.
 function availabilityMonths() {
     return array(
         'jan' => 1, 'january' => 1,
@@ -20,8 +18,7 @@ function availabilityMonths() {
     );
 }
 
-// Some listings give a date with no year, like "8 June". Pick the next time
-// that day happens: this year if it is still coming up, otherwise next year.
+// Some listings give a date with no year, like "8 June".
 function availabilityGuessYear($month, $day) {
     $todayYear = (int) date('Y');
     $candidate = mktime(0, 0, 0, $month, $day, $todayYear);
@@ -32,7 +29,7 @@ function availabilityGuessYear($month, $day) {
     return $todayYear;
 }
 
-// Turn year/month/day numbers into friendly text like "From Aug 1, 2026".
+// Turn year/month/day numbers into text like "From Aug 1, 2026".
 // Returns "" when the numbers are not a real calendar date.
 function availabilityDateText($year, $month, $day) {
     if (!checkdate($month, $day, $year)) {
@@ -42,19 +39,7 @@ function availabilityDateText($year, $month, $day) {
     return 'From ' . date('M j, Y', $timestamp);
 }
 
-// Turn the availability value into friendly text for the page.
-//
-// The scraper normally stores a clean value ("Immediately", "2026-08-01", a
-// short phrase, or ""). But the database can still hold older raw values that
-// were saved before the scraper normalised them, for example:
-//   "Available on 7/1/2026", "From 01-09-2026", "8 Jun 2026",
-//   "Available Immediately", "Available on Immediately".
-// So we normalise here as well, using the same rules as the scraper's
-// normalize_availability(), and every listing ends up reading the same way:
-//   - words meaning "right away" -> "Available now"
-//   - any recognisable date      -> "From Aug 1, 2026"
-//   - a phrase with no date       -> shown as it is
-//   - nothing usable              -> "" (hidden)
+// Turn the availability value into text for the page.
 function formatAvailability($value) {
     $text = trim((string) $value);
     if ($text === '') {
@@ -81,7 +66,6 @@ function formatAvailability($value) {
     }
 
     // 0) The clean normalised shape "YYYY-MM-DD", like "2026-08-01".
-    //    This is what the scraper stores now, so it is the common case.
     if (preg_match('/(\d{4})-(\d{2})-(\d{2})/', $text, $m) === 1) {
         $result = availabilityDateText((int) $m[1], (int) $m[2], (int) $m[3]);
         if ($result !== '') {
@@ -121,8 +105,7 @@ function formatAvailability($value) {
         }
     }
 
-    // 3) A numeric date with slashes. Funda uses American month/day/year,
-    //    like "7/1/2026".
+    // 3) A numeric date with slashes. Funda uses month/day/year,
     if (preg_match('#(\d{1,2})/(\d{1,2})/(\d{4})#', $text, $m) === 1) {
         $month = (int) $m[1];
         $day = (int) $m[2];
@@ -145,10 +128,6 @@ function formatAvailability($value) {
         }
     }
 
-    // Some listings only say "Available from" (or just "Available") with no
-    // date after it. That means the place is free right now, so show it the
-    // same as "Available now". We keep only the letters first, so trailing
-    // spaces or punctuation like "Available from:" still match.
     $onlyLetters = preg_replace('/[^a-z]/', '', $lowered);
     if ($onlyLetters === 'available' || $onlyLetters === 'availablefrom') {
         return 'Available now';

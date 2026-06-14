@@ -1,4 +1,4 @@
-// Loads Dutch cities from Geocoded
+// Lets the user pick a city in the search bar.
 var citySearchField = document.getElementById('city-search-field');
 var cityCard = document.getElementById('city-card');
 var cityDisplay = document.getElementById('city-display');
@@ -6,10 +6,12 @@ var cityInput = document.getElementById('city-input');
 var cityOptionsBox = document.querySelector('.city-options');
 
 if (citySearchField && cityCard && cityDisplay && cityInput && cityOptionsBox) {
-  var allDutchCities = [];
-  var citiesLoaded = false;
-  var citiesLoading = false;
-  var geocodedBaseUrl = 'https://api.geocoded.me';
+  // Wait a moment after the last keyboard press before asking PDOK
+  var citySearchTimer = null;
+
+  // Each search gets a number.
+  // When a reply comes back we only show it if it is still the newest search, so slow replies cannot overwrite newer results.
+  var citySearchToken = 0;
 
   function updateCityDisplay() {
     if (cityInput.value === '') {
@@ -31,7 +33,7 @@ if (citySearchField && cityCard && cityDisplay && cityInput && cityOptionsBox) {
     }
 
     cityCard.classList.add('show');
-    loadDutchCities();
+    runCitySearch();
   }
 
   function toggleCityCard() {
@@ -46,54 +48,6 @@ if (citySearchField && cityCard && cityDisplay && cityInput && cityOptionsBox) {
     cityCard.classList.remove('show');
   }
 
-  function getStateCode(state) {
-    if (state.iso2) {
-      return state.iso2;
-    }
-
-    if (state.isoCode) {
-      return state.isoCode;
-    }
-
-    if (state.code) {
-      return state.code;
-    }
-
-    if (state.state_code) {
-      return state.state_code;
-    }
-
-    if (state.stateCode) {
-      return state.stateCode;
-    }
-
-    return '';
-  }
-
-  function getListFromResponse(responseData) {
-    if (Array.isArray(responseData)) {
-      return responseData;
-    }
-
-    if (responseData && Array.isArray(responseData.data)) {
-      return responseData.data;
-    }
-
-    return [];
-  }
-
-  function addCityName(cityNames, city) {
-    var cityName = '';
-
-    if (city.name) {
-      cityName = city.name;
-    }
-
-    if (cityName !== '') {
-      cityNames[cityName] = true;
-    }
-  }
-
   function showCityMessage(message) {
     cityOptionsBox.innerHTML = '';
 
@@ -103,115 +57,74 @@ if (citySearchField && cityCard && cityDisplay && cityInput && cityOptionsBox) {
     cityOptionsBox.appendChild(messageElement);
   }
 
-  function renderCityOptions() {
+  // Show the list of matching cities as clickable buttons.
+  function renderCityOptions(cityNames) {
     cityOptionsBox.innerHTML = '';
 
-    var searchText = cityInput.value.toLowerCase();
-    var shownCount = 0;
-
-    for (var i = 0; i < allDutchCities.length; i++) {
-      var cityName = allDutchCities[i];
-      var cityNameLower = cityName.toLowerCase();
-
-      if (searchText === '' || cityNameLower.indexOf(searchText) !== -1) {
-        var cityButton = document.createElement('button');
-        cityButton.className = 'city-option';
-        cityButton.type = 'button';
-        cityButton.textContent = cityName;
-
-        cityButton.addEventListener('click', function () {
-          cityInput.value = this.textContent;
-          updateCityDisplay();
-          hideCityCard();
-        });
-
-        cityOptionsBox.appendChild(cityButton);
-        shownCount = shownCount + 1;
-      }
-    }
-
-    if (shownCount === 0) {
+    if (cityNames.length === 0) {
       showCityMessage('No cities found');
+      return;
+    }
+
+    for (var i = 0; i < cityNames.length; i++) {
+      var cityName = cityNames[i];
+
+      var cityButton = document.createElement('button');
+      cityButton.className = 'city-option';
+      cityButton.type = 'button';
+      cityButton.textContent = cityName;
+
+      cityButton.addEventListener('click', function () {
+        cityInput.value = this.textContent;
+        updateCityDisplay();
+        hideCityCard();
+      });
+
+      cityOptionsBox.appendChild(cityButton);
     }
   }
 
-  function saveLoadedCities(cityNames) {
-    allDutchCities = Object.keys(cityNames);
-    allDutchCities.sort();
-    citiesLoaded = true;
-    citiesLoading = false;
-    renderCityOptions();
-  }
+  // Look up cities from PDOK for whatever the user has typed so far.
+  function runCitySearch() {
+    var searchText = cityInput.value.trim();
 
-  function loadCitiesForStates(states) {
-    var cityNames = {};
-    var requests = [];
+    // Nothing typed yet: tell the user what to do instead of searching.
+    if (searchText === '') {
+      showCityMessage('Type to search for a city');
+      return;
+    }
 
-    for (var i = 0; i < states.length; i++) {
-      var stateCode = getStateCode(states[i]);
+    showCityMessage('Searching...');
 
-      if (stateCode !== '') {
-        var url = geocodedBaseUrl + '/countries/NL/states/' + encodeURIComponent(stateCode) + '/cities?fields=name';
+    // Remember which search this is, so an older reply cannot replace a newer one.
+    citySearchToken = citySearchToken + 1;
+    var thisToken = citySearchToken;
 
-        var request = fetch(url)
-          .then(function (response) {
-            return response.json();
-          })
-          .then(function (cityResponse) {
-            var cities = getListFromResponse(cityResponse);
-
-            if (Array.isArray(cities)) {
-              for (var j = 0; j < cities.length; j++) {
-                addCityName(cityNames, cities[j]);
-              }
-            }
-          });
-
-        requests.push(request);
+    window.suggestDutchCities(searchText, function (cities) {
+      // A newer search has already started, so ignore this older reply.
+      if (thisToken !== citySearchToken) {
+        return;
       }
-    }
 
-    Promise.all(requests)
-      .then(function () {
-        saveLoadedCities(cityNames);
-      })
-      .catch(function () {
-        citiesLoading = false;
+      // null means the lookup failed.
+      if (cities === null) {
         showCityMessage('Could not load cities');
-      });
+        return;
+      }
+
+      renderCityOptions(cities);
+    });
   }
 
-  function loadDutchCities() {
-    if (citiesLoaded) {
-      renderCityOptions();
-      return;
+  // Wait a short moment after typing stops before searching.
+  function scheduleCitySearch() {
+    if (citySearchTimer !== null) {
+      clearTimeout(citySearchTimer);
     }
 
-    if (citiesLoading) {
-      return;
-    }
-
-    citiesLoading = true;
-    showCityMessage('Loading cities...');
-
-    fetch(geocodedBaseUrl + '/countries/NL/states?fields=iso2,code,state_code,name')
-      .then(function (response) {
-        return response.json();
-      })
-      .then(function (stateResponse) {
-        var states = getListFromResponse(stateResponse);
-
-        if (Array.isArray(states)) {
-          loadCitiesForStates(states);
-        } else {
-          citiesLoading = false;
-          showCityMessage('Could not load cities');
-        }
-      })
-      .catch(function () {
-        citiesLoading = false;
-        showCityMessage('Could not load cities');
-      });
+    citySearchTimer = setTimeout(function () {
+      runCitySearch();
+    }, 250);
   }
 
   citySearchField.addEventListener('click', function (event) {
@@ -241,9 +154,6 @@ if (citySearchField && cityCard && cityDisplay && cityInput && cityOptionsBox) {
 
   cityInput.addEventListener('input', function () {
     updateCityDisplay();
-
-    if (citiesLoaded) {
-      renderCityOptions();
-    }
+    scheduleCitySearch();
   });
 }

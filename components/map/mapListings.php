@@ -35,28 +35,11 @@ if (!$apiError) {
 
     // If no source filter is selected, fetch all listings in one API request.
     if (empty($sources)) {
-        $mapParams = array();
+        $mapParams = $baseParams;
         // limit says how many listings to ask for.
         // skip is 0 because the map should start from the first listing.
         $mapParams['limit'] = max($totalListings, 500);
         $mapParams['skip'] = 0;
-
-        // Only add filters to the API request if user actually selected them.
-        if ($city !== '') {
-            $mapParams['city'] = $city;
-        }
-        if ($min_price !== '') {
-            $mapParams['min_price'] = $min_price;
-        }
-        if ($max_price !== '') {
-            if (is_numeric($max_price)) {
-                if ((int)$max_price < 5000) {
-                    $mapParams['max_price'] = $max_price;
-                }
-            } else {
-                $mapParams['max_price'] = $max_price;
-            }
-        }
 
         $mapResult = fetchFromApi($mapParams);
 
@@ -71,26 +54,10 @@ if (!$apiError) {
     } else {
         // If source filters are selected, fetch listings for each source one by one.
         foreach ($sources as $source) {
-            $mapParams = array();
+            $mapParams = $baseParams;
             $mapParams['limit'] = 500;
             $mapParams['skip'] = 0;
             $mapParams['source'] = $source;
-
-            if ($city !== '') {
-                $mapParams['city'] = $city;
-            }
-            if ($min_price !== '') {
-                $mapParams['min_price'] = $min_price;
-            }
-            if ($max_price !== '') {
-                if (is_numeric($max_price)) {
-                    if ((int)$max_price < 5000) {
-                        $mapParams['max_price'] = $max_price;
-                    }
-                } else {
-                    $mapParams['max_price'] = $max_price;
-                }
-            }
 
             $mapResult = fetchFromApi($mapParams);
 

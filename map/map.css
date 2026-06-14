@@ -7,7 +7,15 @@
 .map-layout {
   display: grid;
   grid-template-columns: 368px 1fr;
-  height: calc(100vh - 60px);
+  /* minmax(0, 1fr) pins the single row to the exact layout height and lets the
+     sidebar/map shrink to it. Without the minmax(0, ...) the row grows to fit
+     the listing list, so the list never scrolls and the pagination bar gets
+     pushed below the screen. */
+  grid-template-rows: minmax(0, 1fr);
+  /* 100% of the (overflow-hidden, full-height) body minus the 60px nav. Using
+     100% instead of 100vh keeps the layout exactly the visible height, so the
+     pagination bar at the bottom of the sidebar is always on screen. */
+  height: calc(100% - 60px);
   overflow: hidden;
 }
 
@@ -16,7 +24,10 @@
   flex-direction: column;
   background: var(--white);
   border-right: 1px solid var(--border);
-  overflow: hidden;
+  /* Visible (not hidden) so the price/rooms/energy dropdown menus can open
+     over the listing list below them instead of being cut off. The listing
+     list still scrolls on its own (see .map-list). */
+  overflow: visible;
 }
 
 .map-sidebar-head {
@@ -26,24 +37,93 @@
 }
 
 .map-search {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 8px;
   margin-bottom: 12px;
-  padding: 9px 12px;
+  padding: 5px 5px 5px 12px;
   background: var(--surface);
   border: 1.5px solid var(--border);
   border-radius: var(--radius-sm);
 }
 
+/* The list of matching cities that drops down under the search box. */
+.map-city-options {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  z-index: 1200;
+  display: none;
+  flex-direction: column;
+  gap: 2px;
+  max-height: 240px;
+  padding: 6px;
+  overflow-y: auto;
+  background: var(--white);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-lg);
+}
+
+.map-city-options.show {
+  display: flex;
+}
+
+.map-city-option {
+  display: block;
+  width: 100%;
+  padding: 7px 8px;
+  background: transparent;
+  border: 0;
+  border-radius: 6px;
+  color: var(--ink-2);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+
+.map-city-option:hover {
+  background: var(--blue-light);
+  color: var(--blue);
+}
+
+.map-search-icon {
+  font-size: 13px;
+  flex-shrink: 0;
+}
+
 .map-search input {
   width: 100%;
+  flex: 1;
+  min-width: 0;
   background: none;
   border: none;
   outline: none;
   font-family: 'Plus Jakarta Sans', sans-serif;
   font-size: 13px;
   color: var(--ink);
+}
+
+.map-search-btn {
+  flex-shrink: 0;
+  padding: 6px 14px;
+  background: var(--blue);
+  border: none;
+  border-radius: var(--radius-sm);
+  color: white;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background .15s;
+}
+
+.map-search-btn:hover {
+  background: var(--blue-dark);
 }
 
 .map-count {
@@ -58,16 +138,22 @@
   font-weight: 400;
 }
 
-.map-filter-pills {
+.map-sidebar-head .filter-bar {
   display: flex;
+  align-items: center;
   gap: 6px;
-  padding-bottom: 2px;
-  overflow-x: auto;
+  flex-wrap: wrap;
+  padding: 0;
+  background: none;
+  border: none;
 }
 
-.map-pill {
+.map-sidebar-head .filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
   padding: 5px 12px;
-  background: var(--surface);
+  background: var(--white);
   border: 1.5px solid var(--border);
   border-radius: 20px;
   color: var(--ink-2);
@@ -76,23 +162,384 @@
   white-space: nowrap;
   flex-shrink: 0;
   cursor: pointer;
+  text-decoration: none;
   transition: all .15s;
 }
 
-.map-pill:hover {
+.map-sidebar-head .filter-chip:hover {
   border-color: var(--blue);
   color: var(--blue);
 }
 
-.map-pill.active {
+.map-sidebar-head .filter-chip.active {
   background: var(--blue-light);
   border-color: var(--blue);
   color: var(--blue);
 }
 
+.map-sidebar-head .dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.map-sidebar-head .dropdown-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 12px;
+  background: var(--white);
+  border: 1.5px solid var(--border);
+  border-radius: 20px;
+  color: var(--ink-2);
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.map-sidebar-head .dropdown-toggle p {
+  margin: 0;
+}
+
+.map-sidebar-head .dropdown-toggle .chev {
+  line-height: 1;
+}
+
+.map-sidebar-head .dropdown-toggle:hover {
+  border-color: var(--blue);
+  color: var(--blue);
+}
+
+.map-sidebar-head .dropdown-toggle.active {
+  background: var(--blue-light);
+  border-color: var(--blue);
+  color: var(--blue);
+}
+
+.map-sidebar-head .dropdown-options {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 4px;
+  background: var(--white);
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  min-width: 150px;
+  max-width: 90vw;
+  z-index: 1000;
+  display: none;
+  flex-direction: column;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+}
+
+.map-sidebar-head .dropdown-options.show {
+  display: flex;
+}
+
+.map-sidebar-head .dropdown-option {
+  display: block;
+  padding: 8px 14px;
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--ink-2);
+  text-decoration: none;
+  transition: background 0.2s;
+}
+
+.map-sidebar-head .dropdown-option:hover {
+  background: var(--blue-light);
+}
+
+/* ------------------------------------------------------------------ */
+/* Filters panel (the dropdown list of filter options in the sidebar) */
+/* ------------------------------------------------------------------ */
+
+/* The button that opens and closes the filters. */
+.map-filters-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 8px 12px;
+  background: var(--white);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--ink);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: border-color .15s, color .15s;
+}
+
+.map-filters-toggle:hover {
+  border-color: var(--blue);
+  color: var(--blue);
+}
+
+/* The little arrow turns around when the panel is open. */
+#map-filters-chev {
+  transition: transform .15s;
+}
+
+#map-filters-chev.open {
+  transform: rotate(180deg);
+}
+
+/* The panel is hidden until the user opens it. */
+.map-filters-panel {
+  display: none;
+  margin-top: 12px;
+}
+
+.map-filters-panel.open {
+  display: block;
+}
+
+/* Small heading above each group of filter options. */
+.map-filter-label {
+  margin: 14px 0 8px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.map-filter-label:first-child {
+  margin-top: 0;
+}
+
+/* Max budget: number box on top, slider underneath. */
+.map-budget-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 10px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+
+.map-budget-cur,
+.map-budget-per {
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.map-budget-per {
+  color: var(--muted);
+  white-space: nowrap;
+  /* Push "/ mo" to the right edge, so the amount and the "+" stay together
+     on the left next to the euro sign. */
+  margin-left: auto;
+}
+
+/* The little "+" shown only when the budget is at the maximum, so 5000 reads
+   as "5000 +" (meaning 5000 or more). It is empty the rest of the time. */
+.map-budget-plus {
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.map-budget-input {
+  /* The width follows the number (set in mapFilters.js) so the "+" can sit
+     right after the amount. 4ch is a sensible size before the script runs. */
+  width: 4ch;
+  min-width: 0;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  color: var(--ink);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  outline: none;
+}
+
+/* Hide the up/down spinner arrows, so the digits sit flush and the "+" hugs
+   the number instead of being pushed away by the arrows. */
+.map-budget-input::-webkit-outer-spin-button,
+.map-budget-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.map-budget-input {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+.map-budget-slider {
+  display: block;
+  width: 100%;
+  height: 4px;
+  margin-top: 12px;
+  accent-color: var(--blue);
+  cursor: pointer;
+}
+
+/* Move-in: date box with an "Any date" button to clear it. */
+.map-movein {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.map-movein-input {
+  flex: 1;
+  min-width: 0;
+  padding: 8px 10px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--ink);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  outline: none;
+}
+
+.map-movein-input:focus {
+  border-color: var(--blue);
+  background: var(--white);
+}
+
+.map-movein-clear {
+  flex-shrink: 0;
+  padding: 8px 12px;
+  background: var(--white);
+  border: 1.5px solid var(--border);
+  border-radius: 20px;
+  color: var(--ink-2);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: border-color .15s, color .15s;
+}
+
+.map-movein-clear:hover {
+  border-color: var(--blue);
+  color: var(--blue);
+}
+
+/* The source pills sit on a white background here, so they need the light
+   "chip" look instead of the see-through style used on the blue hero. */
+.map-sidebar .source-pills {
+  gap: 6px;
+}
+
+.map-sidebar .source-pill {
+  padding: 5px 12px;
+  background: var(--white);
+  border: 1.5px solid var(--border);
+  border-radius: 20px;
+  color: var(--ink-2);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.map-sidebar .source-pill:hover {
+  background: var(--white);
+  border-color: var(--blue);
+  color: var(--blue);
+}
+
+.map-sidebar .source-pill.active {
+  background: var(--blue-light);
+  border-color: var(--blue);
+  color: var(--blue);
+  font-weight: 700;
+}
+
+/* Applies the city / budget / move-in fields. */
+.map-apply-btn {
+  width: 100%;
+  margin-top: 16px;
+  padding: 10px 14px;
+  background: var(--blue);
+  border: none;
+  border-radius: var(--radius-sm);
+  color: white;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background .15s;
+}
+
+.map-apply-btn:hover {
+  background: var(--blue-dark);
+}
+
 .map-list {
   flex: 1;
+  /* min-height: 0 lets this flex item shrink below its content so it scrolls
+     on its own, keeping the pagination bar (.map-foot) pinned underneath it. */
+  min-height: 0;
   overflow-y: auto;
+}
+
+/* Pagination bar pinned at the bottom of the sidebar. flex-shrink: 0 keeps it
+   visible while the listing list above it scrolls. */
+.map-foot {
+  flex-shrink: 0;
+  padding: 12px 20px;
+  background: var(--white);
+  border-top: 1px solid var(--border);
+}
+
+.map-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.map-page-btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 14px;
+  background: var(--white);
+  border: 1.5px solid var(--border);
+  border-radius: 20px;
+  color: var(--ink-2);
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  text-decoration: none;
+  cursor: pointer;
+  transition: border-color .15s, color .15s;
+}
+
+.map-page-btn:hover {
+  border-color: var(--blue);
+  color: var(--blue);
+}
+
+.map-page-btn--disabled {
+  background: var(--surface);
+  color: var(--muted);
+  cursor: default;
+  opacity: .6;
+}
+
+.map-page-btn--disabled:hover {
+  border-color: var(--border);
+  color: var(--muted);
+}
+
+.map-page-info {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  white-space: nowrap;
 }
 
 .map-list-item {
@@ -174,6 +621,21 @@
 .google-map {
   width: 100%;
   height: 100%;
+}
+
+/* Stop the Google map from shaking/jumping while zooming in and out.
+   styles.css has a global reset ( *{ box-sizing: border-box } ) and image
+   rules that also hit the tiles Google Maps draws inside this box. That makes
+   Google miscalculate tile sizes during a zoom, so the map jitters. Here we
+   set those back to what Google Maps expects, only inside the map. */
+.google-map,
+.google-map * {
+  box-sizing: content-box;
+}
+
+.google-map img {
+  max-width: none;
+  max-height: none;
 }
 
 .map-key-warning {
