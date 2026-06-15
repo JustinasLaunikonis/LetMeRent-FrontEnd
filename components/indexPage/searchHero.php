@@ -55,7 +55,7 @@
                 name="max_price"
                 min="0"
                 max="5000"
-                step="50"
+                step="1"
                 value="<?= htmlspecialchars((string) $selectedMaxBudget) ?>"
               >
               <span class="budget-period">/ mo</span>

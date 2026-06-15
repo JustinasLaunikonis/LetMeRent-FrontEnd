@@ -38,7 +38,6 @@ function fetchFromApi($params)
 
     $response = curl_exec($ch);
     $curlError = curl_error($ch);
-    curl_close($ch);
 
     if ($response === false) {
         return ['error' => 'Could not reach API: ' . $curlError];

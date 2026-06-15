@@ -245,7 +245,7 @@ function initLetMeRentMap() {
       tags.push(`📐 ${listing.living_area} m²`);
     }
     if (listing.housemates) {
-      tags.push(`👥 ${listing.housemates}`);
+      tags.push(`👥 Housemates: ${listing.housemates}`);
     }
     if (listing.energy_label) {
       tags.push(`⚡ ${listing.energy_label}`);

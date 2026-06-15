@@ -88,10 +88,10 @@ if (citySearchField && cityCard && cityDisplay && cityInput && cityOptionsBox) {
   function runCitySearch() {
     var searchText = cityInput.value.trim();
 
-    // Nothing typed yet: tell the user what to do instead of searching.
+    // Nothing typed yet: search as if the user typed the letter "a",
+    // so the list still shows some cities to pick from.
     if (searchText === '') {
-      showCityMessage('Type to search for a city');
-      return;
+      searchText = 'a';
     }
 
     showCityMessage('Searching...');

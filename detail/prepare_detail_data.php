@@ -104,26 +104,20 @@ if (!empty($listing['images']) && is_array($listing['images'])) {
     }
 }
 
-if (isset($listingImages[0])) {
-    $galleryMain = $listingImages[0];
+// We show at most 3 images on the detail page.
+// one image is shown big, more than one is shown side by side (up to 3).
+$galleryImages = array_slice($listingImages, 0, 3);
+$galleryCount = count($galleryImages);
+
+// Total number of images available. When there are more than the 3 we show, we display this count in the corner of the gallery.
+$totalImageCount = count($listingImages);
+
+if (isset($galleryImages[0])) {
+    $galleryMain = $galleryImages[0];
 } else {
     $galleryMain = '';
 }
 
-if (isset($listingImages[1])) {
-    $galleryThumb1 = $listingImages[1];
-} else {
-    $galleryThumb1 = '';
-}
-
-if (isset($listingImages[2])) {
-    $galleryThumb2 = $listingImages[2];
-} else {
-    $galleryThumb2 = '';
-}
-
-$hasSingleGalleryImage = count($listingImages) === 1;
-$galleryHasCarousel = count($listingImages) > 1;
 $chips = buildListingChips($listing);
 
 if ($listingUrl !== '') {
@@ -171,16 +165,18 @@ if ($listingCity !== '') {
     $sidebarCity = 'Unknown';
 }
 
-if ($listingAvailability !== '') {
-    $sidebarAvailability = $listingAvailability;
-} else {
-    $sidebarAvailability = 'Not specified';
+require_once __DIR__ . '/../components/availabilityFormat.php';
+$sidebarAvailability = formatAvailability($listingAvailability);
+
+// When there is no availability text, default to "Available now".
+if ($sidebarAvailability === '') {
+    $sidebarAvailability = 'Available now';
 }
 
 $commuteRows = [
     ['label' => 'Location', 'value' => $commuteLocation],
     ['label' => 'Source', 'value' => $listingSource],
-    ['label' => 'Listed', 'value' => $commuteListed],
+    ['label' => 'Scraped', 'value' => $commuteListed],
 ];
 $sidebarFacts = [
     ['label' => 'Price', 'value' => $listingPricePlain],
@@ -190,10 +186,11 @@ $sidebarFacts = [
     ['label' => 'Lease length', 'value' => firstString($listing, ['rental_period'], 'Not specified')],
 ];
 
-if ($hasSingleGalleryImage) {
-    $galleryClass = 'gallery gallery--single';
+// One image gets shown big, more than one is laid out in a row.
+if ($galleryCount > 1) {
+    $galleryClass = 'gallery gallery--grid';
 } else {
-    $galleryClass = 'gallery';
+    $galleryClass = 'gallery gallery--single';
 }
 
 if ($listingLocationLine !== '') {
@@ -209,9 +206,9 @@ if ($listingAddress !== '') {
 }
 
 if ($listingScrapedAt !== '') {
-    $listedText = 'Listed ' . $listingScrapedAt;
+    $listedText = 'Scraped ' . $listingScrapedAt;
 } else {
-    $listedText = 'Recently listed';
+    $listedText = 'Recently scraped';
 }
 
 if ($listingCity !== '') {

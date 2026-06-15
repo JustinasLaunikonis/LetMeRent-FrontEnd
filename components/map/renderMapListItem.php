@@ -72,7 +72,7 @@ function renderMapListItem(array $listing, bool $selected, $mapIndex = null): st
         array_push($tags, '🛋️ ' . $listing['interior']);
     }
     if (!empty($listing['housemates'])) {
-        array_push($tags, '👥 ' . $listing['housemates']);
+        array_push($tags, '👥 Housemates: ' . $listing['housemates']);
     }
     if (!empty($listing['energy_label'])) {
         array_push($tags, '⚡ ' . $listing['energy_label']);
