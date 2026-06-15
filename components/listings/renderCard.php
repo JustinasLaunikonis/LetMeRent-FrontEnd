@@ -101,6 +101,10 @@ function renderCard(array $listing) {
     // Build the small detail tags shown on the card
     $tags = '';
 
+    if (empty($listing['living_area'])) {
+        $tags .= '<span class="card-tag">🅿️ Garage / Parking</span>';
+    }
+
     if (!empty($listing['property_type'])) {
         $tags .= '<span class="card-tag">🛏️ ' . htmlspecialchars($listing['property_type']) . '</span>';
     } else if (!empty($listing['rooms'])) {
