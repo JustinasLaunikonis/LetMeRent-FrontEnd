@@ -22,7 +22,7 @@
     <td><?php echo esc($listingSource); ?></td>
   </tr>
   <tr>
-    <td>Listed</td>
+    <td>Scraped</td>
     <td><?php echo esc($commuteListed); ?></td>
   </tr>
 </table>

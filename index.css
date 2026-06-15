@@ -587,7 +587,12 @@
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 20px;
-  padding: 0 32px 40px;
+
+  /* Extra space at the bottom. A hovered card grows downward to show its tags,
+     and this reserved room means that growth always fits inside the page.
+     Without it, hovering a card in the only/last row would push the page and
+     add a scrollbar. */
+  padding: 0 32px 140px;
 }
 
 .listing-cell {
@@ -721,8 +726,14 @@
 
 .listing-card:hover .card-meta {
   flex-wrap: wrap;
+
+  /* On hover, reveal more tags, but only let the card grow by a limited amount.
+     If a listing has a lot of tags, the tag area scrolls inside the card
+     instead of making the card taller. This keeps the card a sensible size and
+     stops it from breaking the page. */
   height: auto;
-  overflow: visible;
+  max-height: 100px;
+  overflow-y: auto;
 }
 
 .card-tag {

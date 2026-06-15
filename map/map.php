@@ -190,7 +190,7 @@ if (!isset($selectedMoveIn)) {
                   name="max_price"
                   min="0"
                   max="5000"
-                  step="50"
+                  step="1"
                   value="<?php echo htmlspecialchars((string) $selectedMaxBudget); ?>"
                 >
                 <?php

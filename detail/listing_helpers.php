@@ -240,85 +240,202 @@ function listingScore($listing)
     return $score;
 }
 
+// Build a "count + word" label and add an "s" when there is more than one.
+// Example: chipCountLabel(1, "bath") -> "1 bath", chipCountLabel(2, "bath") -> "2 baths".
+function chipCountLabel($count, $word)
+{
+    $number = (int) $count;
+    if ($number === 1) {
+        return $number . ' ' . $word;
+    } else {
+        return $number . ' ' . $word . 's';
+    }
+}
+
 function buildListingChips($listing)
 {
     $chips = [];
 
-    $propertyType = firstString($listing, ['property_type'], '');
-    $rooms = firstString($listing, ['rooms'], '');
-    $furnished = firstString($listing, ['furnished'], '');
-    $interior = firstString($listing, ['interior'], '');
-    $livingArea = firstString($listing, ['living_area'], '');
-    $housemates = firstString($listing, ['housemates'], '');
-    $energyLabel = firstString($listing, ['energy_label'], '');
-    $availability = firstString($listing, ['availability'], '');
-    $rentalPeriod = firstString($listing, ['rental_period'], '');
-    $deposit = firstString($listing, ['deposit'], '');
-    $neighbourhood = firstString($listing, ['neighbourhood'], '');
-    $status = featureValue($listing, 'Status');
+    if (empty($listing['living_area'])) {
+        $chips[] = '&#127359;&#65039; Garage / Parking';
+    }
+
+    if (!empty($listing['property_type'])) {
+        $chips[] = '&#128719;&#65039; ' . esc($listing['property_type']);
+    }
+
+    if (!empty($listing['property_types'])) {
+        if (empty($listing['property_type']) || $listing['property_types'] !== $listing['property_type']) {
+            $chips[] = '&#127968; ' . esc($listing['property_types']);
+        }
+    }
+
+    if (!empty($listing['rooms'])) {
+        $chips[] = '&#128682; ' . esc(chipCountLabel($listing['rooms'], 'room'));
+    }
+
+    if (!empty($listing['furnished'])) {
+        $chips[] = '&#128715;&#65039; ' . esc($listing['furnished']);
+    } else if (!empty($listing['interior'])) {
+        $chips[] = '&#128715;&#65039; ' . esc($listing['interior']);
+    }
+
+    if (!empty($listing['living_area'])) {
+        $chips[] = '&#128208; ' . esc($listing['living_area']) . ' m&sup2;';
+    }
+
+    if (!empty($listing['housemates'])) {
+        $chips[] = '&#128101; Housemates: ' . esc($listing['housemates']);
+    }
+
+    if (!empty($listing['energy_label'])) {
+        $chips[] = '&#9889; ' . esc($listing['energy_label']);
+    }
+
+    if (!empty($listing['deposit'])) {
+        $chips[] = '&#128273; &euro;' . esc($listing['deposit']) . ' deposit';
+    }
+
+    if (!empty($listing['utilities'])) {
+        if (is_numeric($listing['utilities'])) {
+            $chips[] = '&#128161; &euro;' . esc($listing['utilities']) . ' utilities';
+        } else {
+            $chips[] = '&#128161; ' . esc($listing['utilities']);
+        }
+    }
+
+    if (!empty($listing['service_fee'])) {
+        $chips[] = '&#128182; &euro;' . esc($listing['service_fee']) . ' service';
+    }
+
+    if (!empty($listing['additional_costs'])) {
+        $chips[] = '&#10133; &euro;' . esc($listing['additional_costs']) . ' extra';
+    }
+
+    if (!empty($listing['bedrooms'])) {
+        if (empty($listing['rooms']) || $listing['bedrooms'] != $listing['rooms']) {
+            $chips[] = '&#128719;&#65039; ' . esc(chipCountLabel($listing['bedrooms'], 'bed'));
+        }
+    }
+
+    if (!empty($listing['bathrooms'])) {
+        $bathrooms = $listing['bathrooms'];
+    } else {
+        $bathrooms = featureValue($listing, 'Number of bath rooms');
+    }
+    if (!empty($bathrooms)) {
+        $chips[] = '&#128705; ' . esc(chipCountLabel($bathrooms, 'bath'));
+    }
+
+    if (!empty($listing['toilets'])) {
+        $chips[] = '&#128701; ' . esc(chipCountLabel($listing['toilets'], 'toilet'));
+    }
+
+    if (!empty($listing['kitchens'])) {
+        $chips[] = '&#127859; ' . esc(chipCountLabel($listing['kitchens'], 'kitchen'));
+    }
+
+    if (!empty($listing['floors'])) {
+        $chips[] = '&#127970; ' . esc(chipCountLabel($listing['floors'], 'floor'));
+    }
+
+    if (!empty($listing['floor'])) {
+        $chips[] = '&#128727; ' . esc(chipCountLabel($listing['floor'], 'floor'));
+    }
+
+    if (!empty($listing['balcony']) && $listing['balcony'] === 'Present') {
+        $chips[] = '&#127807; Balcony';
+    }
+    if (!empty($listing['roof_terrace']) && $listing['roof_terrace'] === 'Present') {
+        $chips[] = '&#9728;&#65039; Roof terrace';
+    }
+
+    if (!empty($listing['plot_size'])) {
+        $chips[] = '&#127795; ' . esc($listing['plot_size']) . ' m&sup2; plot';
+    }
+
+    if (!empty($listing['construction_year'])) {
+        $yearBuilt = $listing['construction_year'];
+    } else {
+        $yearBuilt = featureValue($listing, 'Year of construction');
+    }
+    if (!empty($yearBuilt)) {
+        $chips[] = '&#127959;&#65039; ' . esc($yearBuilt);
+    }
+
+    if (!empty($listing['upkeep'])) {
+        $chips[] = '&#128736;&#65039; ' . esc($listing['upkeep']) . ' upkeep';
+    }
+
+    if (!empty($listing['situation'])) {
+        $chips[] = '&#127961;&#65039; ' . esc($listing['situation']);
+    }
+
+    if (!empty($listing['gender_of_housemates'])) {
+        $chips[] = '&#128699; ' . esc($listing['gender_of_housemates']);
+    }
+
+    if (!empty($listing['kitchen'])) {
+        $chips[] = '&#127859; ' . esc($listing['kitchen']) . ' kitchen';
+    }
+    if (!empty($listing['bathroom'])) {
+        $chips[] = '&#128703; ' . esc($listing['bathroom']) . ' bathroom';
+    }
+    if (!empty($listing['toilet'])) {
+        $chips[] = '&#128701; ' . esc($listing['toilet']) . ' toilet';
+    }
+
+    if (!empty($listing['garden']) && $listing['garden'] === 'Present') {
+        $chips[] = '&#127799; Garden';
+    }
+    if (!empty($listing['storage']) && $listing['storage'] === 'Present') {
+        $chips[] = '&#128230; Storage';
+    }
+
+    if (!empty($listing['parking']) && $listing['parking'] === 'Yes') {
+        $chips[] = '&#127359;&#65039; Parking';
+    }
+    if (!empty($listing['garage']) && $listing['garage'] === 'Yes') {
+        $chips[] = '&#128663; Garage';
+    }
+
+    if (!empty($listing['smoking_allowed']) && $listing['smoking_allowed'] === 'Yes') {
+        $chips[] = '&#128684; Smoking allowed';
+    }
+    if (!empty($listing['pets_allowed']) && $listing['pets_allowed'] === 'Yes') {
+        $chips[] = '&#128062; Pets allowed';
+    }
+
+    if (!empty($listing['target_audience'])) {
+        $chips[] = '&#128100; ' . esc($listing['target_audience']);
+    }
+
+    if (isset($listing['ideal_tenant']) && is_array($listing['ideal_tenant'])) {
+        $idealTenant = $listing['ideal_tenant'];
+
+        $openValues = array('Everyone welcome', 'Not important', '');
+
+        if (!empty($idealTenant['Occupation'])) {
+            if (!in_array($idealTenant['Occupation'], $openValues)) {
+                $chips[] = '&#128100; ' . esc($idealTenant['Occupation']);
+            }
+        }
+        if (!empty($idealTenant['Gender'])) {
+            if (!in_array($idealTenant['Gender'], $openValues)) {
+                $chips[] = '&#128699; ' . esc($idealTenant['Gender']);
+            }
+        }
+    }
+
+    if (!empty($listing['neighbourhood'])) {
+        $chips[] = '&#128506;&#65039; ' . esc($listing['neighbourhood']);
+    }
+
     $type = featureValue($listing, 'Type apartment');
-
-    if ($propertyType !== '') {
-        $chips[] = '&#128715; ' . esc($propertyType);
-    } elseif ($rooms !== '') {
-        $chips[] = '&#128715; ' . esc($rooms) . ' rooms';
+    if (empty($type)) {
+        $type = featureValue($listing, 'Kind of house');
     }
-
-    if ($furnished !== '') {
-        $chips[] = '&#128715; ' . esc($furnished);
-    } elseif ($interior !== '') {
-        $chips[] = '&#128715; ' . esc($interior);
-    }
-
-    if ($livingArea !== '') {
-        $chips[] = '&#128208; ' . esc($livingArea) . ' m&sup2;';
-    }
-
-    if ($housemates !== '') {
-        $chips[] = '&#128101; ' . esc($housemates);
-    }
-
-    if ($energyLabel !== '') {
-        $chips[] = '&#9889; ' . esc($energyLabel);
-    }
-
-    $availabilityText = formatAvailability($availability);
-    if ($availabilityText !== '') {
-        $chips[] = '&#128197; ' . esc($availabilityText);
-    }
-
-    if ($rentalPeriod !== '') {
-        $chips[] = '&#128196; ' . esc($rentalPeriod);
-    }
-
-    if ($deposit !== '') {
-        $chips[] = '&#128273; &euro;' . esc($deposit) . ' deposit';
-    }
-
-    $bathrooms = featureValue($listing, 'Number of bath rooms');
-    if ($bathrooms !== '') {
-        $chips[] = '&#128705; ' . esc($bathrooms) . ' bath';
-    }
-
-    $plotSize = firstString($listing, ['plot_size'], '');
-    if ($plotSize !== '') {
-        $chips[] = '&#127811; ' . esc($plotSize) . ' m&sup2; plot';
-    }
-
-    $yearBuilt = featureValue($listing, 'Year of construction');
-    if ($yearBuilt !== '') {
-        $chips[] = '&#127959; ' . esc($yearBuilt);
-    }
-
-    if ($neighbourhood !== '') {
-        $chips[] = '&#128506; ' . esc($neighbourhood);
-    }
-
-    if ($status !== '') {
-        $chips[] = '&#9989; ' . esc($status);
-    }
-
-    if ($type !== '') {
+    if (!empty($type)) {
         $chips[] = '&#127968; ' . esc($type);
     }
 
