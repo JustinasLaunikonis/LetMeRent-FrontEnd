@@ -726,14 +726,8 @@
 
 .listing-card:hover .card-meta {
   flex-wrap: wrap;
-
-  /* On hover, reveal more tags, but only let the card grow by a limited amount.
-     If a listing has a lot of tags, the tag area scrolls inside the card
-     instead of making the card taller. This keeps the card a sensible size and
-     stops it from breaking the page. */
   height: auto;
-  max-height: 100px;
-  overflow-y: auto;
+  overflow: visible;
 }
 
 .card-tag {
