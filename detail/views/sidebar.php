@@ -18,7 +18,7 @@
   </div>
 
   <div class="sidebar-card">
-    <div class="section-title">Landlord</div>
+    <div class="section-title">Rental Site</div>
     <div class="landlord-row">
       <div class="landlord-avatar"><?php echo esc($landlordInitial); ?></div>
       <div>

@@ -410,6 +410,22 @@ function buildListingChips($listing)
         $chips[] = '&#128100; ' . esc($listing['target_audience']);
     }
 
+    $openTenantValues = array('Everyone welcome', 'Not important', 'Mixed', 'Any', 'Anyone', '');
+    if (!empty($listing['tenant_type']) && !in_array($listing['tenant_type'], $openTenantValues)) {
+        $chips[] = '&#128100; ' . esc($listing['tenant_type']);
+    }
+    if (!empty($listing['tenant_gender']) && !in_array($listing['tenant_gender'], $openTenantValues)) {
+        $chips[] = '&#128699; ' . esc($listing['tenant_gender']);
+    }
+
+    if (empty($listing['deposit']) && !empty($listing['deposit_policy'])) {
+        $chips[] = '&#128273; ' . esc($listing['deposit_policy']);
+    }
+
+    if (!empty($listing['wheelchair_accessible']) && $listing['wheelchair_accessible'] === 'Yes') {
+        $chips[] = '&#9855; Wheelchair accessible';
+    }
+
     if (isset($listing['ideal_tenant']) && is_array($listing['ideal_tenant'])) {
         $idealTenant = $listing['ideal_tenant'];
 

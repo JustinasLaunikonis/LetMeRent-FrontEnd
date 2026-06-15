@@ -183,7 +183,7 @@ $sidebarFacts = [
     ['label' => 'City', 'value' => $sidebarCity],
     ['label' => 'Availability', 'value' => $sidebarAvailability],
     ['label' => 'Source', 'value' => $listingSource],
-    ['label' => 'Lease length', 'value' => firstString($listing, ['rental_period'], 'Not specified')],
+    ['label' => 'Lease length', 'value' => firstString($listing, ['duration_of_stay', 'rental_period'], 'Not specified')],
 ];
 
 // One image gets shown big, more than one is laid out in a row.
