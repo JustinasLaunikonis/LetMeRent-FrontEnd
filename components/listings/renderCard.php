@@ -263,6 +263,22 @@ function renderCard(array $listing) {
         $tags .= '<span class="card-tag">👤 ' . htmlspecialchars($listing['target_audience']) . '</span>';
     }
 
+    $openTenantValues = array('Everyone welcome', 'Not important', 'Mixed', 'Any', 'Anyone', '');
+    if (!empty($listing['tenant_type']) && !in_array($listing['tenant_type'], $openTenantValues)) {
+        $tags .= '<span class="card-tag">👤 ' . htmlspecialchars($listing['tenant_type']) . '</span>';
+    }
+    if (!empty($listing['tenant_gender']) && !in_array($listing['tenant_gender'], $openTenantValues)) {
+        $tags .= '<span class="card-tag">🚻 ' . htmlspecialchars($listing['tenant_gender']) . '</span>';
+    }
+
+    if (empty($listing['deposit']) && !empty($listing['deposit_policy'])) {
+        $tags .= '<span class="card-tag">🔑 ' . htmlspecialchars($listing['deposit_policy']) . '</span>';
+    }
+
+    if (!empty($listing['wheelchair_accessible']) && $listing['wheelchair_accessible'] === 'Yes') {
+        $tags .= '<span class="card-tag">♿ Wheelchair accessible</span>';
+    }
+
     if (isset($listing['ideal_tenant']) && is_array($listing['ideal_tenant'])) {
         $idealTenant = $listing['ideal_tenant'];
 
@@ -291,6 +307,20 @@ function renderCard(array $listing) {
     if (!empty($type)) {
         $tags .= '<span class="card-tag">🏠 ' . htmlspecialchars($type) . '</span>';
     }
+
+    // Drop any tag whose visible text is longer than 50 chars
+    // The detail page keeps these tags
+    $tags = preg_replace_callback(
+        '/<span class="card-tag">(.*?)<\/span>/s',
+        function ($match) {
+            $text = html_entity_decode(strip_tags($match[1]), ENT_QUOTES, 'UTF-8');
+            if (mb_strlen(trim($text)) > 50) {
+                return '';
+            }
+            return $match[0];
+        },
+        $tags
+    );
 
     // Availability date shown in the card footer
     $available = '';
