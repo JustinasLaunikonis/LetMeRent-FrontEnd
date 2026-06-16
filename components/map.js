@@ -145,192 +145,11 @@ function initLetMeRentMap() {
     return escapeHtml(listing.priceLabel || 'Price unknown');
   }
 
-  // Short names for the months, used to print a date.
-  var availabilityMonthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-
-  var availabilityMonthNumbers = {
-    jan: 1, january: 1,
-    feb: 2, february: 2,
-    mar: 3, march: 3,
-    apr: 4, april: 4,
-    may: 5,
-    jun: 6, june: 6,
-    jul: 7, july: 7,
-    aug: 8, august: 8,
-    sep: 9, sept: 9, september: 9,
-    oct: 10, october: 10,
-    nov: 11, november: 11,
-    dec: 12, december: 12
-  };
-
-  // Pick the next time a day happens when the year is missing.
-  function availabilityGuessYear(month, day) {
-    var today = new Date();
-    var year = today.getFullYear();
-    var candidate = new Date(year, month - 1, day);
-    var startOfToday = new Date(year, today.getMonth(), today.getDate());
-    if (candidate < startOfToday) {
-      year = year + 1;
+  function getListingTags(listing) {
+    if (Array.isArray(listing.tags)) {
+      return listing.tags;
     }
-    return year;
-  }
-
-  // Build text like "From Aug 1, 2026", or "" if it is not a real date.
-  function availabilityDateText(year, month, day) {
-    if (month < 1 || month > 12 || day < 1 || day > 31) {
-      return '';
-    }
-    return 'From ' + availabilityMonthNames[month - 1] + ' ' + day + ', ' + year;
-  }
-
-  function formatAvailability(value) {
-    if (!value) {
-      return '';
-    }
-
-    var text = String(value).trim();
-    if (text === '') {
-      return '';
-    }
-
-    var lowered = text.toLowerCase();
-    if (lowered.indexOf('immediat') !== -1
-      || lowered.indexOf('direct') !== -1
-      || lowered.indexOf('asap') !== -1
-      || lowered.indexOf('now') !== -1) {
-      return 'Available now';
-    }
-
-    // Look for a 4-digit year anywhere in the text (it may be missing).
-    var year = 0;
-    var yearMatch = text.match(/(\d{4})/);
-    if (yearMatch) {
-      year = parseInt(yearMatch[1], 10);
-    }
-
-    var iso = text.match(/(\d{4})-(\d{2})-(\d{2})/);
-    if (iso) {
-      var r0 = availabilityDateText(parseInt(iso[1], 10), parseInt(iso[2], 10), parseInt(iso[3], 10));
-      if (r0 !== '') {
-        return r0;
-      }
-    }
-
-    // 1) "<day> <month>", like "8 Jun 2026".
-    var dayMonth = text.match(/(\d{1,2})\s+([A-Za-z]+)/);
-    if (dayMonth && availabilityMonthNumbers[dayMonth[2].toLowerCase()]) {
-      var d1 = parseInt(dayMonth[1], 10);
-      var m1 = availabilityMonthNumbers[dayMonth[2].toLowerCase()];
-      var y1 = year;
-      if (y1 === 0) {
-        y1 = availabilityGuessYear(m1, d1);
-      }
-      var r1 = availabilityDateText(y1, m1, d1);
-      if (r1 !== '') {
-        return r1;
-      }
-    }
-
-    // 2) "<month> <day>", like "June 8, 2026".
-    var monthDay = text.match(/([A-Za-z]+)\s+(\d{1,2})/);
-    if (monthDay && availabilityMonthNumbers[monthDay[1].toLowerCase()]) {
-      var m2 = availabilityMonthNumbers[monthDay[1].toLowerCase()];
-      var d2 = parseInt(monthDay[2], 10);
-      var y2 = year;
-      if (y2 === 0) {
-        y2 = availabilityGuessYear(m2, d2);
-      }
-      var r2 = availabilityDateText(y2, m2, d2);
-      if (r2 !== '') {
-        return r2;
-      }
-    }
-
-    // 3) Slashes, like "09/01/2026".
-    var slash = text.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
-    if (slash) {
-      var r3 = availabilityDateText(parseInt(slash[3], 10), parseInt(slash[1], 10), parseInt(slash[2], 10));
-      if (r3 !== '') {
-        return r3;
-      }
-    }
-
-    // 4) Dashes or dots, Dutch day-month-year, like "01-09-2026".
-    var dash = text.match(/(\d{1,2})[-.](\d{1,2})[-.](\d{4})/);
-    if (dash) {
-      var r4 = availabilityDateText(parseInt(dash[3], 10), parseInt(dash[2], 10), parseInt(dash[1], 10));
-      if (r4 !== '') {
-        return r4;
-      }
-    }
-
-    var onlyLetters = lowered.replace(/[^a-z]/g, '');
-    if (onlyLetters === 'available' || onlyLetters === 'availablefrom') {
-      return 'Available now';
-    }
-
-    // Not a date, so show the phrase as it is.
-    return text;
-  }
-
-  // Build the same kind of detail tags used by the listing cards.
-  function buildListingTags(listing) {
-    const tags = [];
-
-    if (listing.city) {
-      tags.push(`📍 ${String(listing.city).charAt(0).toUpperCase() + String(listing.city).slice(1)}`);
-    }
-    if (listing.rooms) {
-      tags.push(`🛏️ ${listing.rooms} rooms`);
-    } else if (listing.property_type) {
-      tags.push(`🛏️ ${listing.property_type}`);
-    }
-    if (listing.furnished) {
-      tags.push(`🛋️ ${listing.furnished}`);
-    } else if (listing.interior) {
-      tags.push(`🛋️ ${listing.interior}`);
-    }
-    if (listing.living_area) {
-      tags.push(`📐 ${listing.living_area} m²`);
-    }
-    if (listing.housemates) {
-      tags.push(`👥 Housemates: ${listing.housemates}`);
-    }
-    if (listing.energy_label) {
-      tags.push(`⚡ ${listing.energy_label}`);
-    }
-    if (listing.rental_period) {
-      tags.push(`📋 ${listing.rental_period}`);
-    }
-    if (listing.deposit) {
-      tags.push(`🔑 €${listing.deposit} deposit`);
-    }
-    if (listing.bathrooms) {
-      tags.push(`🛁 ${listing.bathrooms} bath`);
-    }
-    if (listing.plot_size) {
-      tags.push(`🌳 ${listing.plot_size} m² plot`);
-    }
-    if (listing.year_built) {
-      tags.push(`🏗️ ${listing.year_built}`);
-    }
-    if (listing.neighbourhood) {
-      tags.push(`🗺️ ${listing.neighbourhood}`);
-    }
-    if (listing.status) {
-      tags.push(`✅ ${listing.status}`);
-    }
-    if (listing.home_type) {
-      tags.push(`🏠 ${listing.home_type}`);
-    }
-    if (listing.availability) {
-      var availabilityText = formatAvailability(listing.availability);
-      if (availabilityText) {
-        tags.push(`📅 ${availabilityText}`);
-      }
-    }
-
-    return tags;
+    return [];
   }
 
   // Fill the bottom bar with the selected listing's data and reveal it.
@@ -351,9 +170,11 @@ function initLetMeRentMap() {
 
     listingPrice.innerHTML = formatPrice(listing);
     listingTitle.textContent = listing.title || 'Rental listing';
-    listingTags.innerHTML = buildListingTags(listing).map((tag) => {
+
+    listingTags.innerHTML = getListingTags(listing).map((tag) => {
       return `<span class="tag">${escapeHtml(tag)}</span>`;
     }).join('');
+
     listingLink.href = safeListingUrl(listing.url);
     if (listingDetail) {
       listingDetail.href = safeDetailUrl(listing.id);
@@ -615,42 +436,6 @@ function initLetMeRentMap() {
     });
   }
 
-  // Build the list of tags shown under a sidebar card.
-  function buildSidebarTags(listing) {
-    const tags = [];
-
-    if (listing.city) {
-      tags.push('📍 ' + (String(listing.city).charAt(0).toUpperCase() + String(listing.city).slice(1)));
-    }
-    if (listing.living_area) {
-      tags.push('📐 ' + listing.living_area + ' m²');
-    }
-    if (listing.rooms) {
-      tags.push('🛏️ ' + listing.rooms + ' rooms');
-    } else if (listing.property_type) {
-      tags.push('🛏️ ' + listing.property_type);
-    }
-    if (listing.furnished) {
-      tags.push('🛋️ ' + listing.furnished);
-    } else if (listing.interior) {
-      tags.push('🛋️ ' + listing.interior);
-    }
-    if (listing.housemates) {
-      tags.push('👥 Housemates: ' + listing.housemates);
-    }
-    if (listing.energy_label) {
-      tags.push('⚡ ' + listing.energy_label);
-    }
-    if (listing.rental_period) {
-      tags.push('📋 ' + listing.rental_period);
-    }
-    if (listing.deposit) {
-      tags.push('🔑 €' + listing.deposit + ' deposit');
-    }
-
-    return tags;
-  }
-
   // Build the HTML for one sidebar card from a listing object
   function renderSidebarCardHtml(listing) {
     let thumb = '<div class="map-thumb"></div>';
@@ -668,8 +453,8 @@ function initLetMeRentMap() {
 
     const title = escapeHtml(listing.title || 'Untitled listing');
 
-    // Only the first three tags are shown
-    const tags = buildSidebarTags(listing);
+    // The sidebar always shows the first three tags.
+    const tags = getListingTags(listing);
     let tagHtml = '';
     for (let i = 0; i < tags.length && i < 3; i++) {
       tagHtml += '<span class="tag">' + escapeHtml(tags[i]) + '</span>';

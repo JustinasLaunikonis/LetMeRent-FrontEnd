@@ -1,5 +1,7 @@
 <?php
 
+require_once __DIR__ . '/listings/listingTags.php';
+
 function getListingCoordinates(array $listing) {
     // Some API responses use lat/lng, others use latitude/longitude.
     if (isset($listing['lat']) && isset($listing['lng'])) {
@@ -20,19 +22,6 @@ function getListingCoordinates(array $listing) {
         'lat' => (float)$lat,
         'lng' => (float)$lng
     );
-}
-
-// Some listing sources keep extra values inside a nested features array.
-function getMapMarkerFeatureValue(array $listing, string $key) {
-    if (!isset($listing['features']) || !is_array($listing['features'])) {
-        return null;
-    }
-
-    if (!isset($listing['features'][$key])) {
-        return null;
-    }
-
-    return $listing['features'][$key];
 }
 
 function createMapMarker(array $listing, array $coordinates, int $listingIndex, int $markerIndex): array {
@@ -79,37 +68,7 @@ function createMapMarker(array $listing, array $coordinates, int $listingIndex, 
         $marker['image'] = '';
     }
 
-    foreach (array('city', 'living_area', 'rooms', 'property_type', 'furnished', 'interior', 'housemates', 'plot_size', 'bathrooms', 'energy_label', 'rental_period', 'deposit', 'availability', 'source', 'neighbourhood') as $field) {
-        if (!empty($listing[$field])) {
-            $marker[$field] = $listing[$field];
-        }
-    }
-
-    // Add feature-based tags that are stored differently by some sources.
-    if (empty($marker['bathrooms'])) {
-        $bathrooms = getMapMarkerFeatureValue($listing, 'Number of bath rooms');
-        if (!empty($bathrooms)) {
-            $marker['bathrooms'] = $bathrooms;
-        }
-    }
-
-    $yearBuilt = getMapMarkerFeatureValue($listing, 'Year of construction');
-    if (!empty($yearBuilt)) {
-        $marker['year_built'] = $yearBuilt;
-    }
-
-    $status = getMapMarkerFeatureValue($listing, 'Status');
-    if (!empty($status)) {
-        $marker['status'] = $status;
-    }
-
-    $homeType = getMapMarkerFeatureValue($listing, 'Type apartment');
-    if (empty($homeType)) {
-        $homeType = getMapMarkerFeatureValue($listing, 'Kind of house');
-    }
-    if (!empty($homeType)) {
-        $marker['home_type'] = $homeType;
-    }
+    $marker['tags'] = buildListingCardTags($listing);
 
     $marker['listingIndex'] = $listingIndex;
     $marker['mapIndex'] = $markerIndex;
