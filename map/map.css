@@ -1193,4 +1193,19 @@
 
 .pac-container {
   z-index: 10000;
+  min-width: 280px;
+  max-width: 90vw;
+  border-radius: var(--radius-sm);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+.pac-item {
+  padding: 7px 10px;
+  font-size: 13px;
+  line-height: 1.4;
+  cursor: pointer;
+}
+
+.pac-item-query {
+  font-size: 13px;
 }
