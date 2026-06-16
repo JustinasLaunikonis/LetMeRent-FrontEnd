@@ -671,11 +671,17 @@ function initLetMeRentMap() {
   }
 
   // Set up the "draw area circle" tool
+  let areaCircleApi = null;
   if (typeof window.setupAreaCircle === 'function') {
-    window.setupAreaCircle(map, {
+    areaCircleApi = window.setupAreaCircle(map, {
       filterInCircle: filterListingsInCircle,
       clearFilter: clearListingsCircleFilter
     });
+  }
+
+  // "search a place" box
+  if (typeof window.setupPlaceSearch === 'function') {
+    window.setupPlaceSearch(map, areaCircleApi);
   }
 
   if (markerCount > 0) {

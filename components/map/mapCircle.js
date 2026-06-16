@@ -265,18 +265,28 @@ function setupAreaCircle(map, helpers) {
     }
   }
 
-  function createCircle() {
+  function createCircle(centerOverride, radiusOverride) {
     var radiusInMeters = Number(slider.value);
+    if (radiusOverride !== undefined && radiusOverride !== null) {
+      radiusInMeters = clampRadius(radiusOverride);
+    }
 
     // Keep the whole circle tool above the listing (red) markers
     var handleZIndex = google.maps.Marker.MAX_ZINDEX + 2;
     var pinZIndex = google.maps.Marker.MAX_ZINDEX + 3;
 
-    // The first one goes in the middle. Each extra one is offset so it does not spawn exactly on top of another.
-    var center = map.getCenter();
-    if (circles.length > 0) {
-      var heading = (circles.length * 60) % 360;
-      center = google.maps.geometry.spherical.computeOffset(center, radiusInMeters, heading);
+    // The place search hands us an exact spot (the found place).
+    // if clicked manually first one goes in the middle,
+    // and each extra one is offset so it does not spawn exactly on top of another.
+    var center;
+    if (centerOverride) {
+      center = centerOverride;
+    } else {
+      center = map.getCenter();
+      if (circles.length > 0) {
+        var heading = (circles.length * 60) % 360;
+        center = google.maps.geometry.spherical.computeOffset(center, radiusInMeters, heading);
+      }
     }
 
     var letter = letterForIndex(circles.length);
@@ -560,6 +570,22 @@ function setupAreaCircle(map, helpers) {
   });
 
   updateValueLabel();
+
+  // Drop a finished circle on a found location
+  function createCircleAtLocation(center, radius) {
+    if (!center) {
+      return;
+    }
+    createCircle(center, radius);
+    controls.hidden = false;
+    toggleButton.textContent = 'Add area circle';
+    applyFilter();
+    markAllDone();
+  }
+
+  return {
+    createCircleAt: createCircleAtLocation
+  };
 }
 
 window.setupAreaCircle = setupAreaCircle;
