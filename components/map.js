@@ -21,6 +21,14 @@ function escapeHtml(value) {
   return element.innerHTML;
 }
 
+// Like escapeHtml, but also escapes the double-quote character so a value is
+// safe to put inside a double-quoted HTML attribute (escapeHtml leaves quotes).
+function escapeAttribute(value) {
+  let text = escapeHtml(value);
+  text = text.split('"').join('&quot;');
+  return text;
+}
+
 // Only allow normal website links in the listing detail bar.
 function safeListingUrl(value) {
   try {
@@ -63,6 +71,38 @@ function initLetMeRentMap() {
   const listingLink = document.getElementById('map-listing-link');
   const listingClose = document.getElementById('map-listing-close');
   const config = window.letMeRentMapConfig || {};
+
+  // The sidebar normally shows one server-rendered page of listings, plus the count text at the top.
+  // When the circle tool filters, rebuild the sidebar
+  const sidebarElement = document.querySelector('.map-sidebar');
+  const sidebarListElement = document.querySelector('.map-list');
+  const sidebarCountElement = document.querySelector('.map-count');
+
+  // The footer holds the page buttons.
+  let sidebarFootElement = document.querySelector('.map-foot');
+  let footExistedOriginally = false;
+  let originalFootHtml = '';
+  if (sidebarFootElement) {
+    footExistedOriginally = true;
+    originalFootHtml = sidebarFootElement.innerHTML;
+  }
+  let originalSidebarHtml = '';
+  if (sidebarListElement) {
+    originalSidebarHtml = sidebarListElement.innerHTML;
+  }
+  let originalCountHtml = '';
+  if (sidebarCountElement) {
+    originalCountHtml = sidebarCountElement.innerHTML;
+  }
+
+  // Circle tool state.
+  let circleActive = false;
+  let circleAreas = [];
+  // One true/false for each drawn circle, saying whether it overlaps another circle.
+  let circleHasOverlap = [];
+  let circleListings = [];
+  let circlePage = 1;
+  const circlePerPage = 10;
 
   // Amsterdam is only used when there are no listing markers.
   const fallbackCenter = { lat: 52.3676, lng: 4.9041 };
@@ -374,6 +414,71 @@ function initLetMeRentMap() {
     });
   }
 
+  // Work out which drawn circles overlap each other.
+  // Two circles overlap when the distance between their centers is smaller than their two radii added together.
+  function updateCircleOverlaps() {
+    circleHasOverlap = [];
+    for (let i = 0; i < circleAreas.length; i++) {
+      circleHasOverlap.push(false);
+    }
+
+    for (let i = 0; i < circleAreas.length; i++) {
+      for (let j = i + 1; j < circleAreas.length; j++) {
+        const distance = google.maps.geometry.spherical.computeDistanceBetween(circleAreas[i].center, circleAreas[j].center);
+        if (distance < circleAreas[i].radius + circleAreas[j].radius) {
+          circleHasOverlap[i] = true;
+          circleHasOverlap[j] = true;
+        }
+      }
+    }
+  }
+
+  // Decide whether one listing position should be shown for the current circles.
+  // rules:
+  //   - inside two or more circles -> always show (it is an overlapping area).
+  //   - inside exactly one circle  -> show only when that circle stands on its own (it does not overlap another circle).
+  //   - inside no circle           -> never show.
+  function isInsideFilteredArea(position) {
+    const insideCircles = [];
+    for (let i = 0; i < circleAreas.length; i++) {
+      const distance = google.maps.geometry.spherical.computeDistanceBetween(circleAreas[i].center, position);
+      if (distance <= circleAreas[i].radius) {
+        insideCircles.push(i);
+      }
+    }
+
+    if (insideCircles.length === 0) {
+      return false;
+    }
+
+    // Inside two or more circles:
+    if (insideCircles.length >= 2) {
+      return true;
+    }
+
+    // Inside exactly one circle. Only show it when that circle stands on its own
+    const onlyCircle = insideCircles[0];
+    if (circleHasOverlap[onlyCircle]) {
+      return false;
+    }
+    return true;
+  }
+
+  // Show only the markers that pass the circle filter above.
+  function showMarkersInsideCircle() {
+    markerEntries.forEach((entry) => {
+      entry.marker.setVisible(isInsideFilteredArea(entry.marker.getPosition()));
+    });
+  }
+
+  function resetMarkerVisibility() {
+    if (circleActive && circleAreas.length > 0) {
+      showMarkersInsideCircle();
+    } else {
+      showAllMarkers();
+    }
+  }
+
   // Focus the map by hiding every marker except one.
   function showOnlyMarker(selectedEntry) {
     markerEntries.forEach((entry) => {
@@ -405,14 +510,13 @@ function initLetMeRentMap() {
   // Clicking empty space on the map clears the selected listing.
   map.addListener('click', () => {
     hideListingBar();
-    showAllMarkers();
+    resetMarkerVisibility();
     document.querySelectorAll('.js-map-listing.selected').forEach((selectedItem) => {
       selectedItem.classList.remove('selected');
     });
   });
 
-  // Clicking a listing in the sidebar focuses the matching marker.
-  document.querySelectorAll('.js-map-listing').forEach((item, rowIndex) => {
+  function wireSidebarItem(item) {
     item.addEventListener('click', (event) => {
       event.preventDefault();
 
@@ -424,11 +528,6 @@ function initLetMeRentMap() {
         markerData = markersByPosition.get(positionKey(item.dataset.lat, item.dataset.lng));
       }
 
-      // Last fallback: use the same order as the visible sidebar.
-      if (!markerData && markerEntries[rowIndex]) {
-        markerData = markerEntries[rowIndex];
-      }
-
       document.querySelectorAll('.js-map-listing.selected').forEach((selectedItem) => {
         selectedItem.classList.remove('selected');
       });
@@ -436,7 +535,7 @@ function initLetMeRentMap() {
       // Clicking the selected listing again resets the map.
       if (wasSelected) {
         hideListingBar();
-        showAllMarkers();
+        resetMarkerVisibility();
         return;
       }
 
@@ -460,16 +559,301 @@ function initLetMeRentMap() {
         map.setZoom(15);
       }
     });
-  });
+  }
+
+  function wireAllSidebarItems() {
+    document.querySelectorAll('.js-map-listing').forEach((item) => {
+      wireSidebarItem(item);
+    });
+  }
+
+  // Clicking a listing in the sidebar focuses the matching marker.
+  wireAllSidebarItems();
 
   if (listingClose) {
     listingClose.addEventListener('click', () => {
       // Closing the bar should fully reset the selected map/list state.
       hideListingBar();
-      showAllMarkers();
+      resetMarkerVisibility();
       document.querySelectorAll('.js-map-listing.selected').forEach((selectedItem) => {
         selectedItem.classList.remove('selected');
       });
+    });
+  }
+
+  // Build the list of tags shown under a sidebar card.
+  function buildSidebarTags(listing) {
+    const tags = [];
+
+    if (listing.city) {
+      tags.push('📍 ' + (String(listing.city).charAt(0).toUpperCase() + String(listing.city).slice(1)));
+    }
+    if (listing.living_area) {
+      tags.push('📐 ' + listing.living_area + ' m²');
+    }
+    if (listing.rooms) {
+      tags.push('🛏️ ' + listing.rooms + ' rooms');
+    } else if (listing.property_type) {
+      tags.push('🛏️ ' + listing.property_type);
+    }
+    if (listing.furnished) {
+      tags.push('🛋️ ' + listing.furnished);
+    } else if (listing.interior) {
+      tags.push('🛋️ ' + listing.interior);
+    }
+    if (listing.housemates) {
+      tags.push('👥 Housemates: ' + listing.housemates);
+    }
+    if (listing.energy_label) {
+      tags.push('⚡ ' + listing.energy_label);
+    }
+    if (listing.rental_period) {
+      tags.push('📋 ' + listing.rental_period);
+    }
+    if (listing.deposit) {
+      tags.push('🔑 €' + listing.deposit + ' deposit');
+    }
+
+    return tags;
+  }
+
+  // Build the HTML for one sidebar card from a listing object
+  function renderSidebarCardHtml(listing) {
+    let thumb = '<div class="map-thumb"></div>';
+    const imageUrl = safeImageUrl(listing.image);
+    if (imageUrl) {
+      const altText = escapeAttribute(listing.title || 'Rental listing');
+      thumb = '<div class="map-thumb"><img src="' + escapeAttribute(imageUrl) + '" alt="' + altText + '" style="width:100%;height:100%;object-fit:cover;"></div>';
+    }
+
+    // Price (or a dash when the price is unknown).
+    let priceHtml = '&mdash;';
+    if (listing.price !== undefined && listing.price !== null && listing.price !== '') {
+      priceHtml = '&euro;' + escapeHtml(String(listing.price));
+    }
+
+    const title = escapeHtml(listing.title || 'Untitled listing');
+
+    // Only the first three tags are shown
+    const tags = buildSidebarTags(listing);
+    let tagHtml = '';
+    for (let i = 0; i < tags.length && i < 3; i++) {
+      tagHtml += '<span class="tag">' + escapeHtml(tags[i]) + '</span>';
+    }
+
+    const url = escapeAttribute(safeListingUrl(listing.url));
+    let dataAttributes = '';
+    if (Number.isFinite(Number(listing.lat)) && Number.isFinite(Number(listing.lng))) {
+      dataAttributes += ' data-lat="' + escapeAttribute(String(listing.lat)) + '" data-lng="' + escapeAttribute(String(listing.lng)) + '"';
+    }
+    if (listing.mapIndex !== undefined && listing.mapIndex !== null) {
+      dataAttributes += ' data-map-index="' + escapeAttribute(String(listing.mapIndex)) + '"';
+    }
+
+    return '<a class="map-list-item js-map-listing" href="#google-map" data-listing-url="' + url + '"' + dataAttributes + '>'
+      + thumb
+      + '<div class="map-item-info">'
+      + '<div class="map-item-price">' + priceHtml + '<span>/mo</span></div>'
+      + '<div class="map-item-title">' + title + '</div>'
+      + '<div class="map-item-tags">' + tagHtml + '</div>'
+      + '</div>'
+      + '</a>';
+  }
+
+  // Update the count text at the top of the sidebar.
+  // When a circle is active show how many listings fell inside it
+  function updateSidebarCount(count, circle) {
+    if (!sidebarCountElement) {
+      return;
+    }
+    if (circle) {
+      sidebarCountElement.innerHTML = count + ' listings <span>- in selected area</span>';
+    } else {
+      sidebarCountElement.innerHTML = originalCountHtml;
+    }
+  }
+
+  // Find the footer, making one if the server did not render it (it only does so when the unfiltered list has more than one page).
+  function getOrCreateFoot() {
+    if (sidebarFootElement) {
+      return sidebarFootElement;
+    }
+    const foot = document.createElement('div');
+    foot.className = 'map-foot';
+    if (sidebarElement) {
+      sidebarElement.appendChild(foot);
+    }
+    sidebarFootElement = foot;
+    return sidebarFootElement;
+  }
+
+  // Draw the Prev / Next buttons for the circle results
+  function renderCirclePager(totalPages) {
+    // With one page (or none) there is nothing to page through.
+    if (totalPages <= 1) {
+      if (sidebarFootElement) {
+        sidebarFootElement.innerHTML = '';
+        sidebarFootElement.style.display = 'none';
+      }
+      return;
+    }
+
+    const foot = getOrCreateFoot();
+    if (!foot) {
+      return;
+    }
+    foot.style.display = '';
+
+    // Prev button (greyed out on the first page).
+    let prevHtml = '';
+    if (circlePage > 1) {
+      prevHtml = '<a class="map-page-btn" href="#" id="circle-prev">&#8592; Prev</a>';
+    } else {
+      prevHtml = '<span class="map-page-btn map-page-btn--disabled">&#8592; Prev</span>';
+    }
+
+    // Next button (greyed out on the last page).
+    let nextHtml = '';
+    if (circlePage < totalPages) {
+      nextHtml = '<a class="map-page-btn" href="#" id="circle-next">Next &#8594;</a>';
+    } else {
+      nextHtml = '<span class="map-page-btn map-page-btn--disabled">Next &#8594;</span>';
+    }
+
+    foot.innerHTML = '<nav class="map-pagination">'
+      + prevHtml
+      + '<span class="map-page-info">Page ' + circlePage + ' of ' + totalPages + '</span>'
+      + nextHtml
+      + '</nav>';
+
+    // make the buttons to change the page without reloading.
+    const prevButton = document.getElementById('circle-prev');
+    if (prevButton) {
+      prevButton.addEventListener('click', (event) => {
+        event.preventDefault();
+        circlePage = circlePage - 1;
+        renderCirclePage();
+      });
+    }
+    const nextButton = document.getElementById('circle-next');
+    if (nextButton) {
+      nextButton.addEventListener('click', (event) => {
+        event.preventDefault();
+        circlePage = circlePage + 1;
+        renderCirclePage();
+      });
+    }
+  }
+
+  // Render the current page of circle results into the sidebar.
+  function renderCirclePage() {
+    if (!sidebarListElement) {
+      return;
+    }
+
+    let totalPages = Math.ceil(circleListings.length / circlePerPage);
+    if (totalPages < 1) {
+      totalPages = 1;
+    }
+
+    // Keep the page number inside the valid range.
+    if (circlePage < 1) {
+      circlePage = 1;
+    }
+    if (circlePage > totalPages) {
+      circlePage = totalPages;
+    }
+
+    const start = (circlePage - 1) * circlePerPage;
+    let end = start + circlePerPage;
+    if (end > circleListings.length) {
+      end = circleListings.length;
+    }
+
+    let html = '';
+    for (let i = start; i < end; i++) {
+      html += renderSidebarCardHtml(circleListings[i]);
+    }
+    sidebarListElement.innerHTML = html;
+    wireAllSidebarItems();
+
+    // Start each new page at the top of the list.
+    sidebarListElement.scrollTop = 0;
+
+    renderCirclePager(totalPages);
+  }
+
+  // Show only the listings whose marker is inside one of the circles, and
+  // rebuild the sidebar to list them one page at a time.
+  function filterListingsInCircle(areas) {
+    circleActive = true;
+    circleAreas = areas;
+
+    updateCircleOverlaps();
+
+    // Collect the listings that pass the circle filter, keeping the marker order.
+    circleListings = [];
+    markerEntries.forEach((entry) => {
+      const inside = isInsideFilteredArea(entry.marker.getPosition());
+      entry.marker.setVisible(inside);
+      if (inside) {
+        circleListings.push(entry.listing);
+      }
+    });
+
+    // Always start on the first page of the new results.
+    circlePage = 1;
+
+    if (sidebarListElement) {
+      if (circleListings.length === 0) {
+        sidebarListElement.innerHTML = '<div class="no-results">No listings in this area. Try a bigger circle or move it.</div>';
+        // Nothing to page through, so hide the footer if there is one.
+        if (sidebarFootElement) {
+          sidebarFootElement.innerHTML = '';
+          sidebarFootElement.style.display = 'none';
+        }
+      } else {
+        renderCirclePage();
+      }
+    }
+
+    updateSidebarCount(circleListings.length, true);
+  }
+
+  // Put the sidebar and markers back to normal (when the circle is removed).
+  function clearListingsCircleFilter() {
+    circleActive = false;
+    circleAreas = [];
+    circleListings = [];
+    circlePage = 1;
+
+    showAllMarkers();
+
+    if (sidebarListElement) {
+      sidebarListElement.innerHTML = originalSidebarHtml;
+      wireAllSidebarItems();
+    }
+
+    // Restore the footer to how it started.
+    if (footExistedOriginally) {
+      if (sidebarFootElement) {
+        sidebarFootElement.innerHTML = originalFootHtml;
+        sidebarFootElement.style.display = '';
+      }
+    } else if (sidebarFootElement) {
+      // made the footer ourselves for the circle pager, so remove it again.
+      sidebarFootElement.remove();
+      sidebarFootElement = null;
+    }
+
+    updateSidebarCount(0, false);
+  }
+
+  // Set up the "draw area circle" tool
+  if (typeof window.setupAreaCircle === 'function') {
+    window.setupAreaCircle(map, {
+      filterInCircle: filterListingsInCircle,
+      clearFilter: clearListingsCircleFilter
     });
   }
 
