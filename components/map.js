@@ -44,6 +44,13 @@ function safeListingUrl(value) {
   return '../detail/detail.html';
 }
 
+function safeDetailUrl(id) {
+  if (id === undefined || id === null || String(id) === '') {
+    return '../detail/detail.html';
+  }
+  return '../detail/detail.php?id=' + encodeURIComponent(String(id));
+}
+
 function safeImageUrl(value) {
   try {
     const url = new URL(value || '', window.location.href);
@@ -69,6 +76,7 @@ function initLetMeRentMap() {
   const listingTitle = document.getElementById('map-listing-title');
   const listingTags = document.getElementById('map-listing-tags');
   const listingLink = document.getElementById('map-listing-link');
+  const listingDetail = document.getElementById('map-listing-detail');
   const listingClose = document.getElementById('map-listing-close');
   const config = window.letMeRentMapConfig || {};
 
@@ -100,6 +108,7 @@ function initLetMeRentMap() {
   let circleAreas = [];
   // One true/false for each drawn circle, saying whether it overlaps another circle.
   let circleHasOverlap = [];
+  let circleTargetLevel = 1;
   let circleListings = [];
   let circlePage = 1;
   const circlePerPage = 10;
@@ -346,6 +355,9 @@ function initLetMeRentMap() {
       return `<span class="tag">${escapeHtml(tag)}</span>`;
     }).join('');
     listingLink.href = safeListingUrl(listing.url);
+    if (listingDetail) {
+      listingDetail.href = safeDetailUrl(listing.id);
+    }
     listingBar.hidden = false;
   }
 
@@ -433,35 +445,57 @@ function initLetMeRentMap() {
     }
   }
 
-  // Decide whether one listing position should be shown for the current circles.
-  // rules:
-  //   - inside two or more circles -> always show (it is an overlapping area).
-  //   - inside exactly one circle  -> show only when that circle stands on its own (it does not overlap another circle).
-  //   - inside no circle           -> never show.
-  function isInsideFilteredArea(position) {
-    const insideCircles = [];
+  // Count how many of the drawn circles overlap a position.
+  function countInsideCircles(position) {
+    let count = 0;
     for (let i = 0; i < circleAreas.length; i++) {
       const distance = google.maps.geometry.spherical.computeDistanceBetween(circleAreas[i].center, position);
       if (distance <= circleAreas[i].radius) {
-        insideCircles.push(i);
+        count++;
       }
     }
+    return count;
+  }
 
-    if (insideCircles.length === 0) {
+  // With N circles we want listings inside all N.
+  // If none exist we drop to N-1, then N-2, and so on, never below 2.
+  // The result is the highest number of circles any single listing falls inside
+  // When no listing reaches two circles this returns 1,
+  // then isInsideFilteredArea uses the single-circle rule.
+  function computeCircleTargetLevel() {
+    let maxCount = 0;
+    markerEntries.forEach((entry) => {
+      const count = countInsideCircles(entry.marker.getPosition());
+      if (count > maxCount) {
+        maxCount = count;
+      }
+    });
+
+    if (maxCount < 2) {
+      return 1;
+    }
+    return maxCount;
+  }
+
+  function isInsideFilteredArea(position) {
+    const insideCount = countInsideCircles(position);
+    if (insideCount == 0) {
       return false;
     }
 
-    // Inside two or more circles:
-    if (insideCircles.length >= 2) {
-      return true;
+    // Deepest overlap level reached by some listing
+    if (circleTargetLevel >= 2) {
+      return insideCount >= circleTargetLevel;
     }
 
-    // Inside exactly one circle. Only show it when that circle stands on its own
-    const onlyCircle = insideCircles[0];
-    if (circleHasOverlap[onlyCircle]) {
-      return false;
+    // No listing is inside two or more circles
+    for (let i = 0; i < circleAreas.length; i++) {
+      const distance = google.maps.geometry.spherical.computeDistanceBetween(circleAreas[i].center, position);
+      if (distance <= circleAreas[i].radius) {
+        return !circleHasOverlap[i];
+      }
     }
-    return true;
+    return false;
   }
 
   // Show only the markers that pass the circle filter above.
@@ -790,6 +824,7 @@ function initLetMeRentMap() {
     circleAreas = areas;
 
     updateCircleOverlaps();
+    circleTargetLevel = computeCircleTargetLevel();
 
     // Collect the listings that pass the circle filter, keeping the marker order.
     circleListings = [];
@@ -825,6 +860,7 @@ function initLetMeRentMap() {
     circleActive = false;
     circleAreas = [];
     circleListings = [];
+    circleTargetLevel = 1;
     circlePage = 1;
 
     showAllMarkers();

@@ -286,7 +286,10 @@ if (!isset($selectedMoveIn)) {
           <div id="map-listing-title" class="popup-title"></div>
           <div id="map-listing-tags" class="popup-tags"></div>
         </div>
-        <a id="map-listing-link" class="popup-view" href="../detail/detail.html" target="_blank" rel="noopener">View listing</a>
+        <div class="popup-actions">
+          <a id="map-listing-link" class="popup-view popup-view--secondary" href="../detail/detail.html" target="_blank" rel="noopener">Browse Listing</a>
+          <a id="map-listing-detail" class="popup-view" href="../detail/detail.html">More Details</a>
+        </div>
         <button id="map-listing-close" class="popup-close" type="button" aria-label="Close listing details">&times;</button>
       </div>
     </div>
