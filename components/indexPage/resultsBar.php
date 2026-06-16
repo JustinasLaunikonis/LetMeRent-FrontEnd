@@ -1,3 +1,14 @@
+<?php
+// Carry the filters back to the map view
+if (!isset($mapHref)) {
+    $mapQuery = $_GET;
+    unset($mapQuery['page']);
+    $mapHref = 'map/map.php';
+    if (!empty($mapQuery)) {
+        $mapHref .= '?' . http_build_query($mapQuery);
+    }
+}
+?>
 <!-- Results -->
 <div class="results-bar">
   <div class="results-count">
@@ -22,7 +33,7 @@
     <span class="profile-applied-label">&#9679; Your profile applied</span>
     <div class="view-toggle">
       <button class="view-btn active">&#8862;</button>
-      <button class="view-btn" onclick="location.href='map/map.php'">&#128506;</button>
+      <button class="view-btn" onclick="location.href='<?= htmlspecialchars($mapHref, ENT_QUOTES) ?>'">&#128506;</button>
     </div>
   </div>
 </div>

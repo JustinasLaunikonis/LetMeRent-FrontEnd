@@ -45,6 +45,13 @@ if (!isset($selectedMaxBudget)) {
 if (!isset($selectedMoveIn)) {
   $selectedMoveIn = '';
 }
+
+// Carry the filters back to the browse view
+unset($browseQuery['page']);
+$browseHref = '../index.php';
+if (!empty($browseQuery)) {
+  $browseHref .= '?' . http_build_query($browseQuery);
+}
 ?>
 <!DOCTYPE html>
 <html lang="en" class="map-page">
@@ -70,7 +77,7 @@ if (!isset($selectedMoveIn)) {
     </a>
 
     <ul class="nav-links">
-      <li><a href="../index.php">Browse</a></li>
+      <li><a href="<?= htmlspecialchars($browseHref, ENT_QUOTES) ?>">Browse</a></li>
       <li><a href="map.php" class="active">Map View</a></li>
       <li><a href="../profile/profile.php">My Alerts</a></li>
     </ul>

@@ -3,6 +3,14 @@ include 'components/listings/listings.php';
 include 'components/indexPage/cityValues.php';
 include 'components/indexPage/budgetValues.php';
 include 'components/indexPage/moveInValues.php';
+
+// Carry the filters back to the map view
+$mapQuery = $_GET;
+unset($mapQuery['page']);
+$mapHref = 'map/map.php';
+if (!empty($mapQuery)) {
+    $mapHref .= '?' . http_build_query($mapQuery);
+}
 ?>
 
 <!DOCTYPE html>
@@ -29,7 +37,7 @@ include 'components/indexPage/moveInValues.php';
 
     <ul class="nav-links">
       <li><a href="index.php" class="active">Browse</a></li>
-      <li><a href="map/map.php">Map View</a></li>
+      <li><a href="<?= htmlspecialchars($mapHref, ENT_QUOTES) ?>">Map View</a></li>
       <li><a href="profile/profile.php">My Alerts</a></li>
     </ul>
 
