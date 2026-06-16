@@ -259,6 +259,29 @@ if (!isset($selectedMoveIn)) {
         </div>
       <?php } ?>
       <div class="map-circle-tool">
+        <div class="map-place-search">
+          <div class="map-place-row">
+            <span class="map-place-icon">&#128269;</span>
+            <input type="text" id="map-place-input" class="map-place-input" placeholder="Search a place" autocomplete="off">
+          </div>
+          <div class="map-circle-row">
+            <span class="map-circle-name">Within</span>
+            <span id="map-place-value" class="map-circle-value">2 km</span>
+          </div>
+          <input
+            id="map-place-slider"
+            class="map-circle-slider"
+            type="range"
+            min="100"
+            max="15000"
+            step="100"
+            value="2000"
+            aria-label="Search distance in metres"
+          >
+          <button id="map-place-search-btn" type="button" class="map-place-btn">Search area</button>
+          <div id="map-place-status" class="map-place-status" hidden></div>
+        </div>
+
         <button id="map-circle-toggle" type="button" class="map-circle-btn">Draw area circle</button>
         <div id="map-circle-controls" class="map-circle-controls" hidden>
           <div class="map-circle-row">
@@ -307,6 +330,7 @@ if (!isset($selectedMoveIn)) {
   </script>
   <script src="../components/map/mapResizer.js"></script>
   <script src="../components/map/mapCircle.js"></script>
+  <script src="../components/map/mapPlaceSearch.js"></script>
   <script src="../components/map.js"></script>
   <script src="../components/filters/filterDropdowns.js"></script>
   <script src="../components/filters/filterRooms.js"></script>
@@ -318,7 +342,7 @@ if (!isset($selectedMoveIn)) {
   <script src="../components/map/mapCity.js"></script>
 
   <?php if ($googleMapsApiKey !== '') { ?>
-    <script src="https://maps.googleapis.com/maps/api/js?key=<?php echo htmlspecialchars(rawurlencode($googleMapsApiKey)); ?>&libraries=geometry&callback=initLetMeRentMap" async defer onerror="showMapLoadError()"></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=<?php echo htmlspecialchars(rawurlencode($googleMapsApiKey)); ?>&libraries=geometry,places&callback=initLetMeRentMap" async defer onerror="showMapLoadError()"></script>
   <?php } ?>
 </body>
 </html>
