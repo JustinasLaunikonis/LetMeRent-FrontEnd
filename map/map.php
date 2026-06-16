@@ -256,6 +256,26 @@ if (!isset($selectedMoveIn)) {
           Add GOOGLE_MAPS_API_KEY to your .env file to load the interactive Google map.
         </div>
       <?php } ?>
+      <div class="map-circle-tool">
+        <button id="map-circle-toggle" type="button" class="map-circle-btn">Draw area circle</button>
+        <div id="map-circle-controls" class="map-circle-controls" hidden>
+          <div class="map-circle-row">
+            <span class="map-circle-name" id="map-circle-name">Radius</span>
+            <span id="map-circle-value" class="map-circle-value">5 km</span>
+          </div>
+          <input
+            id="map-circle-slider"
+            class="map-circle-slider"
+            type="range"
+            min="100"
+            max="15000"
+            step="100"
+            value="5000"
+            aria-label="Circle radius in metres"
+          >
+          <button id="map-circle-remove" type="button" class="map-circle-remove">Remove all circles</button>
+        </div>
+      </div>
       <div id="map-load-error" class="map-load-error" hidden>
         Google Maps rejected the API key. Check that billing is enabled, the Maps JavaScript API is enabled, and your key allows this website URL.
       </div>
@@ -280,6 +300,7 @@ if (!isset($selectedMoveIn)) {
       markers: <?php echo json_encode($mapMarkers); ?>
     };
   </script>
+  <script src="../components/map/mapCircle.js"></script>
   <script src="../components/map.js"></script>
   <script src="../components/filters/filterDropdowns.js"></script>
   <script src="../components/filters/filterRooms.js"></script>
@@ -291,7 +312,7 @@ if (!isset($selectedMoveIn)) {
   <script src="../components/map/mapCity.js"></script>
 
   <?php if ($googleMapsApiKey !== '') { ?>
-    <script src="https://maps.googleapis.com/maps/api/js?key=<?php echo htmlspecialchars(rawurlencode($googleMapsApiKey)); ?>&callback=initLetMeRentMap" async defer onerror="showMapLoadError()"></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=<?php echo htmlspecialchars(rawurlencode($googleMapsApiKey)); ?>&libraries=geometry&callback=initLetMeRentMap" async defer onerror="showMapLoadError()"></script>
   <?php } ?>
 </body>
 </html>
