@@ -44,7 +44,41 @@ function setupPlaceSearch(map, circleApi) {
   slider.addEventListener('input', updateValueLabel);
   updateValueLabel();
 
-  // The Places service needs the "places" library to be loaded with the map
+  // Move to a found place and draw the finished circle on it
+  function drawForPlace(place) {
+    if (!place || !place.geometry || !place.geometry.location) {
+      return;
+    }
+
+    var center = place.geometry.location;
+    var radius = Number(slider.value);
+
+    map.panTo(center);
+    circleApi.createCircleAt(center, radius);
+
+    var placeName = place.name || input.value.trim();
+    setStatus('Listings within ' + radiusText(radius) + ' of ' + placeName + '.');
+  }
+
+  // Attach Googles autocomplete dropdown to the input
+  var autocomplete = null;
+  if (google.maps.places && google.maps.places.Autocomplete) {
+    autocomplete = new google.maps.places.Autocomplete(input, {
+      fields: ['name', 'geometry', 'formatted_address']
+    });
+
+    // Bias the suggestions to the area the user is currently looking at.
+    autocomplete.bindTo('bounds', map);
+
+    // Picking a suggestion gives us the place straight away, so draw the circle.
+    autocomplete.addListener('place_changed', function () {
+      var place = autocomplete.getPlace();
+      if (place && place.geometry && place.geometry.location) {
+        drawForPlace(place);
+      }
+    });
+  }
+
   var placesService = null;
   if (google.maps.places && google.maps.places.PlacesService) {
     placesService = new google.maps.places.PlacesService(map);
@@ -96,20 +130,7 @@ function setupPlaceSearch(map, circleApi) {
         return;
       }
 
-      var place = results[0];
-      if (!place.geometry || !place.geometry.location) {
-        setStatus('Could not find where "' + query + '" is.');
-        return;
-      }
-
-      var center = place.geometry.location;
-      var radius = Number(slider.value);
-
-      map.panTo(center);
-      circleApi.createCircleAt(center, radius);
-
-      var placeName = place.name || query;
-      setStatus('Listings within ' + radiusText(radius) + ' of ' + placeName + '.');
+      drawForPlace(results[0]);
     });
   }
 
