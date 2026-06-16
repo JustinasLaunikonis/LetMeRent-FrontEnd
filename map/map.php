@@ -248,6 +248,8 @@ if (!isset($selectedMoveIn)) {
       <?php } ?>
     </div>
 
+    <div id="map-resizer" class="map-resizer" role="separator" aria-orientation="vertical" aria-label="Resize sidebar"></div>
+
     <!-- Map -->
     <div class="map-canvas">
       <div id="google-map" class="google-map"></div>
@@ -303,6 +305,7 @@ if (!isset($selectedMoveIn)) {
       markers: <?php echo json_encode($mapMarkers); ?>
     };
   </script>
+  <script src="../components/map/mapResizer.js"></script>
   <script src="../components/map/mapCircle.js"></script>
   <script src="../components/map.js"></script>
   <script src="../components/filters/filterDropdowns.js"></script>

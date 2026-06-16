@@ -6,10 +6,31 @@
 
 .map-layout {
   display: grid;
-  grid-template-columns: 368px 1fr;
+  grid-template-columns: var(--map-sidebar-width, 368px) 6px 1fr;
   grid-template-rows: minmax(0, 1fr);
   height: calc(100% - 60px);
   overflow: hidden;
+}
+
+.map-resizer {
+  align-self: stretch;
+  cursor: col-resize;
+  background: transparent;
+  border-right: 1px solid transparent;
+  transition: background 0.15s ease, border-color 0.15s ease;
+  touch-action: none;
+  z-index: 25;
+}
+
+.map-resizer:hover,
+.map-resizer.dragging {
+  background: rgba(37, 99, 235, 0.12);
+  border-right-color: var(--blue);
+}
+
+.map-resizing {
+  cursor: col-resize;
+  user-select: none;
 }
 
 .map-sidebar {
@@ -927,6 +948,10 @@
   }
 
   .map-sidebar {
+    display: none;
+  }
+
+  .map-resizer {
     display: none;
   }
 
