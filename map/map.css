@@ -858,6 +858,14 @@
   overflow-y: auto;
 }
 
+.popup-actions {
+  display: flex;
+  flex-direction: column;
+  align-self: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
 .popup-view {
   align-self: center;
   padding: 9px 16px;
@@ -871,7 +879,23 @@
   white-space: nowrap;
   flex-shrink: 0;
   text-decoration: none;
+  text-align: center;
   cursor: pointer;
+}
+
+.popup-actions .popup-view {
+  align-self: stretch;
+}
+
+.popup-view--secondary {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--ink);
+}
+
+.popup-view--secondary:hover {
+  border-color: var(--blue);
+  color: var(--blue);
 }
 
 .popup-close {

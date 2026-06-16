@@ -62,6 +62,17 @@ function createMapMarker(array $listing, array $coordinates, int $listingIndex, 
         $marker['url'] = '../detail/detail.html';
     }
 
+    // The detail page finds the listing by its id (or MongoDB _id).
+    $listingId = '';
+    if (isset($listing['id'])) {
+        $listingId = (string) $listing['id'];
+    } else if (isset($listing['_id'])) {
+        $listingId = (string) $listing['_id'];
+    }
+    if ($listingId !== '') {
+        $marker['id'] = $listingId;
+    }
+
     if (!empty($listing['images']) && is_array($listing['images']) && !empty($listing['images'][0])) {
         $marker['image'] = $listing['images'][0];
     } else {
