@@ -47,6 +47,10 @@ if (!isset($selectedMoveIn)) {
 }
 
 // Carry the filters back to the browse view
+if (!isset($browseQuery) || !is_array($browseQuery)) {
+  $browseQuery = $_GET;
+}
+
 unset($browseQuery['page']);
 $browseHref = '../index.php';
 if (!empty($browseQuery)) {
