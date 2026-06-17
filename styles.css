@@ -113,37 +113,6 @@ body {
   gap: 10px;
 }
 
-.nav-bell {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 50%;
-  font-size: 16px;
-  cursor: pointer;
-}
-
-.nav-bell::after {
-  content: '3';
-  position: absolute;
-  top: -4px;
-  right: -4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 16px;
-  height: 16px;
-  background: var(--red);
-  border-radius: 50%;
-  color: white;
-  font-size: 9px;
-  font-weight: 700;
-}
-
 .nav-avatar {
   display: flex;
   align-items: center;

@@ -72,8 +72,7 @@ if ($navActive === 'alerts') {
 
   <div class="nav-right">
     <?php if ($navLoggedIn): ?>
-      <!-- Logged in: show notifications and the user's avatar. -->
-      <div class="nav-bell">&#128276;</div>
+      <!-- Logged in: show the user's avatar. -->
       <a href="<?= htmlspecialchars($navProfileHref, ENT_QUOTES) ?>" class="nav-avatar"><?= htmlspecialchars($navAvatar) ?></a>
     <?php else: ?>
       <!-- Logged out: no fake avatar. Show a clear "Sign in" button instead. -->

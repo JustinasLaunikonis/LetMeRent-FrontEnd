@@ -528,6 +528,7 @@
 
       setupChoiceCombobox('lease-search', 'lease-select', 'lease-options');
       setupChoiceCombobox('furnishing-search', 'furnishing-select', 'furnishing-options');
+      setupChoiceCombobox('room-type-search', 'room-type-select', 'room-type-options');
     })();
 
 // ---------------------------------------------------------------------------
@@ -718,19 +719,10 @@
   }
 
   resetButton.addEventListener('click', function () {
-    // Plain dropdowns go back to their empty option.
-    const selectNames = ['room_type'];
-    for (let i = 0; i < selectNames.length; i++) {
-      const select = document.querySelector('[name="' + selectNames[i] + '"]');
-      if (select) {
-        select.value = '';
-      }
-    }
-
-    // Combobox fields (Min lease length, Furnishing): clear the box and the submitted value.
     const comboboxes = [
       ['lease-search', 'lease-select'],
-      ['furnishing-search', 'furnishing-select']
+      ['furnishing-search', 'furnishing-select'],
+      ['room-type-search', 'room-type-select']
     ];
     for (let i = 0; i < comboboxes.length; i++) {
       const comboSearch = document.getElementById(comboboxes[i][0]);
