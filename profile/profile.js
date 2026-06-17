@@ -3,6 +3,8 @@
 //   2) the source multi-select dropdown label,
 //   3) the city and university autocompletes.
 //   4) the budget min/max number inputs and sliders, which are linked together
+//   5) the fade out of the "profile updated" message after a few seconds.
+//   6) the reset button, which puts every filter back to its default.
 
 // ---------------------------------------------------------------------------
 // 1) Distance-from-campus slider
@@ -53,17 +55,14 @@
       const emptyLabel = label?.dataset.emptyLabel || 'Any source';
 
       const updateLabel = () => {
-        const selectedLabels = inputs
-          .filter((input) => input.checked)
-          .map((input) => input.closest('label')?.textContent.trim())
-          .filter(Boolean);
+        const selectedCount = inputs.filter((input) => input.checked).length;
 
-        // When nothing is selected, or every source is selected, show the
-        // "Any source" label instead of listing them all.
-        if (selectedLabels.length === 0 || selectedLabels.length === inputs.length) {
+        // When nothing is selected, or every source is selected, show the "Any source" label.
+        // Otherwise show a simple count, for example "3/5 sources selected", instead of listing every source name.
+        if (selectedCount === 0 || selectedCount === inputs.length) {
           label.textContent = emptyLabel;
         } else {
-          label.textContent = selectedLabels.join(', ');
+          label.textContent = selectedCount + '/' + inputs.length + ' sources selected';
         }
       };
 
@@ -611,5 +610,119 @@
     submitId: 'max-budget-input',
     edge: 'max',
     clearBox: true
+  });
+})();
+
+// ---------------------------------------------------------------------------
+// 5) Fade out the "preferences saved" / error banner after a few seconds.
+// ---------------------------------------------------------------------------
+(function () {
+  const message = document.querySelector('.preference-message');
+
+  if (!message) {
+    return;
+  }
+
+  // Leave it on screen for a few seconds so the user can read it.
+  window.setTimeout(function () {
+    // The CSS transition handles the fade; the class just starts it.
+    message.classList.add('preference-message--hide');
+
+    // Once the fade has finished, take it out of the page entirely.
+    window.setTimeout(function () {
+      message.remove();
+    }, 400);
+  }, 4000);
+})();
+
+// ---------------------------------------------------------------------------
+// 6) Reset button: put every filter back to its default (empty / no filter).
+// ---------------------------------------------------------------------------
+(function () {
+  const resetButton = document.getElementById('reset-preferences');
+
+  if (!resetButton) {
+    return;
+  }
+
+  // Fire an event so the script that owns a control updates its display.
+  function fire(element, type) {
+    element.dispatchEvent(new Event(type, { bubbles: true }));
+  }
+
+  resetButton.addEventListener('click', function () {
+    // Plain dropdowns go back to their empty option.
+    const selectNames = ['pet_friendly', 'min_lease_length', 'room_type', 'furnishing'];
+    for (let i = 0; i < selectNames.length; i++) {
+      const select = document.querySelector('[name="' + selectNames[i] + '"]');
+      if (select) {
+        select.value = '';
+      }
+    }
+
+    // Move-in date: clear it.
+    const moveInDate = document.querySelector('[name="move_in_date"]');
+    if (moveInDate) {
+      moveInDate.value = '';
+    }
+
+    // Sources: untick all, then refresh the "Any source" label.
+    const sources = document.querySelectorAll('[name="spider[]"]');
+    for (let i = 0; i < sources.length; i++) {
+      sources[i].checked = false;
+    }
+    if (sources.length > 0) {
+      fire(sources[0], 'change');
+    }
+
+    // City: clear the box and the submitted value, then refresh the campus list.
+    const citySearch = document.getElementById('city-search');
+    const citySelect = document.getElementById('city-select');
+    if (citySearch) {
+      citySearch.value = '';
+    }
+    if (citySelect) {
+      citySelect.value = '';
+      fire(citySelect, 'change');
+    }
+
+    // University / campus: clear the box and the submitted value.
+    // We do this after the city change above so it cannot refill the box.
+    const campusSearch = document.getElementById('campus-search');
+    const campusHidden = document.getElementById('campus-select');
+    if (campusSearch) {
+      campusSearch.value = '';
+    }
+    if (campusHidden) {
+      campusHidden.value = '';
+    }
+
+    // Min budget: slider to the bottom (no lower limit).
+    // The sliders own listener then fills the box with "0" and submits an empty value.
+    const minSlider = document.getElementById('min-budget-slider');
+    if (minSlider) {
+      minSlider.value = minSlider.min;
+      fire(minSlider, 'input');
+    }
+
+    // Max budget: slider to the top (no upper limit, shows "5000+").
+    const maxSlider = document.getElementById('max-budget-slider');
+    if (maxSlider) {
+      maxSlider.value = maxSlider.max;
+      fire(maxSlider, 'input');
+    }
+
+    // Distance: slider to the top (unlimited, shows "20+ km").
+    const distanceSlider = document.getElementById('distance-slider');
+    if (distanceSlider) {
+      distanceSlider.value = distanceSlider.max;
+      fire(distanceSlider, 'input');
+    }
+
+    // Instant alerts toggle: back on, which is its default.
+    const instantAlerts = document.querySelector('.toggle input[type="checkbox"]');
+    if (instantAlerts) {
+      instantAlerts.checked = true;
+    }
   });
 })();

@@ -767,7 +767,7 @@ $selectedPetFriendly = $selectedPetFriendlyRaw === '' ? '' : (boolPreferenceValu
         </div>
 
         <div class="form-footer">
-          <button class="btn-ghost" type="reset">Reset</button>
+          <button class="btn-ghost" type="button" id="reset-preferences">Reset</button>
           <button class="btn-primary" type="submit">Save preferences</button>
         </div>
       </form>
