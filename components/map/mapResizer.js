@@ -37,8 +37,8 @@
     layout.style.setProperty('--map-sidebar-width', finalWidth + 'px');
     try {
       window.localStorage.setItem(STORAGE_KEY, String(finalWidth));
-    } catch (error){
-1      // Ignore write errors
+    } catch (error) {
+      // Ignore write errors
     }
   }
 

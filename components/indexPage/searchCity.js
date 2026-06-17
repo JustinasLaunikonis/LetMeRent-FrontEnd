@@ -1,4 +1,6 @@
 // Lets the user pick a city in the search bar.
+// The open/close behaviour comes from registerSearchField() (searchFields.js)
+// this file adds the city autocomplete that talks to PDOK.
 var citySearchField = document.getElementById('city-search-field');
 var cityCard = document.getElementById('city-card');
 var cityDisplay = document.getElementById('city-display');
@@ -6,12 +8,15 @@ var cityInput = document.getElementById('city-input');
 var cityOptionsBox = document.querySelector('.city-options');
 
 if (citySearchField && cityCard && cityDisplay && cityInput && cityOptionsBox) {
-  // Wait a moment after the last keyboard press before asking PDOK
+  // Wait a moment after the last keyboard press before asking PDOK.
   var citySearchTimer = null;
 
-  // Each search gets a number.
-  // When a reply comes back we only show it if it is still the newest search, so slow replies cannot overwrite newer results.
+  // Each search gets a number. When a reply comes back we only show it if it is
+  // still the newest search, so slow replies cannot overwrite newer results.
   var citySearchToken = 0;
+
+  // Filled in once the field is registered below.
+  var cityField = null;
 
   function updateCityDisplay() {
     if (cityInput.value === '') {
@@ -19,33 +24,6 @@ if (citySearchField && cityCard && cityDisplay && cityInput && cityOptionsBox) {
     } else {
       cityDisplay.textContent = cityInput.value;
     }
-  }
-
-  function showCityCard() {
-    var budgetCard = document.getElementById('budget-card');
-    if (budgetCard) {
-      budgetCard.classList.remove('show');
-    }
-
-    var moveInCard = document.getElementById('move-in-card');
-    if (moveInCard) {
-      moveInCard.classList.remove('show');
-    }
-
-    cityCard.classList.add('show');
-    runCitySearch();
-  }
-
-  function toggleCityCard() {
-    if (cityCard.classList.contains('show')) {
-      hideCityCard();
-    } else {
-      showCityCard();
-    }
-  }
-
-  function hideCityCard() {
-    cityCard.classList.remove('show');
   }
 
   function showCityMessage(message) {
@@ -77,7 +55,9 @@ if (citySearchField && cityCard && cityDisplay && cityInput && cityOptionsBox) {
       cityButton.addEventListener('click', function () {
         cityInput.value = this.textContent;
         updateCityDisplay();
-        hideCityCard();
+        if (cityField) {
+          cityField.hide();
+        }
       });
 
       cityOptionsBox.appendChild(cityButton);
@@ -127,29 +107,12 @@ if (citySearchField && cityCard && cityDisplay && cityInput && cityOptionsBox) {
     }, 250);
   }
 
-  citySearchField.addEventListener('click', function (event) {
-    event.stopPropagation();
-    toggleCityCard();
-  });
-
-  citySearchField.addEventListener('keydown', function (event) {
-    if (event.key === 'Enter') {
-      event.preventDefault();
-      showCityCard();
-      cityInput.focus();
-    }
-
-    if (event.key === 'Escape') {
-      hideCityCard();
-    }
-  });
-
-  cityCard.addEventListener('click', function (event) {
-    event.stopPropagation();
-  });
-
-  document.addEventListener('click', function () {
-    hideCityCard();
+  // Open/close behaviour, and run a city search each time the card opens.
+  cityField = registerSearchField({
+    fieldId: 'city-search-field',
+    cardId: 'city-card',
+    inputId: 'city-input',
+    onOpen: runCitySearch
   });
 
   cityInput.addEventListener('input', function () {

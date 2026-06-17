@@ -2,31 +2,11 @@
 
 // This file prepares everything map/map.php needs before the HTML starts.
 
-require_once __DIR__ . '/map/mapListings.php';
-require_once __DIR__ . '/map/renderMapListItem.php';
+require_once __DIR__ . '/mapListings.php';
+require_once __DIR__ . '/renderMapListItem.php';
 require_once __DIR__ . '/renderMapSidebar.php';
 require_once __DIR__ . '/mapMarkers.php';
-
-function readEnvValue(string $key): string {
-    $envPath = __DIR__ . '/../.env';
-
-    if (!file_exists($envPath)) {
-        return '';
-    }
-
-    $envLines = file($envPath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-
-    foreach ($envLines as $line) {
-        $parts = explode('=', $line, 2);
-
-        if (count($parts) === 2 && trim($parts[0]) === $key) {
-            // Remove spaces and optional quotes around values from .env.
-            return trim(trim($parts[1]), '"\'');
-        }
-    }
-
-    return '';
-}
+require_once __DIR__ . '/../../includes/env.php';
 
 // These defaults keep the page from breaking if the API returns an error.
 if (!isset($listings) || !is_array($listings)) {
@@ -45,12 +25,7 @@ if (!isset($city)) {
     $city = '';
 }
 
-$googleMapsApiKey = readEnvValue('GOOGLE_MAPS_API_KEY');
-
-// Support an older/shorter key name too, in case it is used in .env.
-if ($googleMapsApiKey === '') {
-    $googleMapsApiKey = readEnvValue('GOOGLE_MAPS_KEY');
-}
+$googleMapsApiKey = readEnv('GOOGLE_MAPS_API_KEY');
 
 // -------------------------------------------------------------------------
 // Sidebar pagination
@@ -63,7 +38,7 @@ if (!isset($page) || !is_numeric($page) || (int)$page < 1) {
 }
 $page = (int)$page;
 
-// How many pages there are in total, based on all the listings found.
+// How many pages there are in total, based on all the listings found
 $totalMapPages = (int)ceil($totalListings / $mapPerPage);
 if ($totalMapPages < 1) {
     $totalMapPages = 1;
@@ -88,6 +63,4 @@ if ($city !== '') {
 }
 
 // The sidebar filter form (city / max budget / move-in) needs the same values the front page search bar uses.
-require_once __DIR__ . '/indexPage/cityValues.php';
-require_once __DIR__ . '/indexPage/budgetValues.php';
-require_once __DIR__ . '/indexPage/moveInValues.php';
+require_once __DIR__ . '/../indexPage/searchValues.php';

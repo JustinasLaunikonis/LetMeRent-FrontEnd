@@ -1,4 +1,7 @@
 <?php
+// Shared API client (provides fetchFromApi()) and .env reader.
+require_once __DIR__ . '/../../includes/api.php';
+
 $listings      = [];
 $apiError      = null;
 $totalListings = 0;
@@ -170,75 +173,25 @@ if ($sort !== '') {
 }
 
 // -------------------------------------------------------------------------
-// Function to fetch listings from the API
+// Fetch listings. The API does all filtering, sorting and pagination, across every selected source, in a single request.
 // -------------------------------------------------------------------------
-// Takes an array of parameters then sends a request to the API, and returns the result.
 
-function fetchFromApi(array $params) {
-    // read API base URL from .env file
-    $envPath  = __DIR__ . '/../../.env';
-    $envLines = file($envPath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-    $apiBase  = '';
+if (empty($skipListingsFetch)) {
+    $result = fetchFromApi($baseParams);
 
-    foreach ($envLines as $line) {
-        $parts = explode('=', $line, 2);
-        if (count($parts) === 2 && trim($parts[0]) === 'API_URL') {
-            $apiBase = trim($parts[1]);
-        }
-    }
-
-    $url = $apiBase . '?' . http_build_query($params);
-
-    $ch = curl_init($url);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_TIMEOUT, 60);
-    $response  = curl_exec($ch);
-    $curlError = curl_error($ch);
-    unset($ch);
-
-    if ($curlError) {
-        $result = [];
-        $result['error'] = 'Could not reach API: ' . $curlError;
-        return $result;
-    }
-
-    $decoded = json_decode($response, true);
-
-    if (!isset($decoded['data']) || !is_array($decoded['data'])) {
-        $result = [];
-        $result['error'] = 'Unexpected API response format.';
-        return $result;
-    }
-
-    $result = [];
-    $result['data']  = $decoded['data'];
-
-    if (isset($decoded['count'])) {
-        $result['count'] = $decoded['count'];
+    if (isset($result['error'])) {
+        $apiError = $result['error'];
     } else {
-        $result['count'] = count($decoded['data']);
+        $listings      = $result['data'];
+        $totalListings = $result['count'];
     }
 
-    return $result;
-}
-
-// -------------------------------------------------------------------------
-// Fetch listings. The API does all filtering, sorting and pagination, across
-// every selected source, in a single request.
-// -------------------------------------------------------------------------
-
-$result = fetchFromApi($baseParams);
-
-if (isset($result['error'])) {
-    $apiError = $result['error'];
-} else {
-    $listings      = $result['data'];
-    $totalListings = $result['count'];
-}
-
-// Calculate how many pages exist in total
-if ($totalListings > 0) {
-    $totalPages = (int)ceil($totalListings / $limit);
+    // Calculate how many pages exist in total
+    if ($totalListings > 0) {
+        $totalPages = (int)ceil($totalListings / $limit);
+    } else {
+        $totalPages = 1;
+    }
 } else {
     $totalPages = 1;
 }

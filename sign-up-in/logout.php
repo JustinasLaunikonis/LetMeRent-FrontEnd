@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-require_once __DIR__ . '/auth_config.php';
+require_once __DIR__ . '/authConfig.php';
 
 startAuthSession();
 $_SESSION = [];

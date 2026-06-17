@@ -1,6 +1,6 @@
 <?php
 
-require_once __DIR__ . '/listings/listingTags.php';
+require_once __DIR__ . '/../../includes/listingTags.php';
 
 function getListingCoordinates(array $listing) {
     // Some API responses use lat/lng, others use latitude/longitude.
@@ -25,7 +25,7 @@ function getListingCoordinates(array $listing) {
 }
 
 function createMapMarker(array $listing, array $coordinates, int $listingIndex, int $markerIndex): array {
-    // This is the data JavaScript needs to create one Google Maps pin.
+    // This is the data JavaScript needs to create one Google Maps pin
     $marker = array();
     $marker['lat'] = $coordinates['lat'];
     $marker['lng'] = $coordinates['lng'];
@@ -36,7 +36,7 @@ function createMapMarker(array $listing, array $coordinates, int $listingIndex, 
         $marker['title'] = 'Rental listing';
     }
 
-    // Keep raw price and display fallback separate for the bottom listing bar.
+    // Keep raw price and display fallback separate for the bottom listing bar
     if (isset($listing['price']) && $listing['price'] !== '') {
         $marker['price'] = $listing['price'];
         $marker['priceLabel'] = 'EUR ' . $listing['price'] . '/mo';
@@ -48,7 +48,7 @@ function createMapMarker(array $listing, array $coordinates, int $listingIndex, 
     if (!empty($listing['url'])) {
         $marker['url'] = $listing['url'];
     } else {
-        $marker['url'] = '../detail/detail.html';
+        $marker['url'] = '../detail/detail.php';
     }
 
     // The detail page finds the listing by its id (or MongoDB _id).
@@ -68,7 +68,7 @@ function createMapMarker(array $listing, array $coordinates, int $listingIndex, 
         $marker['image'] = '';
     }
 
-    $marker['tags'] = buildListingCardTags($listing);
+    $marker['tags'] = buildListingTags($listing);
 
     $marker['listingIndex'] = $listingIndex;
     $marker['mapIndex'] = $markerIndex;
