@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
-  <!-- LetMeRent tab logo: white house on the brand blue (--blue #1558A7), same as the navbar. -->
+  <!-- LetMeRent tab logo: white house on the brand blue #1558A7, same as the navbar. -->
   <rect width="32" height="32" rx="8" fill="#1558A7"/>
   <path d="M6 14L16 5L26 14V27H19V20H13V27H6V14Z" fill="white"/>
 </svg>
