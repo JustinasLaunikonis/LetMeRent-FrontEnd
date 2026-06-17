@@ -1,5 +1,10 @@
 <?php
 
+// Start the login session first, before anything is printed to the page.
+// The navbar reads this session to show the avatar or a "Sign in" button.
+require_once __DIR__ . '/../sign-up-in/authConfig.php';
+startAuthSession();
+
 // Detail page: look up one listing by its id and show it.
 require __DIR__ . '/detailHelpers.php';
 
