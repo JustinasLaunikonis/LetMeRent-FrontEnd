@@ -1,3 +1,8 @@
+html {
+  overflow-y: scroll;
+  scrollbar-gutter: stable;
+}
+
 .profile-wrap {
   display: grid;
   grid-template-columns: 288px 1fr;
@@ -294,6 +299,52 @@
   height: 4px;
   accent-color: var(--blue);
   cursor: pointer;
+}
+
+/* Move-in date field. Same look as the move-in card on the browse page (index.php):
+   a styled date input with an "Any date" button under it that clears the date. */
+.move-in-field {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.move-in-input {
+  width: 100%;
+  padding: 10px 14px;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--ink);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  outline: none;
+  transition: border-color .15s;
+}
+
+.move-in-input:focus {
+  background: white;
+  border-color: var(--blue);
+}
+
+.move-in-clear {
+  align-self: flex-start;
+  padding: 7px 8px;
+  background: transparent;
+  border: 0;
+  border-radius: 6px;
+  color: var(--ink-2);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+
+.move-in-clear:hover {
+  background: var(--blue-light);
+  color: var(--blue);
 }
 
 .form-select {

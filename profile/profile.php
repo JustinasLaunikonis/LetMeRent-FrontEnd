@@ -437,6 +437,23 @@ $selectedMinBudget = preferenceValue($preferences, 'min_budget', '');
 $selectedMaxBudget = preferenceValue($preferences, 'max_budget', '');
 $selectedMoveInDate = preferenceValue($preferences, 'move_in_date', '');
 $selectedLeaseLength = preferenceValue($preferences, 'min_lease_length', '');
+
+// The "Min lease length" field uses the same combobox UI as University / Campus.
+// These are the choices it shows, and we work out which label matches the saved value.
+$leaseLengthOptions = [
+    ['value' => '12', 'label' => '12 months'],
+    ['value' => '6', 'label' => '6 months'],
+    ['value' => '3', 'label' => '3 months'],
+    ['value' => '0', 'label' => 'Any'],
+];
+
+$selectedLeaseLabel = '';
+foreach ($leaseLengthOptions as $leaseOption) {
+    if ((string) $leaseOption['value'] === (string) $selectedLeaseLength) {
+        $selectedLeaseLabel = $leaseOption['label'];
+    }
+}
+
 $selectedDistance = preferenceValue($preferences, 'max_distance_from_campus', '');
 $selectedRoomType = preferenceValue($preferences, 'room_type', '');
 $selectedFurnishing = preferenceValue($preferences, 'furnishing', '');
@@ -448,7 +465,7 @@ $selectedPetFriendly = $selectedPetFriendlyRaw === '' ? '' : (boolPreferenceValu
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>LetMeRent — Profile & Alerts</title>
+  <title>LetMeRent - Profile & Alerts</title>
   <link rel="icon" type="image/svg+xml" href="../favicon.svg?v=2">
   <link rel="stylesheet" href="../styles.css">
   <link rel="stylesheet" href="profile.css">
@@ -675,19 +692,48 @@ $selectedPetFriendly = $selectedPetFriendlyRaw === '' ? '' : (boolPreferenceValu
           <div class="form-row">
             <div class="form-group">
               <label class="form-label">Move-in date</label>
-              <input class="form-input" type="date" name="move_in_date" value="<?php echo htmlspecialchars((string) $selectedMoveInDate); ?>">
+              <div class="move-in-field">
+                <input
+                  class="move-in-input"
+                  id="move-in-input"
+                  type="date"
+                  name="move_in_date"
+                  value="<?php echo htmlspecialchars((string) $selectedMoveInDate); ?>"
+                >
+                <button class="move-in-clear" id="move-in-clear" type="button">Any date</button>
+              </div>
             </div>
 
             <!-- Lease Length Selection -->
             <div class="form-group">
               <label class="form-label">Min lease length</label>
-              <select class="form-input form-select" name="min_lease_length">
-                <option value=""<?php echo selectedAttr($selectedLeaseLength, ''); ?>></option>
-                <option value="12"<?php echo selectedAttr($selectedLeaseLength, 12); ?>>12 months</option>
-                <option value="6"<?php echo selectedAttr($selectedLeaseLength, 6); ?>>6 months</option>
-                <option value="3"<?php echo selectedAttr($selectedLeaseLength, 3); ?>>3 months</option>
-                <option value="0"<?php echo selectedAttr($selectedLeaseLength, 0); ?>>Any</option>
-              </select>
+              <!-- Same combobox UI as University / Campus: a box that opens a list of choices. -->
+              <div class="city-combobox">
+                <input
+                  class="form-input"
+                  type="text"
+                  id="lease-search"
+                  value="<?php echo htmlspecialchars($selectedLeaseLabel); ?>"
+                  autocomplete="off"
+                  placeholder="Select lease length"
+                  readonly
+                  role="combobox"
+                  aria-autocomplete="list"
+                  aria-expanded="false"
+                  aria-controls="lease-options"
+                >
+                <input type="hidden" name="min_lease_length" id="lease-select" value="<?php echo htmlspecialchars((string) $selectedLeaseLength); ?>">
+                <div class="city-options" id="lease-options" role="listbox">
+                  <?php foreach ($leaseLengthOptions as $leaseOption): ?>
+                    <button
+                      type="button"
+                      class="city-option"
+                      role="option"
+                      data-value="<?php echo htmlspecialchars($leaseOption['value']); ?>"
+                    ><?php echo htmlspecialchars($leaseOption['label']); ?></button>
+                  <?php endforeach; ?>
+                </div>
+              </div>
             </div>
           </div>
 

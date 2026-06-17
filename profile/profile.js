@@ -1,8 +1,9 @@
 // Profile page scripts:
 //   1) the custom "distance from campus" drag slider,
 //   2) the source multi-select dropdown label,
-//   3) the city and university autocompletes.
+//   3) the city and university autocompletes, and the min lease length combobox.
 //   4) the budget min/max number inputs and sliders, which are linked together
+//   4b) the move-in date "Any date" button, which clears the picked date.
 //   5) the fade out of the "profile updated" message after a few seconds.
 //   6) the reset button, which puts every filter back to its default.
 
@@ -480,6 +481,52 @@
       syncCitySelect();
     })();
 
+    (() => {
+      // Min lease length combobox. Same look as the University / Campus box:
+      // a read-only box that opens a list of choices.
+      const leaseSearch = document.getElementById('lease-search');
+      const leaseHidden = document.getElementById('lease-select');
+      const leaseOptions = document.getElementById('lease-options');
+
+      if (!leaseSearch || !leaseHidden || !leaseOptions) {
+        return;
+      }
+
+      const optionButtons = [...leaseOptions.querySelectorAll('.city-option')];
+
+      const openOptions = () => {
+        leaseOptions.classList.add('show');
+        leaseSearch.setAttribute('aria-expanded', 'true');
+      };
+
+      const closeOptions = () => {
+        leaseOptions.classList.remove('show');
+        leaseSearch.setAttribute('aria-expanded', 'false');
+      };
+
+      // Put the chosen value in the hidden (submitted) field and its label in the box.
+      const selectOption = (button) => {
+        leaseHidden.value = button.dataset.value;
+        leaseSearch.value = button.textContent.trim();
+        closeOptions();
+      };
+
+      optionButtons.forEach((button) => {
+        // mousedown (not click) so the choice happens before the box loses focus.
+        button.addEventListener('mousedown', (event) => {
+          event.preventDefault();
+          selectOption(button);
+        });
+      });
+
+      leaseSearch.addEventListener('focus', openOptions);
+      leaseSearch.addEventListener('click', openOptions);
+      leaseSearch.addEventListener('blur', () => {
+        // Small delay so a click on an option is handled before we close.
+        window.setTimeout(closeOptions, 120);
+      });
+    })();
+
 // ---------------------------------------------------------------------------
 // 4) Budget number input + slider sync (min and max budget)
 // ---------------------------------------------------------------------------
@@ -614,6 +661,23 @@
 })();
 
 // ---------------------------------------------------------------------------
+// 4b) Move-in date "Any date" button. Clears the date, just like the browse page.
+// ---------------------------------------------------------------------------
+(function () {
+  const moveInInput = document.getElementById('move-in-input');
+  const moveInClear = document.getElementById('move-in-clear');
+
+  if (!moveInInput || !moveInClear) {
+    return;
+  }
+
+  // The "Any date" button clears the picked date so no move-in filter is saved.
+  moveInClear.addEventListener('click', function () {
+    moveInInput.value = '';
+  });
+})();
+
+// ---------------------------------------------------------------------------
 // 5) Fade out the "preferences saved" / error banner after a few seconds.
 // ---------------------------------------------------------------------------
 (function () {
@@ -652,12 +716,22 @@
 
   resetButton.addEventListener('click', function () {
     // Plain dropdowns go back to their empty option.
-    const selectNames = ['pet_friendly', 'min_lease_length', 'room_type', 'furnishing'];
+    const selectNames = ['pet_friendly', 'room_type', 'furnishing'];
     for (let i = 0; i < selectNames.length; i++) {
       const select = document.querySelector('[name="' + selectNames[i] + '"]');
       if (select) {
         select.value = '';
       }
+    }
+
+    // Min lease length: clear the box and the submitted value.
+    const leaseSearch = document.getElementById('lease-search');
+    const leaseHidden = document.getElementById('lease-select');
+    if (leaseSearch) {
+      leaseSearch.value = '';
+    }
+    if (leaseHidden) {
+      leaseHidden.value = '';
     }
 
     // Move-in date: clear it.
