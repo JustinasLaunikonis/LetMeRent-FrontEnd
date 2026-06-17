@@ -53,36 +53,6 @@
   word-break: break-word;
 }
 
-.profile-stats {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-  margin-top: 16px;
-}
-
-.profile-stat {
-  padding: 10px;
-  background: var(--surface);
-  border-radius: var(--radius-sm);
-  text-align: center;
-}
-
-.profile-stat .val {
-  font-size: 22px;
-  font-weight: 800;
-  color: var(--blue);
-  letter-spacing: -.02em;
-}
-
-.profile-stat .lbl {
-  margin-top: 2px;
-  font-size: 10px;
-  font-weight: 500;
-  color: var(--muted);
-  text-transform: uppercase;
-  letter-spacing: .05em;
-}
-
 .side-menu {
   background: var(--white);
   border: 1px solid var(--border);
@@ -200,6 +170,60 @@
 .form-input:focus {
   background: white;
   border-color: var(--blue);
+}
+
+.budget-field {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.budget-input-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 10px;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+
+.budget-currency,
+.budget-period {
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.budget-period {
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.budget-number-input {
+  width: 100%;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid transparent;
+  color: var(--ink);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  outline: none;
+}
+
+.budget-number-input:focus {
+  border-bottom-color: var(--blue);
+}
+
+.budget-slider {
+  display: block;
+  width: 100%;
+  height: 4px;
+  accent-color: var(--blue);
+  cursor: pointer;
 }
 
 .form-select {
@@ -421,25 +445,21 @@
   font-size: 13px;
   font-weight: 500;
   color: var(--ink);
-  /* Optional: add max-width or flex properties if needed */
 }
 
 .toggle-sub {
-  margin-top: 4px; /* space between title and sub */
+  margin-top: 4px;
   font-size: 12px;
   color:var(--muted);
 }
 
-/* Optional: style the toggle switch for better appearance */
 .toggle {
-  /* Existing toggle styles */
   position: relative;
   width: 50px;
   height: 24px;
   display: inline-block;
 }
 
-/* Hide the default checkbox */
 .toggle input {
   opacity: 0;
   width: 0;
@@ -447,7 +467,6 @@
   position: absolute;
 }
 
-/* Style the slider */
 .toggle-slider {
   position: absolute;
   cursor: pointer;
@@ -479,6 +498,7 @@
 .toggle input:checked + .toggle-slider::before {
   transform: translateX(26px);
 }
+
 .form-footer {
   display: flex;
   justify-content: flex-end;

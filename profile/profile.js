@@ -2,6 +2,7 @@
 //   1) the custom "distance from campus" drag slider,
 //   2) the source multi-select dropdown label,
 //   3) the city and university autocompletes.
+//   4) the budget min/max number inputs and sliders, which are linked together
 
 // ---------------------------------------------------------------------------
 // 1) Distance-from-campus slider
@@ -388,3 +389,74 @@
       // If the page loaded with a saved city, make sure the campus list matches it.
       syncCitySelect();
     })();
+
+// ---------------------------------------------------------------------------
+// 4) Budget number input + slider sync (min and max budget)
+// ---------------------------------------------------------------------------
+(function () {
+  // Connect one number input to its matching range slider.
+  function linkBudgetField(inputId, sliderId) {
+    const numberInput = document.getElementById(inputId);
+    const slider = document.getElementById(sliderId);
+
+    if (!numberInput || !slider) {
+      return;
+    }
+
+    const minBudget = parseInt(slider.min, 10);
+    const maxBudget = parseInt(slider.max, 10);
+
+    // Keep a typed value inside the allowed range.
+    function clamp(value) {
+      if (value < minBudget) {
+        return minBudget;
+      }
+      if (value > maxBudget) {
+        return maxBudget;
+      }
+      return value;
+    }
+
+    // Dragging the slider fills in the number box.
+    slider.addEventListener('input', function () {
+      numberInput.value = slider.value;
+    });
+
+    // Typing in the number box moves the slider along with it.
+    numberInput.addEventListener('input', function () {
+      if (numberInput.value === '') {
+        return;
+      }
+
+      const typed = parseInt(numberInput.value, 10);
+      if (isNaN(typed)) {
+        return;
+      }
+
+      const safe = clamp(typed);
+      numberInput.value = safe;
+      slider.value = safe;
+    });
+
+    // When leaving an empty box, fall back to the slider value.
+    numberInput.addEventListener('change', function () {
+      if (numberInput.value === '') {
+        numberInput.value = slider.value;
+        return;
+      }
+
+      const typed = parseInt(numberInput.value, 10);
+      if (isNaN(typed)) {
+        numberInput.value = slider.value;
+        return;
+      }
+
+      const safe = clamp(typed);
+      numberInput.value = safe;
+      slider.value = safe;
+    });
+  }
+
+  linkBudgetField('min-budget-input', 'min-budget-slider');
+  linkBudgetField('max-budget-input', 'max-budget-slider');
+})();
