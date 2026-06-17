@@ -1,4 +1,7 @@
 <?php
+require_once __DIR__ . '/sign-up-in/authConfig.php';
+startAuthSession();
+
 include 'components/listings/listings.php';
 include 'components/indexPage/searchValues.php';
 

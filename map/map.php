@@ -1,4 +1,7 @@
 <?php
+require_once __DIR__ . '/../sign-up-in/authConfig.php';
+startAuthSession();
+
 // This file prepares the listings, markers, API key, and other map variables.
 require '../components/map/mapPageData.php';
 // These defaults prevent warnings if something goes wrong while loading the data file.
