@@ -392,38 +392,10 @@
   color: var(--blue);
 }
 
-.slider-track {
-  position: relative;
-  height: 6px;
-  background: var(--border);
-  border-radius: 3px;
-}
-
-.slider-fill {
-  height: 100%;
-  width: 53%;
-  background: var(--blue);
-  border-radius: 3px;
-}
-
-.slider-thumb {
-  position: absolute;
-  top: 50%;
-  left: 53%;
-  transform: translate(-50%, -50%);
-  width: 20px;
-  height: 20px;
-  background: white;
-  border: 2.5px solid var(--blue);
-  border-radius: 50%;
-  box-shadow: 0 2px 8px rgba(21, 88, 167, .3);
-  cursor: pointer;
-}
-
 .slider-ticks {
   display: flex;
   justify-content: space-between;
-  margin-top: 5px;
+  margin-top: 8px;
   font-size: 10px;
   color: var(--muted);
 }

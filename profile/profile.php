@@ -557,20 +557,23 @@ $selectedPetFriendly = $selectedPetFriendlyRaw === '' ? '' : (boolPreferenceValu
             <!-- Uni Selection -->
             <div class="form-group">
               <label class="form-label">University / Campus</label>
-              <select
-                class="form-input form-select"
-                name="university_campus"
-                id="campus-select"
-                data-selected-campus="<?php echo htmlspecialchars((string) $selectedCampus); ?>"
-                aria-busy="true"
-              >
-                <option value=""<?php echo selectedAttr($selectedCampus, ''); ?>></option>
-                <?php if ($selectedCampus !== ''): ?>
-                  <option value="<?php echo htmlspecialchars((string) $selectedCampus); ?>" selected>
-                    <?php echo htmlspecialchars((string) $selectedCampus); ?>
-                  </option>
-                <?php endif; ?>
-              </select>
+              <div class="city-combobox">
+                <input
+                  class="form-input"
+                  type="text"
+                  id="campus-search"
+                  value="<?php echo htmlspecialchars((string) $selectedCampus); ?>"
+                  autocomplete="off"
+                  placeholder="Select a university"
+                  role="combobox"
+                  aria-autocomplete="list"
+                  aria-expanded="false"
+                  aria-controls="campus-options"
+                  aria-busy="true"
+                >
+                <input type="hidden" name="university_campus" id="campus-select" value="<?php echo htmlspecialchars((string) $selectedCampus); ?>">
+                <div class="city-options" id="campus-options" role="listbox"></div>
+              </div>
             </div>
           </div>
 
@@ -691,14 +694,20 @@ $selectedPetFriendly = $selectedPetFriendlyRaw === '' ? '' : (boolPreferenceValu
           <div class="slider-group">
             <div class="slider-top">
               <div class="slider-label">Max distance from campus</div>
-              <div class="slider-value"><?php echo $selectedDistance === '' ? '' : htmlspecialchars((string) $selectedDistance) . ' km'; ?></div>
+              <div class="slider-value" id="distance-value"><?php echo $selectedDistance === '' ? '20+ km' : htmlspecialchars((string) $selectedDistance) . ' km'; ?></div>
             </div>
-            <input type="hidden" name="max_distance_from_campus" class="slider-input" value="<?php echo htmlspecialchars((string) $selectedDistance); ?>">
 
-            <div class="slider-track">
-              <div class="slider-fill"></div>
-              <div class="slider-thumb"></div>
-            </div>
+            <input
+              class="budget-slider"
+              id="distance-slider"
+              type="range"
+              min="0"
+              max="20"
+              step="1"
+              value="<?php echo $selectedDistance === '' ? '20' : htmlspecialchars((string) $selectedDistance); ?>"
+              aria-label="Max distance from campus slider"
+            >
+            <input type="hidden" name="max_distance_from_campus" id="distance-input" value="<?php echo htmlspecialchars((string) $selectedDistance); ?>">
 
             <div class="slider-ticks">
               <span>0</span>

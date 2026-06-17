@@ -8,76 +8,34 @@
 // 1) Distance-from-campus slider
 // ---------------------------------------------------------------------------
 (function () {
-  const sliderGroup = document.querySelector('.slider-group');
-  if (!sliderGroup) {
+  const distanceSlider = document.getElementById('distance-slider');
+  const distanceValue = document.getElementById('distance-value');
+  const distanceInput = document.getElementById('distance-input');
+
+  if (!distanceSlider || !distanceValue || !distanceInput) {
     return;
   }
 
-  const sliderTrack = sliderGroup.querySelector('.slider-track');
-  const sliderFill = sliderGroup.querySelector('.slider-fill');
-  const sliderThumb = sliderGroup.querySelector('.slider-thumb');
-  const sliderValue = sliderGroup.querySelector('.slider-value');
-  const sliderInput = sliderGroup.querySelector('.slider-input');
+  const maxDistance = parseInt(distanceSlider.max, 10);
 
-  let isDragging = false;
+  // Show the sliders current value next to the label, e.g. "8 km".
+  // At the very top the distance is treated as unlimited: show "20+ km" and submit an empty value so no distance filter is applied.
+  function updateDistanceValue() {
+    const distance = parseInt(distanceSlider.value, 10);
 
-  const min = 0;
-  const max = 20;
-
-  function setSliderPosition(percent) {
-    percent = Math.max(0, Math.min(1, percent));
-    const value = Math.round(min + percent * (max - min));
-    sliderFill.style.width = `${percent * 100}%`;
-    sliderThumb.style.left = `${percent * 100}%`;
-    sliderValue.textContent = `${value} km`;
-    sliderInput.value = value;
-  }
-
-  function clearSliderPosition() {
-    sliderFill.style.width = '0%';
-    sliderThumb.style.left = '0%';
-    sliderValue.textContent = '';
-    sliderInput.value = '';
-  }
-
-  function getPercentFromEvent(e) {
-    const rect = sliderTrack.getBoundingClientRect();
-    const x = e.clientX !== undefined ? e.clientX : e.touches[0].clientX;
-    return (x - rect.left) / rect.width;
-  }
-
-  sliderThumb.addEventListener('mousedown', () => {
-    isDragging = true;
-  });
-  document.addEventListener('mouseup', () => {
-    isDragging = false;
-  });
-  document.addEventListener('mousemove', (e) => {
-    if (isDragging) {
-      setSliderPosition(getPercentFromEvent(e));
+    if (distance >= maxDistance) {
+      distanceValue.textContent = maxDistance + '+ km';
+      distanceInput.value = '';
+    } else {
+      distanceValue.textContent = distance + ' km';
+      distanceInput.value = distance;
     }
-  });
-  sliderTrack.addEventListener('click', (e) => {
-    setSliderPosition(getPercentFromEvent(e));
-  });
-  sliderThumb.addEventListener('touchstart', () => {
-    isDragging = true;
-  });
-  document.addEventListener('touchend', () => {
-    isDragging = false;
-  });
-  document.addEventListener('touchmove', (e) => {
-    if (isDragging) {
-      setSliderPosition(getPercentFromEvent(e));
-    }
-  });
-
-  // Start from the value PHP put in the hidden input (empty = no distance set).
-  if (sliderInput.value === '') {
-    clearSliderPosition();
-  } else {
-    setSliderPosition(parseFloat(sliderInput.value) / 20);
   }
+
+  distanceSlider.addEventListener('input', updateDistanceValue);
+
+  // Make sure the label matches the value the page loaded with.
+  updateDistanceValue();
 })();
 
 // ---------------------------------------------------------------------------
@@ -117,15 +75,15 @@
     })();
 
     (() => {
-      const campusSelect = document.getElementById('campus-select');
+      const campusHidden = document.getElementById('campus-select');
+      const campusSearch = document.getElementById('campus-search');
+      const campusOptions = document.getElementById('campus-options');
       const citySelect = document.getElementById('city-select');
-      const citySearch = document.getElementById('city-search');
 
-      if (!campusSelect || !citySelect) {
+      if (!campusHidden || !campusSearch || !campusOptions || !citySelect) {
         return;
       }
 
-      const selectedCampus = campusSelect.dataset.selectedCampus || '';
       const fallbackCampuses = [
         { name: 'Amsterdam University of Applied Sciences', city: 'Amsterdam' },
         { name: 'ArtEZ University of the Arts', city: 'Arnhem' },
@@ -204,32 +162,142 @@
         });
       };
 
-      const setCampusOptions = () => {
+      // Campuses that match the chosen city (or all of them when no city is set).
+      const campusesForCity = () => {
         const selectedCity = selectedCityValue();
         const selectedCityKey = normalizeCity(selectedCity);
-        const filteredCampuses = uniqueCampuses(campuses).filter((campus) => {
+
+        return uniqueCampuses(campuses).filter((campus) => {
           return selectedCity === '' || normalizeCity(campus.city) === selectedCityKey;
         });
-        let activeCampus = campusSelect.value || selectedCampus;
-        const hasActiveCampus = filteredCampuses.some((campus) => campus.name === activeCampus);
+      };
 
-        if (activeCampus !== '' && !hasActiveCampus) {
-          if (selectedCity === '') {
-            filteredCampuses.unshift({ name: activeCampus, city: '' });
-          } else {
-            activeCampus = '';
+      // What we show for a campus. When no city is picked we add the city name so the user can tell similar campuses apart.
+      const campusLabel = (campus) => {
+        if (selectedCityValue() === '' && campus.city !== '') {
+          return `${campus.name} - ${campus.city}`;
+        }
+
+        return campus.name;
+      };
+
+      // Find a campus object by its stored name.
+      const findCampus = (name) => {
+        const list = campusesForCity();
+
+        for (let i = 0; i < list.length; i++) {
+          if (list[i].name === name) {
+            return list[i];
           }
         }
 
-        campusSelect.replaceChildren(new Option('', '', activeCampus === '', activeCampus === ''));
+        return null;
+      };
 
-        filteredCampuses.forEach((campus) => {
-          const label = selectedCity === '' && campus.city !== '' ? `${campus.name} - ${campus.city}` : campus.name;
+      const closeCampusOptions = () => {
+        campusOptions.classList.remove('show');
+        campusSearch.setAttribute('aria-expanded', 'false');
+      };
 
-          campusSelect.add(new Option(label, campus.name, false, campus.name === activeCampus));
+      // Show a single line of text in the options box (e.g. "No universities found").
+      const showCampusMessage = (message) => {
+        campusOptions.replaceChildren();
+
+        const messageElement = document.createElement('p');
+        messageElement.className = 'city-loading';
+        messageElement.textContent = message;
+        campusOptions.append(messageElement);
+
+        campusOptions.classList.add('show');
+        campusSearch.setAttribute('aria-expanded', 'true');
+      };
+
+      // Put the chosen campus in the hidden (submitted) field and the visible box.
+      const selectCampus = (campus) => {
+        campusHidden.value = campus.name;
+        campusSearch.value = campusLabel(campus);
+        closeCampusOptions();
+      };
+
+      // Build the styled list of campus options (same look as the city dropdown).
+      const buildCampusOptions = (matches) => {
+        campusOptions.replaceChildren();
+
+        if (matches.length === 0) {
+          showCampusMessage('No universities found');
+          return;
+        }
+
+        matches.forEach((campus) => {
+          const option = document.createElement('button');
+          option.type = 'button';
+          option.className = 'city-option';
+          option.setAttribute('role', 'option');
+          option.textContent = campusLabel(campus);
+          // mousedown (not click) so the choice happens before the input blurs.
+          option.addEventListener('mousedown', (event) => {
+            event.preventDefault();
+            selectCampus(campus);
+          });
+
+          campusOptions.append(option);
         });
 
-        campusSelect.setAttribute('aria-busy', 'false');
+        campusOptions.classList.add('show');
+        campusSearch.setAttribute('aria-expanded', 'true');
+      };
+
+      // Show every campus for the current city (used when the box is focused).
+      const openCampusOptions = () => {
+        buildCampusOptions(campusesForCity());
+      };
+
+      // Narrow the list down to whatever the user has typed.
+      const filterCampusOptions = () => {
+        const typed = campusSearch.value.trim().toLowerCase();
+        const matches = campusesForCity().filter((campus) => {
+          if (typed === '') {
+            return true;
+          }
+
+          const nameMatch = campus.name.toLowerCase().indexOf(typed) !== -1;
+          const cityMatch = campus.city.toLowerCase().indexOf(typed) !== -1;
+          return nameMatch || cityMatch;
+        });
+
+        buildCampusOptions(matches);
+      };
+
+      // Make the visible box show the label of the campus that is stored.
+      const syncCampusDisplay = () => {
+        if (campusHidden.value === '') {
+          campusSearch.value = '';
+          return;
+        }
+
+        const campus = findCampus(campusHidden.value);
+        if (campus === null) {
+          // Not in the current (city-filtered) list, but still show the saved name.
+          campusSearch.value = campusHidden.value;
+        } else {
+          campusSearch.value = campusLabel(campus);
+        }
+      };
+
+      // When the city changes, drop a saved campus that no longer fits that city.
+      const onCityChange = () => {
+        if (campusHidden.value !== '') {
+          const stillValid = findCampus(campusHidden.value) !== null;
+          if (!stillValid && selectedCityValue() !== '') {
+            campusHidden.value = '';
+          }
+        }
+
+        syncCampusDisplay();
+
+        if (campusOptions.classList.contains('show')) {
+          filterCampusOptions();
+        }
       };
 
       const loadCampuses = async () => {
@@ -246,12 +314,29 @@
         }));
 
         campuses = uniqueCampuses([...fallbackCampuses, ...apiCampuses]);
-        setCampusOptions();
+        campusSearch.setAttribute('aria-busy', 'false');
+        syncCampusDisplay();
+
+        if (campusOptions.classList.contains('show')) {
+          filterCampusOptions();
+        }
       };
 
-      citySelect.addEventListener('change', setCampusOptions);
-      setCampusOptions();
-      loadCampuses().catch(setCampusOptions);
+      campusSearch.addEventListener('focus', openCampusOptions);
+      campusSearch.addEventListener('input', filterCampusOptions);
+      campusSearch.addEventListener('blur', () => {
+        // Small delay so a click on an option is handled before we close.
+        window.setTimeout(() => {
+          closeCampusOptions();
+          syncCampusDisplay();
+        }, 120);
+      });
+
+      citySelect.addEventListener('change', onCityChange);
+      syncCampusDisplay();
+      loadCampuses().catch(() => {
+        campusSearch.setAttribute('aria-busy', 'false');
+      });
     })();
 
     (() => {
