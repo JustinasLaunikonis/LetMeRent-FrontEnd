@@ -44,6 +44,15 @@
   color: var(--muted);
 }
 
+.profile-email {
+  margin-top: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--muted);
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
 .profile-stats {
   display: grid;
   grid-template-columns: 1fr 1fr;
