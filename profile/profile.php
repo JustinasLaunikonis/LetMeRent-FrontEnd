@@ -217,6 +217,7 @@ function normalizePreferences(array $data): array
         'room_type' => 'room_type',
         'roomType' => 'room_type',
         'furnishing' => 'furnishing',
+        'enabled' => 'enabled',
     ];
 
     $preferences = [];
@@ -329,10 +330,21 @@ $preferenceNotice = null;
 $preferenceError = null;
 $preferences = [];
 
+// Whether the "Instant alerts" toggle is on.
+// A chrono task should only be scheduled when the user has turned this toggle on.
+$instantAlertsEnabled = false;
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['form'] ?? '') === 'preferences') {
     if ($email === '') {
         $preferenceError = 'Could not save preferences because your profile email is missing.';
     } else {
+        // The checkbox is only present in the POST data when it is ticked.
+        if (isset($_POST['instant_alerts'])) {
+            $instantAlertsEnabled = true;
+        } else {
+            $instantAlertsEnabled = false;
+        }
+
         $preferencesPayload = [
             'user' => $email,
             'spider' => nullableStringListFromPost('spider', array_keys(spiderLabels())),
@@ -345,14 +357,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['form'] ?? '') === 'prefere
             'max_distance_from_campus' => nullableIntFromPost('max_distance_from_campus'),
             'room_type' => nullableStringFromPost('room_type'),
             'furnishing' => nullableStringFromPost('furnishing'),
+            'enabled' => $instantAlertsEnabled,
         ];
 
+        // We always save the preferences so they are not lost.
+        // The "enabled" flag decides whether the Chrono service schedules alerts for them.
         $saveResult = callChronoApi('POST', '/chrono/tasks', $preferencesPayload);
 
         if ($saveResult['ok']) {
             $preferences = $preferencesPayload;
             $_SESSION['preferences'] = $preferencesPayload;
-            $preferenceNotice = 'Preferences saved.';
+
+            if ($instantAlertsEnabled) {
+                $preferenceNotice = 'Preferences saved. Instant alerts are on.';
+            } else {
+                $preferenceNotice = 'Preferences saved. Instant alerts are off, so we will not email you.';
+            }
         } else {
             $preferences = $preferencesPayload;
             $preferenceError = $saveResult['error'] ?? 'Could not save preferences.';
@@ -382,6 +402,20 @@ if ($preferences === [] && is_array($_SESSION['preferences'] ?? null)) {
 }
 
 $hasPreferences = $preferences !== [];
+
+// Work out whether the "Instant alerts" toggle should show as on.
+// On a POST we already set this from the submitted form above
+//  For a normal page load we read it back from the saved preferences instead.
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    if ($hasPreferences && array_key_exists('enabled', $preferences)) {
+        $instantAlertsEnabled = (bool) $preferences['enabled'];
+    } elseif ($hasPreferences) {
+        $instantAlertsEnabled = true;
+    } else {
+        // No saved preferences yet, so alerts start off.
+        $instantAlertsEnabled = false;
+    }
+}
 $selectedSpiders = preferenceListValue($preferences, 'spider');
 $spiderLabels = spiderLabels();
 $selectedSpiderLabel = 'Any source';
@@ -827,7 +861,7 @@ foreach ($furnishingOptions as $furnishingOption) {
           <div class="toggle-row">
             <div>
               <div class="toggle-title">
-                <p>Instant alerts — new matches</p>
+                <p>Instant alerts - new matches</p>
               </div>
 
               <div class="toggle-sub">
@@ -836,7 +870,13 @@ foreach ($furnishingOptions as $furnishingOption) {
             </div>
 
             <label class="toggle">
-              <input type="checkbox" checked>
+              <?php
+                $instantAlertsChecked = '';
+                if ($instantAlertsEnabled) {
+                    $instantAlertsChecked = ' checked';
+                }
+              ?>
+              <input type="checkbox" name="instant_alerts" value="1"<?php echo $instantAlertsChecked; ?>>
               <span class="toggle-slider"></span>
             </label>
           </div>
