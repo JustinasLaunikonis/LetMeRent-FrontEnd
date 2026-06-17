@@ -485,7 +485,6 @@ $selectedPetFriendly = $selectedPetFriendlyRaw === '' ? '' : (boolPreferenceValu
             <p><?php echo htmlspecialchars($email); ?></p>
           </div>
         <?php endif; ?>
-        </div>
       </div>
 
       <div class="side-menu">
