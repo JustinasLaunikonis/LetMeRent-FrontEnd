@@ -48,8 +48,8 @@ function formatAvailability($value) {
 
     $lowered = strtolower($text);
 
-    // "Available now", "Per direct", "Immediately" and "ASAP" all mean the same.
-    // We check this first so "Available on Immediately" also becomes "now".
+    // "Available now", "Per direct", "Immediately" and "ASAP" all mean the same
+    // We check this first so "Available on Immediately" also becomes "now"
     if (strpos($lowered, 'immediat') !== false
         || strpos($lowered, 'direct') !== false
         || strpos($lowered, 'asap') !== false
@@ -59,7 +59,7 @@ function formatAvailability($value) {
 
     $months = availabilityMonths();
 
-    // Look for a 4-digit year anywhere in the text (it may be missing).
+    // Look for a 4-digit year anywhere in the text (it may be missing)
     $year = 0;
     if (preg_match('/(\d{4})/', $text, $yearMatch) === 1) {
         $year = (int) $yearMatch[1];
@@ -116,8 +116,7 @@ function formatAvailability($value) {
         }
     }
 
-    // 4) A numeric date with dashes or dots. Huurwoningen uses Dutch
-    //    day-month-year, like "01-09-2026".
+    // 4) A numeric date with dashes or dots. Huurwoningen uses Dutch day-month-year, like "01-09-2026".
     if (preg_match('/(\d{1,2})[-.](\d{1,2})[-.](\d{4})/', $text, $m) === 1) {
         $day = (int) $m[1];
         $month = (int) $m[2];

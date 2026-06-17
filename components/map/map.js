@@ -32,21 +32,21 @@ function escapeAttribute(value) {
 // Only allow normal website links in the listing detail bar.
 function safeListingUrl(value) {
   try {
-    const url = new URL(value || '../detail/detail.html', window.location.href);
+    const url = new URL(value || '../detail/detail.php', window.location.href);
 
     if (url.protocol === 'http:' || url.protocol === 'https:') {
       return url.href;
     }
   } catch (error) {
-    return '../detail/detail.html';
+    return '../detail/detail.php';
   }
 
-  return '../detail/detail.html';
+  return '../detail/detail.php';
 }
 
 function safeDetailUrl(id) {
   if (id === undefined || id === null || String(id) === '') {
-    return '../detail/detail.html';
+    return '../detail/detail.php';
   }
   return '../detail/detail.php?id=' + encodeURIComponent(String(id));
 }
@@ -113,7 +113,7 @@ function initLetMeRentMap() {
   let circlePage = 1;
   const circlePerPage = 10;
 
-  // Amsterdam is only used when there are no listing markers.
+  // Amsterdam is only used when there are no listing markers. (fallback)
   const fallbackCenter = { lat: 52.3676, lng: 4.9041 };
   const map = new google.maps.Map(mapElement, {
     center: fallbackCenter,
@@ -152,7 +152,7 @@ function initLetMeRentMap() {
     return [];
   }
 
-  // Fill the bottom bar with the selected listing's data and reveal it.
+  // Fill the bottom bar with the selected listings data and reveal it.
   function showListingBar(listing) {
     if (!listingBar || !listingImage || !listingPrice || !listingTitle || !listingTags || !listingLink) {
       return;

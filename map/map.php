@@ -1,6 +1,6 @@
 <?php
 // This file prepares the listings, markers, API key, and other map variables.
-require '../components/mapPageData.php';
+require '../components/map/mapPageData.php';
 // These defaults prevent warnings if something goes wrong while loading the data file.
 if (!isset($mapCenterQuery)) {
   $mapCenterQuery = 'Amsterdam';
@@ -68,29 +68,14 @@ if (!empty($browseQuery)) {
 </head>
 
 <body>
-  <!-- Nav Bar -->
-  <nav class="nav">
-    <a class="nav-logo" href="../index.php">
-      <div class="logo-icon">
-        <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-          <!-- Let-Me-Rent Logo -->
-          <path d="M2 8L9 2L16 8V16H11V12H7V16H2V8Z" fill="white"/>
-        </svg>
-      </div>
-      <p>LetMeRent</p>
-    </a>
-
-    <ul class="nav-links">
-      <li><a href="<?= htmlspecialchars($browseHref, ENT_QUOTES) ?>">Browse</a></li>
-      <li><a href="map.php" class="active">Map View</a></li>
-      <li><a href="../profile/profile.php">My Alerts</a></li>
-    </ul>
-
-    <div class="nav-right">
-      <div class="nav-bell">&#128276;</div>
-      <a href="../profile/profile.html" class="nav-avatar">JL</a>
-    </div>
-  </nav>
+  <?php
+  // Top navbar. <Map View> is the current page. Browse link keeps the filters.
+  $navBase = '../';
+  $navActive = 'map';
+  $navBrowseHref = $browseHref;
+  $navMapHref = 'map.php';
+  include __DIR__ . '/../includes/nav.php';
+  ?>
 
   <div class="map-layout">
     <div class="map-sidebar">
@@ -323,8 +308,8 @@ if (!empty($browseQuery)) {
           <div id="map-listing-tags" class="popup-tags"></div>
         </div>
         <div class="popup-actions">
-          <a id="map-listing-link" class="popup-view popup-view--secondary" href="../detail/detail.html" target="_blank" rel="noopener">Browse Listing</a>
-          <a id="map-listing-detail" class="popup-view" href="../detail/detail.html">More Details</a>
+          <a id="map-listing-link" class="popup-view popup-view--secondary" href="../detail/detail.php" target="_blank" rel="noopener">Browse Listing</a>
+          <a id="map-listing-detail" class="popup-view" href="../detail/detail.php">More Details</a>
         </div>
         <button id="map-listing-close" class="popup-close" type="button" aria-label="Close listing details">&times;</button>
       </div>
@@ -342,11 +327,8 @@ if (!empty($browseQuery)) {
   <script src="../components/map/mapResizer.js"></script>
   <script src="../components/map/mapCircle.js"></script>
   <script src="../components/map/mapPlaceSearch.js"></script>
-  <script src="../components/map.js"></script>
+  <script src="../components/map/map.js"></script>
   <script src="../components/filters/filterDropdowns.js"></script>
-  <script src="../components/filters/filterRooms.js"></script>
-  <script src="../components/filters/filterPrice.js"></script>
-  <script src="../components/filters/filterEnergy.js"></script>
   <script src="../components/map/mapFilters.js"></script>
   <script src="../components/map/mapStagedFilters.js"></script>
   <script src="../components/indexPage/cityGeoData.js"></script>

@@ -12,7 +12,15 @@ if (!isset($mapHref)) {
 <!-- Results -->
 <div class="results-bar">
   <div class="results-count">
-    <strong><?php include 'components/listings/resultsCount.php'; ?></strong>
+    <strong>
+    <?php
+      if ($totalListings > 0) {
+          echo $totalListings;
+      } else {
+          echo 0;
+      }
+    ?>
+    </strong>
 
     listings &middot; <?= htmlspecialchars($selectedCityText) ?> &middot;
 

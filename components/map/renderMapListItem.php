@@ -1,6 +1,6 @@
 <?php
 
-require_once __DIR__ . '/../listings/listingTags.php';
+require_once __DIR__ . '/../../includes/listingTags.php';
 
 function renderMapListItem(array $listing, bool $selected, $mapIndex = null): string {
     // Add the selected class when the map page wants this listing highlighted.
@@ -33,7 +33,7 @@ function renderMapListItem(array $listing, bool $selected, $mapIndex = null): st
     }
 
     // Set default values first. Then replace them if the listing has real values.
-    $url = '../detail/detail.html';
+    $url = '../detail/detail.php';
     if (!empty($listing['url'])) {
         $url = htmlspecialchars($listing['url']);
     }
@@ -54,7 +54,7 @@ function renderMapListItem(array $listing, bool $selected, $mapIndex = null): st
         $thumb = '<div class="map-thumb"><img src="' . $image . '" alt="' . $title . '" style="width:100%;height:100%;object-fit:cover;"></div>';
     }
 
-    $tags = buildListingCardTags($listing);
+    $tags = buildListingTags($listing);
 
     $tagHtml = '';
     // array_slice takes only the first 3 items from the tags array.

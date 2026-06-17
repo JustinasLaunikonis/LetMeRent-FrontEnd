@@ -1,7 +1,7 @@
 <?php
 
-require_once __DIR__ . '/../availabilityFormat.php';
-require_once __DIR__ . '/listingTags.php';
+require_once __DIR__ . '/../../includes/availabilityFormat.php';
+require_once __DIR__ . '/../../includes/listingTags.php';
 
 // returns the HTML for a single listing card.
 // Call this function by passing one listing array
@@ -81,7 +81,7 @@ function renderCard(array $listing) {
     }
 
     $tags = '';
-    foreach (buildListingCardTags($listing) as $tag) {
+    foreach (buildListingTags($listing) as $tag) {
         $tags .= '<span class="card-tag">' . htmlspecialchars($tag) . '</span>';
     }
 

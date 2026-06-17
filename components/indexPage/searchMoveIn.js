@@ -1,6 +1,5 @@
-// Lets the user pick a move-in date in the search bar.
-// Works like the City and Max Budget fields: clicking the field opens a small
-// card with a date picker, and the chosen date is shown on the field.
+// Lets the user pick a move-in date in the search bar. The open/close behaviour comes from registerSearchField() (searchFields.js)
+// this file adds the date display and the "Any date" clear button.
 var moveInSearchField = document.getElementById('move-in-search-field');
 var moveInCard = document.getElementById('move-in-card');
 var moveInDisplay = document.getElementById('move-in-display');
@@ -8,6 +7,9 @@ var moveInInput = document.getElementById('move-in-input');
 var moveInClear = document.getElementById('move-in-clear');
 
 if (moveInSearchField && moveInCard && moveInDisplay && moveInInput && moveInClear) {
+  // Filled in once the field is registered below.s
+  var moveInField = null;
+
   function updateMoveInDisplay() {
     if (moveInInput.value === '') {
       moveInDisplay.textContent = 'Any date';
@@ -16,56 +18,10 @@ if (moveInSearchField && moveInCard && moveInDisplay && moveInInput && moveInCle
     }
   }
 
-  function showMoveInCard() {
-    // Close the other search cards so only one is open at a time.
-    var cityCard = document.getElementById('city-card');
-    if (cityCard) {
-      cityCard.classList.remove('show');
-    }
-
-    var budgetCard = document.getElementById('budget-card');
-    if (budgetCard) {
-      budgetCard.classList.remove('show');
-    }
-
-    moveInCard.classList.add('show');
-  }
-
-  function hideMoveInCard() {
-    moveInCard.classList.remove('show');
-  }
-
-  function toggleMoveInCard() {
-    if (moveInCard.classList.contains('show')) {
-      hideMoveInCard();
-    } else {
-      showMoveInCard();
-    }
-  }
-
-  moveInSearchField.addEventListener('click', function (event) {
-    event.stopPropagation();
-    toggleMoveInCard();
-  });
-
-  moveInSearchField.addEventListener('keydown', function (event) {
-    if (event.key === 'Enter') {
-      event.preventDefault();
-      showMoveInCard();
-      moveInInput.focus();
-    }
-
-    if (event.key === 'Escape') {
-      hideMoveInCard();
-    }
-  });
-
-  moveInCard.addEventListener('click', function (event) {
-    event.stopPropagation();
-  });
-
-  document.addEventListener('click', function () {
-    hideMoveInCard();
+  moveInField = registerSearchField({
+    fieldId: 'move-in-search-field',
+    cardId: 'move-in-card',
+    inputId: 'move-in-input'
   });
 
   moveInInput.addEventListener('input', function () {
@@ -76,6 +32,8 @@ if (moveInSearchField && moveInCard && moveInDisplay && moveInInput && moveInCle
   moveInClear.addEventListener('click', function () {
     moveInInput.value = '';
     updateMoveInDisplay();
-    hideMoveInCard();
+    if (moveInField) {
+      moveInField.hide();
+    }
   });
 }

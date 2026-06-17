@@ -1,6 +1,12 @@
 <?php
 
-// Shared tag logic so the front-page cards
+// Builds the short descriptive "tags" shown on a listing
+// (the browse cards, the map sidebar, the map popup and the detail page all use this one list, so a listing looks the same everywhere).
+
+// The labels contain plain emoji and plain text.
+// Whoever prints a tag is responsible for escaping it (the card and map item run it through htmlspecialchars; the map markers send it as JSON).
+
+// Read one value out of the listings "features" sub-array, or null if missing.
 if (!function_exists('featureValue')) {
     function featureValue(array $listing, $key) {
         if (!isset($listing['features'])) {
@@ -17,9 +23,9 @@ if (!function_exists('featureValue')) {
     }
 }
 
+// Build a "count + word" label and add an "s" when there is more than one.
+// Example: countLabel(1, "bath") -> "1 bath", countLabel(2, "bath") -> "2 baths".
 if (!function_exists('countLabel')) {
-    // Build a "count + word" label and add an "s" when there is more than one.
-    // Example: countLabel(1, "bath") -> "1 bath", countLabel(2, "bath") -> "2 baths".
     function countLabel($count, $word) {
         $number = (int) $count;
         if ($number === 1) {
@@ -30,7 +36,7 @@ if (!function_exists('countLabel')) {
     }
 }
 
-function buildListingCardTags(array $listing): array {
+function buildListingTags(array $listing): array {
     $tags = array();
 
     if (empty($listing['living_area'])) {
