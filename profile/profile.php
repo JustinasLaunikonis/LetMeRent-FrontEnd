@@ -678,7 +678,9 @@ foreach ($furnishingOptions as $furnishingOption) {
                   name="move_in_date"
                   value="<?php echo htmlspecialchars((string) $selectedMoveInDate); ?>"
                 >
-                <button class="move-in-clear" id="move-in-clear" type="button">Any date</button>
+                <button class="move-in-clear" id="move-in-clear" type="button">
+                  <span class="move-in-clear-icon">&times;</span> Clear date (any)
+                </button>
               </div>
             </div>
 
@@ -750,11 +752,10 @@ foreach ($furnishingOptions as $furnishingOption) {
               <label class="form-label">Room type</label>
               <select class="form-input form-select" name="room_type">
                 <option value=""<?php echo selectedAttr($selectedRoomType, ''); ?>></option>
-                <option value="studio_or_room"<?php echo selectedAttr($selectedRoomType, 'studio_or_room'); ?>>Studio or Room</option>
-                <option value="studio"<?php echo selectedAttr($selectedRoomType, 'studio'); ?>>Studio only</option>
-                <option value="room"<?php echo selectedAttr($selectedRoomType, 'room'); ?>>Room (shared)</option>
-                <option value="apartment"<?php echo selectedAttr($selectedRoomType, 'apartment'); ?>>1-bed apartment</option>
-                <option value="any"<?php echo selectedAttr($selectedRoomType, 'any'); ?>>Any</option>
+                <option value="Room"<?php echo selectedAttr($selectedRoomType, 'Room'); ?>>Room</option>
+                <option value="Studio"<?php echo selectedAttr($selectedRoomType, 'Studio'); ?>>Studio</option>
+                <option value="Apartment"<?php echo selectedAttr($selectedRoomType, 'Apartment'); ?>>Apartment</option>
+                <option value="House"<?php echo selectedAttr($selectedRoomType, 'House'); ?>>House</option>
               </select>
             </div>
 

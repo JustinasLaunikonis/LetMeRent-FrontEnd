@@ -3,7 +3,7 @@
 //   2) the source multi-select dropdown label,
 //   3) the city and university autocompletes, and the min lease length combobox.
 //   4) the budget min/max number inputs and sliders, which are linked together
-//   4b) the move-in date "Any date" button, which clears the picked date.
+//   4b) the move-in date "Clear date" button, which clears the picked date.
 //   5) the fade out of the "profile updated" message after a few seconds.
 //   6) the reset button, which puts every filter back to its default.
 
@@ -664,7 +664,7 @@
 })();
 
 // ---------------------------------------------------------------------------
-// 4b) Move-in date "Any date" button. Clears the date, just like the browse page.
+// 4b) Move-in date "Clear date" button. Clears the date, just like the browse page.
 // ---------------------------------------------------------------------------
 (function () {
   const moveInInput = document.getElementById('move-in-input');
@@ -674,7 +674,7 @@
     return;
   }
 
-  // The "Any date" button clears the picked date so no move-in filter is saved.
+  // The "Clear date" button clears the picked date so no move-in filter is saved.
   moveInClear.addEventListener('click', function () {
     moveInInput.value = '';
   });
