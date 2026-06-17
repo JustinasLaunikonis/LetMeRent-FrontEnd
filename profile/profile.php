@@ -449,6 +449,7 @@ $selectedPetFriendly = $selectedPetFriendlyRaw === '' ? '' : (boolPreferenceValu
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>LetMeRent — Profile & Alerts</title>
+  <link rel="icon" type="image/svg+xml" href="../favicon.svg">
   <link rel="stylesheet" href="../styles.css">
   <link rel="stylesheet" href="profile.css">
 </head>
@@ -708,24 +709,6 @@ $selectedPetFriendly = $selectedPetFriendlyRaw === '' ? '' : (boolPreferenceValu
             </div>
           </div>
 
-        </div>
-
-        <div class="form-footer">
-          <button class="btn-ghost" type="reset">Reset</button>
-          <button class="btn-primary" type="submit">Save preferences</button>
-        </div>
-      </form>
-
-      <!-- Alert Settings -->
-      <div class="form-card">
-        <div class="form-head">
-          <div class="form-head-title">
-            <p>Email Alert Settings</p>
-          </div>
-        </div>
-
-        <div class="form-body">
-
           <!-- Instant Alerts -->
           <div class="toggle-row">
             <div>
@@ -743,6 +726,23 @@ $selectedPetFriendly = $selectedPetFriendlyRaw === '' ? '' : (boolPreferenceValu
               <span class="toggle-slider"></span>
             </label>
           </div>
+        </div>
+
+        <div class="form-footer">
+          <button class="btn-ghost" type="reset">Reset</button>
+          <button class="btn-primary" type="submit">Save preferences</button>
+        </div>
+      </form>
+
+      <!-- Alert Settings -->
+      <div class="form-card">
+        <div class="form-head">
+          <div class="form-head-title">
+            <p>Email Alert Settings</p>
+          </div>
+        </div>
+
+        <div class="form-body">
 
           <!-- Daily Digest -->
           <div class="toggle-row">
@@ -806,6 +806,7 @@ $selectedPetFriendly = $selectedPetFriendlyRaw === '' ? '' : (boolPreferenceValu
       </div>
     </div>
   </div>
+  <script src="../components/indexPage/cityGeoData.js"></script>
   <script src="profile.js"></script>
 </body>
 </html>

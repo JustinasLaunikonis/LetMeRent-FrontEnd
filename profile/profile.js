@@ -254,6 +254,7 @@
     })();
 
     (() => {
+      // City autocomplete. This works the same way as the browse page (index.php)
       const citySelect = document.getElementById('city-select');
       const citySearch = document.getElementById('city-search');
       const cityOptions = document.getElementById('city-options');
@@ -262,73 +263,61 @@
         return;
       }
 
-      const selectedCity = citySelect.value || '';
-      const fallbackCities = [
-        'Amsterdam',
-        'Rotterdam',
-        'Den Haag',
-        'Utrecht',
-        'Eindhoven',
-        'Emmen',
-        'Groningen',
-        'Tilburg',
-        'Almere',
-        'Breda',
-        'Nijmegen',
-        'Enschede',
-        'Haarlem',
-        'Arnhem',
-        'Amersfoort',
-        'Apeldoorn',
-        'Leiden',
-        'Dordrecht',
-        'Zoetermeer',
-        'Zwolle',
-        'Maastricht'
-      ];
+      // Wait a short moment after the last keypress before asking PDOK.
+      let citySearchTimer = null;
 
-      const endpoint = 'https://api.pdok.nl/bzk/locatieserver/search/v3_1/free';
-      const maxVisibleOptions = 12;
+      // Each search gets a number. When a reply comes back we only use it if it is
+      // still the newest search, so a slow reply cannot overwrite newer results.
+      let citySearchToken = 0;
 
-      const naturalSort = (left, right) => left.localeCompare(right, 'nl', { sensitivity: 'base' });
-      let cities = fallbackCities;
-      let activeOptionIndex = -1;
+      // Keep the hidden field (the one that is submitted, and the one the
+      // University / Campus dropdown reads) in step with the visible box,
+      // then tell the campus dropdown to refresh.
+      const syncCitySelect = () => {
+        citySelect.value = citySearch.value.trim();
+        citySelect.dispatchEvent(new Event('change'));
+      };
 
       const closeOptions = () => {
         cityOptions.classList.remove('show');
         citySearch.setAttribute('aria-expanded', 'false');
-        activeOptionIndex = -1;
+      };
+
+      // Show a single line of text in the options box (e.g. "Searching...").
+      const showCityMessage = (message) => {
+        cityOptions.replaceChildren();
+
+        const messageElement = document.createElement('p');
+        messageElement.className = 'city-loading';
+        messageElement.textContent = message;
+        cityOptions.append(messageElement);
+
+        cityOptions.classList.add('show');
+        citySearch.setAttribute('aria-expanded', 'true');
       };
 
       const selectCity = (city) => {
         citySearch.value = city;
-        citySelect.value = city;
+        syncCitySelect();
         closeOptions();
-        citySelect.dispatchEvent(new Event('change'));
       };
 
-      const renderCityOptions = () => {
-        const query = citySearch.value.trim().toLowerCase();
-        const selectedValue = citySelect.value;
-        const matchingCities = cities
-          .filter((city) => query === '' || city.toLowerCase().includes(query))
-          .slice(0, maxVisibleOptions);
-
+      // Show the list of matching cities as clickable buttons.
+      const renderCityOptions = (cityNames) => {
         cityOptions.replaceChildren();
 
-        if (matchingCities.length === 0) {
-          closeOptions();
+        if (cityNames.length === 0) {
+          showCityMessage('No cities found');
           return;
         }
 
-        matchingCities.forEach((city, index) => {
+        cityNames.forEach((city) => {
           const option = document.createElement('button');
           option.type = 'button';
-          option.className = `city-option${city === selectedValue ? ' active' : ''}`;
-          option.id = `city-option-${index}`;
+          option.className = 'city-option';
           option.setAttribute('role', 'option');
-          option.setAttribute('aria-selected', city === selectedValue ? 'true' : 'false');
           option.textContent = city;
+          // mousedown (not click) so the choice happens before the input blurs.
           option.addEventListener('mousedown', (event) => {
             event.preventDefault();
             selectCity(city);
@@ -341,111 +330,61 @@
         citySearch.setAttribute('aria-expanded', 'true');
       };
 
-      const clearCityIfNotExactMatch = () => {
-        const typedCity = citySearch.value.trim();
-        const exactCity = cities.find((city) => city.toLowerCase() === typedCity.toLowerCase());
+      // Look up cities from PDOK for whatever the user has typed so far.
+      const runCitySearch = () => {
+        let searchText = citySearch.value.trim();
 
-        citySelect.value = exactCity || '';
-
-        if (exactCity !== undefined && citySearch.value !== exactCity) {
-          citySearch.value = exactCity;
+        // Nothing typed yet: search as if the user typed "a", so the list still
+        // shows some cities to pick from.
+        if (searchText === '') {
+          searchText = 'a';
         }
 
-        citySelect.dispatchEvent(new Event('change'));
-      };
+        showCityMessage('Searching...');
 
-      const setCityOptions = (loadedCities) => {
-        const uniqueCities = [...new Set(loadedCities.filter(Boolean))].sort(naturalSort);
+        // Remember which search this is, so an older reply cannot replace a newer one.
+        citySearchToken = citySearchToken + 1;
+        const thisToken = citySearchToken;
 
-        if (selectedCity !== '' && !uniqueCities.includes(selectedCity)) {
-          uniqueCities.unshift(selectedCity);
-        }
+        window.suggestDutchCities(searchText, (cities) => {
+          // A newer search has already started, so ignore this older reply.
+          if (thisToken !== citySearchToken) {
+            return;
+          }
 
-        cities = uniqueCities;
-        citySearch.setAttribute('aria-busy', 'false');
-        clearCityIfNotExactMatch();
-        citySelect.dispatchEvent(new Event('change'));
-      };
+          // null means the lookup failed.
+          if (cities === null) {
+            showCityMessage('Could not load cities');
+            return;
+          }
 
-      const fetchCityPage = async (start) => {
-        const params = new URLSearchParams({
-          q: '*',
-          fq: 'type:woonplaats',
-          rows: '100',
-          start: String(start),
-          fl: 'woonplaatsnaam'
+          renderCityOptions(cities);
         });
-        const response = await fetch(`${endpoint}?${params.toString()}`);
-
-        if (!response.ok) {
-          throw new Error(`PDOK city request failed with ${response.status}`);
-        }
-
-        return response.json();
       };
 
-      const loadCities = async () => {
-        const firstPage = await fetchCityPage(0);
-        const total = Number(firstPage?.response?.numFound || 0);
-        const starts = [];
-
-        for (let start = 100; start < total; start += 100) {
-          starts.push(start);
+      // Wait a short moment after typing stops before searching.
+      const scheduleCitySearch = () => {
+        if (citySearchTimer !== null) {
+          clearTimeout(citySearchTimer);
         }
 
-        const pages = await Promise.all(starts.map(fetchCityPage));
-        const docs = [firstPage, ...pages].flatMap((page) => page?.response?.docs || []);
-
-        setCityOptions(docs.map((doc) => doc.woonplaatsnaam));
+        citySearchTimer = setTimeout(runCitySearch, 250);
       };
-
-      loadCities().catch(() => {
-        setCityOptions(fallbackCities);
-      });
 
       citySearch.addEventListener('input', () => {
-        citySelect.value = '';
-        citySelect.dispatchEvent(new Event('change'));
-        renderCityOptions();
+        // Whatever is typed is what gets submitted, just like the browse page.
+        syncCitySelect();
+        scheduleCitySearch();
       });
 
-      citySearch.addEventListener('focus', renderCityOptions);
+      citySearch.addEventListener('focus', runCitySearch);
 
       citySearch.addEventListener('blur', () => {
-        clearCityIfNotExactMatch();
         window.setTimeout(closeOptions, 120);
       });
 
-      citySearch.addEventListener('keydown', (event) => {
-        if (event.key === 'ArrowDown') {
-          event.preventDefault();
-          renderCityOptions();
-          const options = [...cityOptions.querySelectorAll('.city-option')];
-          activeOptionIndex = Math.min(activeOptionIndex + 1, options.length - 1);
-          options.forEach((option, index) => {
-            option.classList.toggle('active', index === activeOptionIndex);
-          });
-        } else if (event.key === 'ArrowUp') {
-          event.preventDefault();
-          const options = [...cityOptions.querySelectorAll('.city-option')];
-          activeOptionIndex = Math.max(activeOptionIndex - 1, 0);
-          options.forEach((option, index) => {
-            option.classList.toggle('active', index === activeOptionIndex);
-          });
-        } else if (event.key === 'Enter') {
-          const options = [...cityOptions.querySelectorAll('.city-option')];
+      citySearch.setAttribute('aria-busy', 'false');
 
-          if (activeOptionIndex >= 0 && options[activeOptionIndex]) {
-            event.preventDefault();
-            selectCity(options[activeOptionIndex].textContent);
-          }
-
-          return;
-        } else if (event.key === 'Escape') {
-          closeOptions();
-          return;
-        } else {
-          return;
-        }
-      });
+      // If the page loaded with a saved city, make sure the campus list matches it.
+      syncCitySelect();
     })();
