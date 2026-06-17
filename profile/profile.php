@@ -485,27 +485,6 @@ $selectedPetFriendly = $selectedPetFriendlyRaw === '' ? '' : (boolPreferenceValu
             <p><?php echo htmlspecialchars($email); ?></p>
           </div>
         <?php endif; ?>
-
-        <div class="profile-stats">
-          <div class="profile-stat">
-            <div class="val">47</div>
-            <div class="lbl">Saved</div>
-          </div>
-
-          <div class="profile-stat">
-            <div class="val">8</div>
-            <div class="lbl">Applied</div>
-          </div>
-
-          <div class="profile-stat">
-            <div class="val">3</div>
-            <div class="lbl">Alerts</div>
-          </div>
-
-          <div class="profile-stat">
-            <div class="val">94%</div>
-            <div class="lbl">Top match</div>
-          </div>
         </div>
       </div>
 
@@ -630,12 +609,62 @@ $selectedPetFriendly = $selectedPetFriendlyRaw === '' ? '' : (boolPreferenceValu
           <div class="form-row">
             <div class="form-group">
               <label class="form-label">Min budget (€/mo)</label>
-              <input class="form-input" type="number" name="min_budget" min="0" step="50" value="<?php echo htmlspecialchars((string) $selectedMinBudget); ?>">
+              <div class="budget-field">
+                <div class="budget-input-row">
+                  <span class="budget-currency">&euro;</span>
+                  <input
+                    class="budget-number-input"
+                    id="min-budget-input"
+                    type="number"
+                    name="min_budget"
+                    min="0"
+                    max="5000"
+                    step="1"
+                    value="<?php echo htmlspecialchars((string) $selectedMinBudget); ?>"
+                  >
+                  <span class="budget-period">/ mo</span>
+                </div>
+                <input
+                  class="budget-slider"
+                  id="min-budget-slider"
+                  type="range"
+                  min="0"
+                  max="5000"
+                  step="50"
+                  value="<?php echo htmlspecialchars((string) $selectedMinBudget); ?>"
+                  aria-label="Min budget slider"
+                >
+              </div>
             </div>
 
             <div class="form-group">
               <label class="form-label">Max budget (€/mo)</label>
-              <input class="form-input" type="number" name="max_budget" min="0" step="50" value="<?php echo htmlspecialchars((string) $selectedMaxBudget); ?>">
+              <div class="budget-field">
+                <div class="budget-input-row">
+                  <span class="budget-currency">&euro;</span>
+                  <input
+                    class="budget-number-input"
+                    id="max-budget-input"
+                    type="number"
+                    name="max_budget"
+                    min="0"
+                    max="5000"
+                    step="1"
+                    value="<?php echo htmlspecialchars((string) $selectedMaxBudget); ?>"
+                  >
+                  <span class="budget-period">/ mo</span>
+                </div>
+                <input
+                  class="budget-slider"
+                  id="max-budget-slider"
+                  type="range"
+                  min="0"
+                  max="5000"
+                  step="50"
+                  value="<?php echo htmlspecialchars((string) $selectedMaxBudget); ?>"
+                  aria-label="Max budget slider"
+                >
+              </div>
             </div>
           </div>
 
