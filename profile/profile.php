@@ -431,6 +431,21 @@ foreach ($leaseLengthOptions as $leaseOption) {
 
 $selectedDistance = preferenceValue($preferences, 'max_distance_from_campus', '');
 $selectedRoomType = preferenceValue($preferences, 'room_type', '');
+
+$roomTypeOptions = [
+    ['value' => 'Room', 'label' => 'Room'],
+    ['value' => 'Studio', 'label' => 'Studio'],
+    ['value' => 'Apartment', 'label' => 'Apartment'],
+    ['value' => 'House', 'label' => 'House'],
+];
+
+$selectedRoomTypeLabel = '';
+foreach ($roomTypeOptions as $roomTypeOption) {
+    if ((string) $roomTypeOption['value'] === (string) $selectedRoomType) {
+        $selectedRoomTypeLabel = $roomTypeOption['label'];
+    }
+}
+
 $selectedFurnishing = preferenceValue($preferences, 'furnishing', '');
 
 // The "Furnishing" field uses the same combobox UI as Min lease length.
@@ -678,9 +693,7 @@ foreach ($furnishingOptions as $furnishingOption) {
                   name="move_in_date"
                   value="<?php echo htmlspecialchars((string) $selectedMoveInDate); ?>"
                 >
-                <button class="move-in-clear" id="move-in-clear" type="button">
-                  <span class="move-in-clear-icon">&times;</span> Clear date (any)
-                </button>
+                <button class="move-in-clear" id="move-in-clear" type="button">Clear date (any)</button>
               </div>
             </div>
 
@@ -750,13 +763,32 @@ foreach ($furnishingOptions as $furnishingOption) {
           <div class="form-row">
             <div class="form-group">
               <label class="form-label">Room type</label>
-              <select class="form-input form-select" name="room_type">
-                <option value=""<?php echo selectedAttr($selectedRoomType, ''); ?>></option>
-                <option value="Room"<?php echo selectedAttr($selectedRoomType, 'Room'); ?>>Room</option>
-                <option value="Studio"<?php echo selectedAttr($selectedRoomType, 'Studio'); ?>>Studio</option>
-                <option value="Apartment"<?php echo selectedAttr($selectedRoomType, 'Apartment'); ?>>Apartment</option>
-                <option value="House"<?php echo selectedAttr($selectedRoomType, 'House'); ?>>House</option>
-              </select>
+              <div class="city-combobox">
+                <input
+                  class="form-input"
+                  type="text"
+                  id="room-type-search"
+                  value="<?php echo htmlspecialchars($selectedRoomTypeLabel); ?>"
+                  autocomplete="off"
+                  placeholder="Select room type"
+                  readonly
+                  role="combobox"
+                  aria-autocomplete="list"
+                  aria-expanded="false"
+                  aria-controls="room-type-options"
+                >
+                <input type="hidden" name="room_type" id="room-type-select" value="<?php echo htmlspecialchars((string) $selectedRoomType); ?>">
+                <div class="city-options" id="room-type-options" role="listbox">
+                  <?php foreach ($roomTypeOptions as $roomTypeOption): ?>
+                    <button
+                      type="button"
+                      class="city-option"
+                      role="option"
+                      data-value="<?php echo htmlspecialchars($roomTypeOption['value']); ?>"
+                    ><?php echo htmlspecialchars($roomTypeOption['label']); ?></button>
+                  <?php endforeach; ?>
+                </div>
+              </div>
             </div>
 
             <!-- Furnishing Selection -->
