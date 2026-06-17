@@ -58,7 +58,13 @@
           .map((input) => input.closest('label')?.textContent.trim())
           .filter(Boolean);
 
-        label.textContent = selectedLabels.length > 0 ? selectedLabels.join(', ') : emptyLabel;
+        // When nothing is selected, or every source is selected, show the
+        // "Any source" label instead of listing them all.
+        if (selectedLabels.length === 0 || selectedLabels.length === inputs.length) {
+          label.textContent = emptyLabel;
+        } else {
+          label.textContent = selectedLabels.join(', ');
+        }
       };
 
       inputs.forEach((input) => {
