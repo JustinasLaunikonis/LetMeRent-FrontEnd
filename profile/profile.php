@@ -426,6 +426,13 @@ if ($selectedSpiders !== []) {
 }
 $selectedCity = preferenceValue($preferences, 'city', '');
 $selectedCampus = preferenceValue($preferences, 'university_campus', '');
+
+// The university is not stored on the user account.
+// It is saved in the search preferences instead.
+// So if the profile did not give us a university, fall back to the campus the user picked in their preferences.
+if ($university === 'University not set' && trim((string) $selectedCampus) !== '') {
+    $university = (string) $selectedCampus;
+}
 $selectedMinBudget = preferenceValue($preferences, 'min_budget', '');
 $selectedMaxBudget = preferenceValue($preferences, 'max_budget', '');
 $selectedMoveInDate = preferenceValue($preferences, 'move_in_date', '');
@@ -505,16 +512,6 @@ $selectedPetFriendly = $selectedPetFriendlyRaw === '' ? '' : (boolPreferenceValu
         <a class="side-menu-item active" href="profile.php">
           <span class="side-menu-icon">👤</span>
           <p>My Profile</p>
-        </a>
-
-        <a class="side-menu-item" href="profile.php">
-          <span class="side-menu-icon">🔔</span>
-          <p>Alert Settings</p>
-        </a>
-
-        <a class="side-menu-item" href="profile.php">
-          <span class="side-menu-icon">🏠</span>
-          <p>Preferences</p>
         </a>
 
         <a class="side-menu-item" href="../index.php">
