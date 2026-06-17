@@ -618,11 +618,10 @@ $selectedPetFriendly = $selectedPetFriendlyRaw === '' ? '' : (boolPreferenceValu
                     class="budget-number-input"
                     id="min-budget-input"
                     type="number"
-                    name="min_budget"
                     min="0"
                     max="5000"
                     step="1"
-                    value="<?php echo htmlspecialchars((string) $selectedMinBudget); ?>"
+                    value="<?php echo $selectedMinBudget === '' ? '0' : htmlspecialchars((string) $selectedMinBudget); ?>"
                   >
                   <span class="budget-period">/ mo</span>
                 </div>
@@ -633,9 +632,10 @@ $selectedPetFriendly = $selectedPetFriendlyRaw === '' ? '' : (boolPreferenceValu
                   min="0"
                   max="5000"
                   step="50"
-                  value="<?php echo htmlspecialchars((string) $selectedMinBudget); ?>"
+                  value="<?php echo $selectedMinBudget === '' ? '0' : htmlspecialchars((string) $selectedMinBudget); ?>"
                   aria-label="Min budget slider"
                 >
+                <input type="hidden" name="min_budget" id="min-budget-hidden" value="<?php echo htmlspecialchars((string) $selectedMinBudget); ?>">
               </div>
             </div>
 
@@ -652,6 +652,7 @@ $selectedPetFriendly = $selectedPetFriendlyRaw === '' ? '' : (boolPreferenceValu
                     min="0"
                     max="5000"
                     step="1"
+                    placeholder="5000+"
                     value="<?php echo htmlspecialchars((string) $selectedMaxBudget); ?>"
                   >
                   <span class="budget-period">/ mo</span>
@@ -663,7 +664,7 @@ $selectedPetFriendly = $selectedPetFriendlyRaw === '' ? '' : (boolPreferenceValu
                   min="0"
                   max="5000"
                   step="50"
-                  value="<?php echo htmlspecialchars((string) $selectedMaxBudget); ?>"
+                  value="<?php echo $selectedMaxBudget === '' ? '5000' : htmlspecialchars((string) $selectedMaxBudget); ?>"
                   aria-label="Max budget slider"
                 >
               </div>

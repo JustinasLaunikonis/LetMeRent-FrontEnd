@@ -480,16 +480,26 @@
 // ---------------------------------------------------------------------------
 (function () {
   // Connect one number input to its matching range slider.
-  function linkBudgetField(inputId, sliderId) {
-    const numberInput = document.getElementById(inputId);
-    const slider = document.getElementById(sliderId);
+  //
+  // config.edge is the slider end that means "no limit":
+  //   'max' (budget max) - the top of the range, 5000, means "no upper limit".
+  //   'min' (budget min) - the bottom of the range, 0, means "no lower limit".
+  // At that edge an empty value is submitted (via config.submitId), just like
+  // the distance slider. config.clearBox decides what the box shows there:
+  //   true  - clear the box so its placeholder ("5000+") shows.
+  //   false - keep showing the edge number ("0").
+  function linkBudgetField(config) {
+    const numberInput = document.getElementById(config.inputId);
+    const slider = document.getElementById(config.sliderId);
+    const submitInput = document.getElementById(config.submitId);
 
-    if (!numberInput || !slider) {
+    if (!numberInput || !slider || !submitInput) {
       return;
     }
 
     const minBudget = parseInt(slider.min, 10);
     const maxBudget = parseInt(slider.max, 10);
+    const edgeValue = config.edge === 'max' ? maxBudget : minBudget;
 
     // Keep a typed value inside the allowed range.
     function clamp(value) {
@@ -502,14 +512,42 @@
       return value;
     }
 
-    // Dragging the slider fills in the number box.
+    function isUnlimited(value) {
+      if (config.edge === 'max') {
+        return value >= maxBudget;
+      }
+      return value <= minBudget;
+    }
+
+    // Move everything (slider, box, submitted value) to one number.
+    function apply(value) {
+      const safe = clamp(value);
+      slider.value = safe;
+
+      if (isUnlimited(safe)) {
+        // No limit on this end: submit an empty value.
+        submitInput.value = '';
+        if (config.clearBox) {
+          numberInput.value = '';
+        } else {
+          numberInput.value = safe;
+        }
+      } else {
+        submitInput.value = safe;
+        numberInput.value = safe;
+      }
+    }
+
+    // Dragging the slider updates the box and the submitted value.
     slider.addEventListener('input', function () {
-      numberInput.value = slider.value;
+      apply(parseInt(slider.value, 10));
     });
 
-    // Typing in the number box moves the slider along with it.
+    // Typing in the box moves the slider along with it.
     numberInput.addEventListener('input', function () {
       if (numberInput.value === '') {
+        slider.value = edgeValue;
+        submitInput.value = '';
         return;
       }
 
@@ -519,29 +557,53 @@
       }
 
       const safe = clamp(typed);
-      numberInput.value = safe;
       slider.value = safe;
+
+      if (isUnlimited(safe)) {
+        submitInput.value = '';
+        if (config.clearBox) {
+          numberInput.value = '';
+        } else {
+          numberInput.value = safe;
+        }
+      } else {
+        submitInput.value = safe;
+        numberInput.value = safe;
+      }
     });
 
-    // When leaving an empty box, fall back to the slider value.
     numberInput.addEventListener('change', function () {
       if (numberInput.value === '') {
-        numberInput.value = slider.value;
+        apply(edgeValue);
         return;
       }
 
       const typed = parseInt(numberInput.value, 10);
       if (isNaN(typed)) {
-        numberInput.value = slider.value;
+        apply(parseInt(slider.value, 10));
         return;
       }
 
-      const safe = clamp(typed);
-      numberInput.value = safe;
-      slider.value = safe;
+      apply(typed);
     });
   }
 
-  linkBudgetField('min-budget-input', 'min-budget-slider');
-  linkBudgetField('max-budget-input', 'max-budget-slider');
+  // Min: 0 means "no lower limit". Show "0" in the box, submit empty.
+  linkBudgetField({
+    inputId: 'min-budget-input',
+    sliderId: 'min-budget-slider',
+    submitId: 'min-budget-hidden',
+    edge: 'min',
+    clearBox: false
+  });
+
+  // Max: 5000 means "no upper limit".
+  // Clear the box so "5000+" placeholder shows, and submit empty
+  linkBudgetField({
+    inputId: 'max-budget-input',
+    sliderId: 'max-budget-slider',
+    submitId: 'max-budget-input',
+    edge: 'max',
+    clearBox: true
+  });
 })();
