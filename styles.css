@@ -159,6 +159,25 @@ body {
   text-decoration: none;
 }
 
+.nav-signin {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 36px;
+  padding: 0 18px;
+  background: linear-gradient(135deg, var(--blue) 0%, var(--blue-mid) 100%);
+  border-radius: 20px;
+  color: white;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.nav-signin:hover {
+  opacity: 0.9;
+}
+
 .badge {
   display: inline-flex;
   align-items: center;

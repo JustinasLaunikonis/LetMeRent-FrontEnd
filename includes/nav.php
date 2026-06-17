@@ -24,9 +24,18 @@ if (!isset($navMapHref)) {
 if (!isset($navProfileHref)) {
     $navProfileHref = $navBase . 'profile/profile.php';
 }
+
+// Helper that knows who is logged in (used for the avatar and the logged-out "Sign in" button below).
+require_once __DIR__ . '/userInitials.php';
+
+$navLoggedIn = userIsLoggedIn();
+
 if (!isset($navAvatar)) {
-    $navAvatar = 'AA';
+    $navAvatar = sessionUserInitials();
 }
+
+// Where the "Sign in" button should point for logged-out visitors.
+$navSignInHref = $navBase . 'sign-up-in/signin.php';
 
 // Work out the "active" highlight for each menu item.
 $browseActive = '';
@@ -62,7 +71,13 @@ if ($navActive === 'alerts') {
   </ul>
 
   <div class="nav-right">
-    <div class="nav-bell">&#128276;</div>
-    <a href="<?= htmlspecialchars($navProfileHref, ENT_QUOTES) ?>" class="nav-avatar"><?= htmlspecialchars($navAvatar) ?></a>
+    <?php if ($navLoggedIn): ?>
+      <!-- Logged in: show notifications and the user's avatar. -->
+      <div class="nav-bell">&#128276;</div>
+      <a href="<?= htmlspecialchars($navProfileHref, ENT_QUOTES) ?>" class="nav-avatar"><?= htmlspecialchars($navAvatar) ?></a>
+    <?php else: ?>
+      <!-- Logged out: no fake avatar. Show a clear "Sign in" button instead. -->
+      <a href="<?= htmlspecialchars($navSignInHref, ENT_QUOTES) ?>" class="nav-signin">Sign in</a>
+    <?php endif; ?>
   </div>
 </nav>
