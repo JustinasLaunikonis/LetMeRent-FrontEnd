@@ -482,49 +482,52 @@
     })();
 
     (() => {
-      // Min lease length combobox. Same look as the University / Campus box:
-      // a read-only box that opens a list of choices.
-      const leaseSearch = document.getElementById('lease-search');
-      const leaseHidden = document.getElementById('lease-select');
-      const leaseOptions = document.getElementById('lease-options');
+      const setupChoiceCombobox = (searchId, hiddenId, optionsId) => {
+        const searchBox = document.getElementById(searchId);
+        const hiddenField = document.getElementById(hiddenId);
+        const optionsBox = document.getElementById(optionsId);
 
-      if (!leaseSearch || !leaseHidden || !leaseOptions) {
-        return;
-      }
+        if (!searchBox || !hiddenField || !optionsBox) {
+          return;
+        }
 
-      const optionButtons = [...leaseOptions.querySelectorAll('.city-option')];
+        const optionButtons = [...optionsBox.querySelectorAll('.city-option')];
 
-      const openOptions = () => {
-        leaseOptions.classList.add('show');
-        leaseSearch.setAttribute('aria-expanded', 'true');
-      };
+        const openOptions = () => {
+          optionsBox.classList.add('show');
+          searchBox.setAttribute('aria-expanded', 'true');
+        };
 
-      const closeOptions = () => {
-        leaseOptions.classList.remove('show');
-        leaseSearch.setAttribute('aria-expanded', 'false');
-      };
+        const closeOptions = () => {
+          optionsBox.classList.remove('show');
+          searchBox.setAttribute('aria-expanded', 'false');
+        };
 
-      // Put the chosen value in the hidden (submitted) field and its label in the box.
-      const selectOption = (button) => {
-        leaseHidden.value = button.dataset.value;
-        leaseSearch.value = button.textContent.trim();
-        closeOptions();
-      };
+        // Put the chosen value in the hidden (submitted) field and its label in the box.
+        const selectOption = (button) => {
+          hiddenField.value = button.dataset.value;
+          searchBox.value = button.textContent.trim();
+          closeOptions();
+        };
 
-      optionButtons.forEach((button) => {
-        // mousedown (not click) so the choice happens before the box loses focus.
-        button.addEventListener('mousedown', (event) => {
-          event.preventDefault();
-          selectOption(button);
+        optionButtons.forEach((button) => {
+          // mousedown (not click) so the choice happens before the box loses focus.
+          button.addEventListener('mousedown', (event) => {
+            event.preventDefault();
+            selectOption(button);
+          });
         });
-      });
 
-      leaseSearch.addEventListener('focus', openOptions);
-      leaseSearch.addEventListener('click', openOptions);
-      leaseSearch.addEventListener('blur', () => {
-        // Small delay so a click on an option is handled before we close.
-        window.setTimeout(closeOptions, 120);
-      });
+        searchBox.addEventListener('focus', openOptions);
+        searchBox.addEventListener('click', openOptions);
+        searchBox.addEventListener('blur', () => {
+          // Small delay so a click on an option is handled before we close.
+          window.setTimeout(closeOptions, 120);
+        });
+      };
+
+      setupChoiceCombobox('lease-search', 'lease-select', 'lease-options');
+      setupChoiceCombobox('furnishing-search', 'furnishing-select', 'furnishing-options');
     })();
 
 // ---------------------------------------------------------------------------
@@ -716,7 +719,7 @@
 
   resetButton.addEventListener('click', function () {
     // Plain dropdowns go back to their empty option.
-    const selectNames = ['pet_friendly', 'room_type', 'furnishing'];
+    const selectNames = ['room_type'];
     for (let i = 0; i < selectNames.length; i++) {
       const select = document.querySelector('[name="' + selectNames[i] + '"]');
       if (select) {
@@ -724,14 +727,20 @@
       }
     }
 
-    // Min lease length: clear the box and the submitted value.
-    const leaseSearch = document.getElementById('lease-search');
-    const leaseHidden = document.getElementById('lease-select');
-    if (leaseSearch) {
-      leaseSearch.value = '';
-    }
-    if (leaseHidden) {
-      leaseHidden.value = '';
+    // Combobox fields (Min lease length, Furnishing): clear the box and the submitted value.
+    const comboboxes = [
+      ['lease-search', 'lease-select'],
+      ['furnishing-search', 'furnishing-select']
+    ];
+    for (let i = 0; i < comboboxes.length; i++) {
+      const comboSearch = document.getElementById(comboboxes[i][0]);
+      const comboHidden = document.getElementById(comboboxes[i][1]);
+      if (comboSearch) {
+        comboSearch.value = '';
+      }
+      if (comboHidden) {
+        comboHidden.value = '';
+      }
     }
 
     // Move-in date: clear it.

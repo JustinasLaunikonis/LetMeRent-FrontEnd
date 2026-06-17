@@ -187,17 +187,6 @@ function nullableStringListFromPost(string $key, array $defaultValues = []): ?st
     return implode(',', $normalizedValues);
 }
 
-function nullableBoolFromPost(string $key): ?bool
-{
-    $value = nullableStringFromPost($key);
-
-    if ($value === null) {
-        return null;
-    }
-
-    return $value === 'true';
-}
-
 function preferenceValue(array $preferences, string $key, mixed $fallback): mixed
 {
     return array_key_exists($key, $preferences) && $preferences[$key] !== null ? $preferences[$key] : $fallback;
@@ -228,8 +217,6 @@ function normalizePreferences(array $data): array
         'room_type' => 'room_type',
         'roomType' => 'room_type',
         'furnishing' => 'furnishing',
-        'pet_friendly' => 'pet_friendly',
-        'petFriendly' => 'pet_friendly',
     ];
 
     $preferences = [];
@@ -311,17 +298,6 @@ function extractPreferences(array $taskData): array
     return $candidates[count($candidates) - 1]['preferences'];
 }
 
-function boolPreferenceValue(mixed $value): bool
-{
-    if (is_bool($value)) {
-        return $value;
-    }
-
-    $normalized = strtolower(trim((string) $value));
-
-    return in_array($normalized, ['1', 'true', 'yes', 'required'], true);
-}
-
 function selectedAttr(mixed $actual, mixed $expected): string
 {
     return (string) $actual === (string) $expected ? ' selected' : '';
@@ -369,7 +345,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['form'] ?? '') === 'prefere
             'max_distance_from_campus' => nullableIntFromPost('max_distance_from_campus'),
             'room_type' => nullableStringFromPost('room_type'),
             'furnishing' => nullableStringFromPost('furnishing'),
-            'pet_friendly' => nullableBoolFromPost('pet_friendly'),
         ];
 
         $saveResult = callChronoApi('POST', '/chrono/tasks', $preferencesPayload);
@@ -457,8 +432,20 @@ foreach ($leaseLengthOptions as $leaseOption) {
 $selectedDistance = preferenceValue($preferences, 'max_distance_from_campus', '');
 $selectedRoomType = preferenceValue($preferences, 'room_type', '');
 $selectedFurnishing = preferenceValue($preferences, 'furnishing', '');
-$selectedPetFriendlyRaw = preferenceValue($preferences, 'pet_friendly', '');
-$selectedPetFriendly = $selectedPetFriendlyRaw === '' ? '' : (boolPreferenceValue($selectedPetFriendlyRaw) ? 'true' : 'false');
+
+// The "Furnishing" field uses the same combobox UI as Min lease length.
+// The values match the furnishing tag shown on listings (the 🛋️ tag in listingTags.php).
+$furnishingOptions = [
+    ['value' => 'Furnished', 'label' => 'Furnished'],
+    ['value' => 'Unfurnished', 'label' => 'Unfurnished'],
+];
+
+$selectedFurnishingLabel = '';
+foreach ($furnishingOptions as $furnishingOption) {
+    if ((string) $furnishingOption['value'] === (string) $selectedFurnishing) {
+        $selectedFurnishingLabel = $furnishingOption['label'];
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -612,15 +599,6 @@ $selectedPetFriendly = $selectedPetFriendlyRaw === '' ? '' : (boolPreferenceValu
                   <?php endforeach; ?>
                 </div>
               </details>
-            </div>
-
-            <div class="form-group">
-              <label class="form-label">Pet-friendly</label>
-              <select class="form-input form-select" name="pet_friendly">
-                <option value=""<?php echo selectedAttr($selectedPetFriendly, ''); ?>></option>
-                <option value="true"<?php echo selectedAttr($selectedPetFriendly, 'true'); ?>>Required</option>
-                <option value="false"<?php echo selectedAttr($selectedPetFriendly, 'false'); ?>>Not needed</option>
-              </select>
             </div>
           </div>
 
@@ -783,13 +761,32 @@ $selectedPetFriendly = $selectedPetFriendlyRaw === '' ? '' : (boolPreferenceValu
             <!-- Furnishing Selection -->
             <div class="form-group">
               <label class="form-label">Furnishing</label>
-              <select class="form-input form-select" name="furnishing">
-                <option value=""<?php echo selectedAttr($selectedFurnishing, ''); ?>></option>
-                <option value="furnished"<?php echo selectedAttr($selectedFurnishing, 'furnished'); ?>>Furnished required</option>
-                <option value="furnished_preferred"<?php echo selectedAttr($selectedFurnishing, 'furnished_preferred'); ?>>Furnished preferred</option>
-                <option value="unfurnished"<?php echo selectedAttr($selectedFurnishing, 'unfurnished'); ?>>Unfurnished only</option>
-                <option value="any"<?php echo selectedAttr($selectedFurnishing, 'any'); ?>>Any</option>
-              </select>
+              <div class="city-combobox">
+                <input
+                  class="form-input"
+                  type="text"
+                  id="furnishing-search"
+                  value="<?php echo htmlspecialchars($selectedFurnishingLabel); ?>"
+                  autocomplete="off"
+                  placeholder="Select furnishing"
+                  readonly
+                  role="combobox"
+                  aria-autocomplete="list"
+                  aria-expanded="false"
+                  aria-controls="furnishing-options"
+                >
+                <input type="hidden" name="furnishing" id="furnishing-select" value="<?php echo htmlspecialchars((string) $selectedFurnishing); ?>">
+                <div class="city-options" id="furnishing-options" role="listbox">
+                  <?php foreach ($furnishingOptions as $furnishingOption): ?>
+                    <button
+                      type="button"
+                      class="city-option"
+                      role="option"
+                      data-value="<?php echo htmlspecialchars($furnishingOption['value']); ?>"
+                    ><?php echo htmlspecialchars($furnishingOption['label']); ?></button>
+                  <?php endforeach; ?>
+                </div>
+              </div>
             </div>
           </div>
 
