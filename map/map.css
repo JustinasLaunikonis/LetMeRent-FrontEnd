@@ -148,6 +148,11 @@
   font-weight: 400;
 }
 
+.map-count .apply-profile-btn {
+  margin-left: 10px;
+  vertical-align: middle;
+}
+
 .map-sidebar-head .filter-bar {
   display: flex;
   align-items: center;

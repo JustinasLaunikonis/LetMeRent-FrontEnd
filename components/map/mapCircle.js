@@ -571,16 +571,24 @@ function setupAreaCircle(map, helpers) {
 
   updateValueLabel();
 
-  // Drop a finished circle on a found location
-  function createCircleAtLocation(center, radius) {
+  // Drop a circle on a found location.
+  function createCircleAtLocation(center, radius, applyNow) {
     if (!center) {
       return;
     }
+
+    if (applyNow === undefined) {
+      applyNow = true;
+    }
+
     createCircle(center, radius);
     controls.hidden = false;
     toggleButton.textContent = 'Add area circle';
-    applyFilter();
-    markAllDone();
+
+    if (applyNow) {
+      applyFilter();
+      markAllDone();
+    }
   }
 
   return {

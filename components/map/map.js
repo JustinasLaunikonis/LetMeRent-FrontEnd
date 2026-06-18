@@ -684,8 +684,10 @@ function initLetMeRentMap() {
     window.setupPlaceSearch(map, areaCircleApi);
   }
 
+  // Work out the campus point and the radius for its area circle.
   const campusCircle = config.campusCircle || null;
   let campusCenter = null;
+  let campusRadiusMeters = 5000;
   if (campusCircle) {
     const campusLat = Number(campusCircle.lat);
     const campusLng = Number(campusCircle.lng);
@@ -695,54 +697,27 @@ function initLetMeRentMap() {
     if (Number.isFinite(campusLat) && Number.isFinite(campusLng)) {
       campusCenter = { lat: campusLat, lng: campusLng };
 
-      // Only draw the distance circle when there is a real distance limit.
-      // A distance of 0 means "20+ km" (no limit), so we show just the pin.
-      if (campusDistanceKm > 0) {
-        new google.maps.Circle({
-          map,
-          center: campusCenter,
-          radius: campusDistanceKm * 1000,
-          strokeColor: '#1558A7',
-          strokeOpacity: 0.8,
-          strokeWeight: 2,
-          fillColor: '#1558A7',
-          fillOpacity: 0.1,
-          clickable: false
-        });
+      // A distance of 0 means "20+ km" (no limit), so we keep the default size, which the user can resize.
+      if (Number.isFinite(campusDistanceKm) && campusDistanceKm > 0) {
+        campusRadiusMeters = campusDistanceKm * 1000;
       }
-
-      // Drop a pin on the campus itself, so it is clear which campus is selected.
-      new google.maps.Marker({
-        position: campusCenter,
-        map,
-        title: campusCircle.name || 'Campus',
-        animation: google.maps.Animation.DROP,
-        icon: {
-          path: google.maps.SymbolPath.CIRCLE,
-          scale: 7,
-          fillColor: '#1558A7',
-          fillOpacity: 1,
-          strokeColor: '#ffffff',
-          strokeWeight: 2
-        }
-      });
     }
   }
 
+  // Decide the starting view before dropping the campus circle.
   if (markerCount > 0) {
     map.fitBounds(bounds);
     showAllMarkers();
-    return;
-  }
-
-  // No listing markers. Center on the campus circle if we have one.
-  if (campusCenter) {
+  } else if (campusCenter) {
     map.setCenter(campusCenter);
     map.setZoom(13);
-    return;
+  } else {
+    map.setCenter(fallbackCenter);
   }
 
-  map.setCenter(fallbackCenter);
+  if (campusCenter && areaCircleApi && typeof areaCircleApi.createCircleAt === 'function') {
+    areaCircleApi.createCircleAt(campusCenter, campusRadiusMeters, false);
+  }
 }
 
 window.showMapLoadError = showMapLoadError;
