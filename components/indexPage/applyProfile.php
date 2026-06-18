@@ -286,6 +286,7 @@ function applyProfileBuildQuery($preferences)
 // -------------------------------------------------------------------------
 $hasProfileFilters = false;
 $applyProfileHref = '';
+$applyProfileQuery = array();
 
 // Find the logged-in users email from the session.
 $profileEmail = '';
@@ -300,6 +301,7 @@ if ($profileEmail !== '') {
     $profileQuery = applyProfileBuildQuery($preferences);
 
     if (count($profileQuery) > 0) {
+        $applyProfileQuery = $profileQuery;
         $applyProfileHref = 'index.php?' . http_build_query($profileQuery);
         $hasProfileFilters = true;
     }
