@@ -67,6 +67,7 @@ $firstName = profileValue($profileData, ['firstName', 'first_name']);
 $lastName = profileValue($profileData, ['lastName', 'last_name']);
 $fullName = trim($firstName . ' ' . $lastName);
 $displayName = profileValue($profileData, ['name', 'fullName', 'full_name', 'username'], $fullName);
+$username = profileValue($profileData, ['username']);
 $email = profileValue($profileData, ['email']);
 $university = profileValue($profileData, ['university', 'school', 'campus'], 'University not set');
 $avatarInitials = profileInitials($displayName, $email);
@@ -335,8 +336,8 @@ $preferences = [];
 $instantAlertsEnabled = false;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['form'] ?? '') === 'preferences') {
-    if ($email === '') {
-        $preferenceError = 'Could not save preferences because your profile email is missing.';
+    if ($username === '') {
+        $preferenceError = 'Could not save preferences because your profile username is missing.';
     } else {
         // The checkbox is only present in the POST data when it is ticked.
         if (isset($_POST['instant_alerts'])) {
@@ -346,7 +347,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['form'] ?? '') === 'prefere
         }
 
         $preferencesPayload = [
-            'user' => $email,
+            'user' => $username,
             'spider' => nullableStringListFromPost('spider', array_keys(spiderLabels())),
             'city' => nullableStringFromPost('city'),
             'university_campus' => nullableStringFromPost('university_campus'),
@@ -380,8 +381,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['form'] ?? '') === 'prefere
     }
 }
 
-if ($preferences === [] && $email !== '') {
-    $taskResult = callChronoApi('GET', '/chrono/tasks/user/' . rawurlencode($email));
+if ($preferences === [] && $username !== '') {
+    $taskResult = callChronoApi('GET', '/chrono/tasks/user/' . rawurlencode($username));
 
     if ($taskResult['ok']) {
         $taskData = $taskResult['data'];
@@ -393,8 +394,8 @@ if ($preferences === [] && $email !== '') {
     } elseif ($taskResult['status'] !== 404) {
         $preferenceError = $taskResult['error'] ?? 'Could not load preferences.';
     }
-} elseif ($email === '') {
-    $preferenceError = 'Could not load preferences because /me did not return an email.';
+} elseif ($username === '') {
+    $preferenceError = 'Could not load preferences because /me did not return a username.';
 }
 
 if ($preferences === [] && is_array($_SESSION['preferences'] ?? null)) {
