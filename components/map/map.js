@@ -684,9 +684,55 @@ function initLetMeRentMap() {
     window.setupPlaceSearch(map, areaCircleApi);
   }
 
+  const campusCircle = config.campusCircle || null;
+  let campusCenter = null;
+  if (campusCircle) {
+    const campusLat = Number(campusCircle.lat);
+    const campusLng = Number(campusCircle.lng);
+    const campusDistanceKm = Number(campusCircle.distanceKm);
+
+    if (Number.isFinite(campusLat) && Number.isFinite(campusLng) && campusDistanceKm > 0) {
+      campusCenter = { lat: campusLat, lng: campusLng };
+
+      new google.maps.Circle({
+        map,
+        center: campusCenter,
+        radius: campusDistanceKm * 1000,
+        strokeColor: '#1558A7',
+        strokeOpacity: 0.8,
+        strokeWeight: 2,
+        fillColor: '#1558A7',
+        fillOpacity: 0.1,
+        clickable: false
+      });
+
+      // A dot marking the campus itself, so it is clear what the circle is around.
+      new google.maps.Marker({
+        position: campusCenter,
+        map,
+        title: campusCircle.name || 'Campus',
+        icon: {
+          path: google.maps.SymbolPath.CIRCLE,
+          scale: 7,
+          fillColor: '#1558A7',
+          fillOpacity: 1,
+          strokeColor: '#ffffff',
+          strokeWeight: 2
+        }
+      });
+    }
+  }
+
   if (markerCount > 0) {
     map.fitBounds(bounds);
     showAllMarkers();
+    return;
+  }
+
+  // No listing markers. Center on the campus circle if we have one.
+  if (campusCenter) {
+    map.setCenter(campusCenter);
+    map.setZoom(13);
     return;
   }
 

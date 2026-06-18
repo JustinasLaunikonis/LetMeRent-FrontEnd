@@ -42,9 +42,11 @@ if (!empty($mapQuery)) {
   <script src="components/filters/filterDropdowns.js"></script>
   <script src="components/filters/filterSources.js"></script>
   <script src="components/indexPage/cityGeoData.js"></script>
+  <script src="components/indexPage/campusData.js"></script>
   <script src="components/indexPage/searchFields.js"></script>
   <script src="components/indexPage/searchCity.js"></script>
   <script src="components/indexPage/searchBudget.js"></script>
   <script src="components/indexPage/searchMoveIn.js"></script>
+  <script src="components/indexPage/campusFilter.js"></script>
 </body>
 </html>

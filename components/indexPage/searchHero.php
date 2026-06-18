@@ -94,11 +94,39 @@
         </div>
       </div>
 
-      <div class="search-field">
-        <span class="search-field-icon">&#128690;</span>
-        <div>
-          <p class="search-field-label">Max from campus</p>
-          <p class="search-field-val">8 km</p>
+      <div class="search-field campus-search-field" id="campus-search-field" tabindex="0">
+        <span class="search-field-icon">&#127891;</span>
+        <div class="campus-field-body">
+          <p class="search-field-label">Campus</p>
+          <p class="search-field-val" id="campus-display"><?= htmlspecialchars($selectedCampusText) ?></p>
+
+          <div class="campus-card" id="campus-card">
+            <label class="campus-card-label" for="campus-search-input">University / Campus</label>
+            <input
+              class="city-input"
+              id="campus-search-input"
+              type="text"
+              autocomplete="off"
+              placeholder="Search your campus"
+              value="<?= htmlspecialchars($selectedCampus) ?>"
+            >
+            <div class="city-options" id="campus-options"></div>
+
+            <label class="campus-card-label" for="campus-distance-select">Max distance</label>
+            <select class="campus-distance-select" id="campus-distance-select">
+              <option value="">Any distance</option>
+              <option value="1">Within 1 km</option>
+              <option value="2">Within 2 km</option>
+              <option value="3">Within 3 km</option>
+              <option value="5">Within 5 km</option>
+              <option value="10">Within 10 km</option>
+            </select>
+          </div>
+
+          <input type="hidden" name="campus" id="campus-name" value="<?= htmlspecialchars($selectedCampus) ?>">
+          <input type="hidden" name="campus_lat" id="campus-lat" value="<?= htmlspecialchars($selectedCampusLat) ?>">
+          <input type="hidden" name="campus_lng" id="campus-lng" value="<?= htmlspecialchars($selectedCampusLng) ?>">
+          <input type="hidden" name="max_distance_km" id="campus-distance" value="<?= htmlspecialchars($selectedDistance) ?>">
         </div>
       </div>
 

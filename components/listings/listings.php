@@ -108,6 +108,25 @@ if (isset($_GET['order']) && strtolower(trim($_GET['order'])) === 'desc') {
     $order = 'desc';
 }
 
+// Campus distance filter.
+if (isset($_GET['campus_lat'])) {
+    $campus_lat = trim($_GET['campus_lat']);
+} else {
+    $campus_lat = '';
+}
+
+if (isset($_GET['campus_lng'])) {
+    $campus_lng = trim($_GET['campus_lng']);
+} else {
+    $campus_lng = '';
+}
+
+if (isset($_GET['max_distance_km'])) {
+    $max_distance_km = trim($_GET['max_distance_km']);
+} else {
+    $max_distance_km = '';
+}
+
 // -------------------------------------------------------------------------
 // Build the parameters to send to the API
 // -------------------------------------------------------------------------
@@ -170,6 +189,14 @@ if ($available_by !== '') {
 if ($sort !== '') {
     $baseParams['sort']  = $sort;
     $baseParams['order'] = $order;
+}
+
+// Only send the distance filter when we have all three pieces:
+// the campus  coordinates and the chosen distance.
+if ($campus_lat !== '' && $campus_lng !== '' && $max_distance_km !== '') {
+    $baseParams['campus_lat']      = $campus_lat;
+    $baseParams['campus_lng']      = $campus_lng;
+    $baseParams['max_distance_km'] = $max_distance_km;
 }
 
 // -------------------------------------------------------------------------
