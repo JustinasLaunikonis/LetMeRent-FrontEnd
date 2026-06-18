@@ -840,3 +840,94 @@
   color: var(--muted);
   font-size: 13px;
 }
+
+.campus-search-field {
+  position: relative;
+  cursor: pointer;
+}
+
+.campus-field-body {
+  width: 100%;
+  min-width: 120px;
+}
+
+.campus-card {
+  position: absolute;
+  top: calc(100% + 10px);
+  left: 10px;
+  width: 260px;
+  padding: 14px;
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-lg);
+  cursor: default;
+  display: none;
+  z-index: 20;
+}
+
+.campus-card.show {
+  display: block;
+}
+
+.campus-card-label {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .06em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.campus-distance-select {
+  width: 100%;
+  margin-top: 6px;
+  padding: 8px 10px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--ink);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  outline: none;
+  cursor: pointer;
+}
+
+.campus-distance-select:focus {
+  border-color: var(--blue);
+  background: var(--white);
+}
+
+.campus-distance-select:disabled {
+  color: var(--muted);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: 8px;
+  padding: 3px 10px;
+  background: var(--blue-light);
+  border-radius: 999px;
+  color: var(--blue);
+  font-size: 12px;
+  font-weight: 700;
+  text-decoration: none;
+  vertical-align: middle;
+}
+
+.filter-chip:hover {
+  background: var(--blue);
+  color: var(--white);
+}
+
+.filter-chip-x {
+  font-size: 14px;
+  line-height: 1;
+}

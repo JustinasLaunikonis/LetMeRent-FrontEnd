@@ -8,6 +8,18 @@ if (!isset($mapHref)) {
         $mapHref .= '?' . http_build_query($mapQuery);
     }
 }
+
+// Build a link that removes the campus distance filter but keeps everything else.
+$clearDistanceQuery = $_GET;
+unset($clearDistanceQuery['campus']);
+unset($clearDistanceQuery['campus_lat']);
+unset($clearDistanceQuery['campus_lng']);
+unset($clearDistanceQuery['max_distance_km']);
+unset($clearDistanceQuery['page']);
+$clearDistanceHref = 'index.php';
+if (!empty($clearDistanceQuery)) {
+    $clearDistanceHref .= '?' . http_build_query($clearDistanceQuery);
+}
 ?>
 <!-- Results -->
 <div class="results-bar">
@@ -34,6 +46,13 @@ if (!isset($mapHref)) {
 
     <?php if ($selectedMoveIn !== '') { ?>
       &middot; move-in by <?= htmlspecialchars($selectedMoveInText) ?>
+    <?php } ?>
+
+    <?php if (!empty($distanceFilterActive)) { ?>
+      <a class="filter-chip" href="<?= htmlspecialchars($clearDistanceHref, ENT_QUOTES) ?>">
+        Within <?= htmlspecialchars($selectedDistance) ?> km of <?= htmlspecialchars($selectedCampus) ?>
+        <span class="filter-chip-x">&times;</span>
+      </a>
     <?php } ?>
 
   </div>

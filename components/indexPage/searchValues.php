@@ -35,3 +35,38 @@ $selectedMoveInText = $selectedMoveIn;
 if ($selectedMoveIn === '') {
     $selectedMoveInText = 'Any date';
 }
+
+// --- Campus + max distance from campus ---
+$selectedCampus = '';
+if (isset($_GET['campus'])) {
+    $selectedCampus = trim($_GET['campus']);
+}
+
+$selectedCampusLat = '';
+if (isset($_GET['campus_lat'])) {
+    $selectedCampusLat = trim($_GET['campus_lat']);
+}
+
+$selectedCampusLng = '';
+if (isset($_GET['campus_lng'])) {
+    $selectedCampusLng = trim($_GET['campus_lng']);
+}
+
+$selectedDistance = '';
+if (isset($_GET['max_distance_km'])) {
+    $selectedDistance = trim($_GET['max_distance_km']);
+}
+
+if ($selectedCampus !== '' && $selectedDistance !== '') {
+    $selectedCampusText = $selectedDistance . ' km from campus';
+} else if ($selectedCampus !== '') {
+    $selectedCampusText = 'Pick a distance';
+} else {
+    $selectedCampusText = 'Any campus';
+}
+
+// The distance filter only really counts when we have a campus, its coordinates and a distance
+$distanceFilterActive = false;
+if ($selectedCampus !== '' && $selectedCampusLat !== '' && $selectedCampusLng !== '' && $selectedDistance !== '') {
+    $distanceFilterActive = true;
+}

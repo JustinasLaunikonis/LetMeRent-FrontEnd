@@ -48,6 +48,21 @@ if (!isset($selectedMaxBudget)) {
 if (!isset($selectedMoveIn)) {
   $selectedMoveIn = '';
 }
+if (!isset($selectedCampus)) {
+  $selectedCampus = '';
+}
+if (!isset($selectedCampusLat)) {
+  $selectedCampusLat = '';
+}
+if (!isset($selectedCampusLng)) {
+  $selectedCampusLng = '';
+}
+if (!isset($selectedDistance)) {
+  $selectedDistance = '';
+}
+if (!isset($distanceFilterActive)) {
+  $distanceFilterActive = false;
+}
 
 // Carry the filters back to the browse view
 if (!isset($browseQuery) || !is_array($browseQuery)) {
@@ -325,7 +340,22 @@ if (!empty($browseQuery)) {
     // map.js uses this data to place pins on Google Maps.
     window.letMeRentMapConfig = {
       centerQuery: <?php echo json_encode($mapCenterQuery . ', Netherlands'); ?>,
-      markers: <?php echo json_encode($mapMarkers); ?>
+      markers: <?php echo json_encode($mapMarkers); ?>,
+      campusCircle: <?php
+        // When the "max distance from campus" filter is on, send the campus
+        // point and distance so map.js can draw a circle around it.
+        if (!empty($distanceFilterActive)) {
+            $campusCircleData = array(
+                'lat' => (float) $selectedCampusLat,
+                'lng' => (float) $selectedCampusLng,
+                'distanceKm' => (float) $selectedDistance,
+                'name' => $selectedCampus,
+            );
+            echo json_encode($campusCircleData);
+        } else {
+            echo 'null';
+        }
+      ?>
     };
   </script>
   <script src="../components/map/mapResizer.js"></script>
