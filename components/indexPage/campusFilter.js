@@ -8,7 +8,8 @@
   var campusDisplay = document.getElementById('campus-display');
   var campusSearchInput = document.getElementById('campus-search-input');
   var campusOptions = document.getElementById('campus-options');
-  var distanceSelect = document.getElementById('campus-distance-select');
+  var distanceSlider = document.getElementById('campus-distance-slider');
+  var distanceValue = document.getElementById('campus-distance-value');
 
   var campusNameHidden = document.getElementById('campus-name');
   var campusLatHidden = document.getElementById('campus-lat');
@@ -18,7 +19,7 @@
   var cityInput = document.getElementById('city-input');
 
   // If anything is missing, or the campus data helper did not load, do nothing.
-  if (!campusField || !campusCard || !campusSearchInput || !campusOptions || !distanceSelect) {
+  if (!campusField || !campusCard || !campusSearchInput || !campusOptions || !distanceSlider || !distanceValue) {
     return;
   }
   if (!campusNameHidden || !campusLatHidden || !campusLngHidden || !distanceHidden) {
@@ -59,12 +60,22 @@
     }
   }
 
-  // The distance dropdown only works once a campus has been chosen.
+  // The distance slider only works once a campus has been chosen.
   function refreshDistanceState() {
     if (campusNameHidden.value === '') {
-      distanceSelect.disabled = true;
+      distanceSlider.disabled = true;
     } else {
-      distanceSelect.disabled = false;
+      distanceSlider.disabled = false;
+    }
+  }
+
+  // Show the slider value as text. 0 means "no distance limit".
+  function updateDistanceLabel() {
+    var km = Number(distanceSlider.value);
+    if (km > 0) {
+      distanceValue.textContent = km + ' km';
+    } else {
+      distanceValue.textContent = 'Any distance';
     }
   }
 
@@ -160,7 +171,8 @@
         campusLngHidden.value = '';
         campusSearchInput.value = '';
         distanceHidden.value = '';
-        distanceSelect.value = '';
+        distanceSlider.value = 0;
+        updateDistanceLabel();
         refreshDistanceState();
         updateDisplay();
       }
@@ -175,8 +187,15 @@
     buildOptions(campusSearchInput.value);
   });
 
-  distanceSelect.addEventListener('change', function () {
-    distanceHidden.value = distanceSelect.value;
+  distanceSlider.addEventListener('input', function () {
+    var km = Number(distanceSlider.value);
+    if (km > 0) {
+      distanceHidden.value = km;
+    } else {
+      // 0 on the slider means "no distance limit", so clear the value.
+      distanceHidden.value = '';
+    }
+    updateDistanceLabel();
     updateDisplay();
   });
 
@@ -185,7 +204,12 @@
   }
 
   // Set up the starting state from whatever was already in the URL.
-  distanceSelect.value = distanceHidden.value;
+  if (distanceHidden.value !== '') {
+    distanceSlider.value = distanceHidden.value;
+  } else {
+    distanceSlider.value = 0;
+  }
+  updateDistanceLabel();
   refreshDistanceState();
   updateDisplay();
 

@@ -112,15 +112,21 @@
             >
             <div class="city-options" id="campus-options"></div>
 
-            <label class="campus-card-label" for="campus-distance-select">Max distance</label>
-            <select class="campus-distance-select" id="campus-distance-select">
-              <option value="">Any distance</option>
-              <option value="1">Within 1 km</option>
-              <option value="2">Within 2 km</option>
-              <option value="3">Within 3 km</option>
-              <option value="5">Within 5 km</option>
-              <option value="10">Within 10 km</option>
-            </select>
+            <label class="campus-card-label" for="campus-distance-slider">Max distance</label>
+            <div class="campus-distance-row">
+              <span class="campus-distance-name">Within</span>
+              <span class="campus-distance-value" id="campus-distance-value">Any distance</span>
+            </div>
+            <input
+              class="campus-distance-slider"
+              id="campus-distance-slider"
+              type="range"
+              min="0"
+              max="15"
+              step="1"
+              value="0"
+              aria-label="Maximum distance from campus in kilometres"
+            >
           </div>
 
           <input type="hidden" name="campus" id="campus-name" value="<?= htmlspecialchars($selectedCampus) ?>">
