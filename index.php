@@ -35,6 +35,7 @@ if (!empty($mapQuery)) {
 
   <?php include 'components/indexPage/searchHero.php'; ?>
   <?php include 'components/indexPage/filterBar.php'; ?>
+  <?php include 'components/indexPage/applyProfile.php'; ?>
   <?php include 'components/indexPage/resultsBar.php'; ?>
   <?php include 'components/listings/listingsGrid.php'; ?>
   <?php include 'components/listings/pagination.php'; ?>

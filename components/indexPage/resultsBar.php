@@ -57,7 +57,9 @@ if (!empty($clearDistanceQuery)) {
 
   </div>
   <div class="results-actions">
-    <span class="profile-applied-label">&#9679; Your profile applied</span>
+    <?php if (!empty($hasProfileFilters)) { ?>
+      <a class="apply-profile-btn" href="<?= htmlspecialchars($applyProfileHref, ENT_QUOTES) ?>">Apply profile settings</a>
+    <?php } ?>
     <div class="view-toggle">
       <button class="view-btn active">&#8862;</button>
       <button class="view-btn" onclick="location.href='<?= htmlspecialchars($mapHref, ENT_QUOTES) ?>'">&#128506;</button>
