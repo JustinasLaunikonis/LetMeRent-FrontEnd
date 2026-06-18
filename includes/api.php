@@ -1,44 +1,27 @@
 <?php
 
-function readEnvValue($key)
-{
-    $envPath = __DIR__ . '/../.env';
+require_once __DIR__ . '/env.php';
 
-    if (!file_exists($envPath)) {
-        return '';
-    }
+// Sends one request to the listings API and returns the result.
 
-    $envLines = file($envPath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-    if ($envLines === false) {
-        return '';
-    }
+// It always returns one of two shapes:
+//   - ['error' => 'message']                  when something went wrong
+//   - ['data' => [...], 'count' => number]    when listings came back
 
-    foreach ($envLines as $line) {
-        $parts = explode('=', $line, 2);
-        if (count($parts) === 2 && trim($parts[0]) === $key) {
-            return trim(trim($parts[1]), "\"'");
-        }
-    }
-
-    return '';
-}
-
-function fetchFromApi($params)
-{
-    $apiBase = readEnvValue('API_URL');
+// The API does all the filtering, sorting and pagination, so the frontend just passes the query parameters straight through
+function fetchFromApi(array $params) {
+    $apiBase = readEnv('API_URL');
     if ($apiBase === '') {
         return ['error' => 'API_URL is not configured.'];
     }
 
     $url = $apiBase . '?' . http_build_query($params);
-    $ch = curl_init($url);
 
+    $ch = curl_init($url);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_TIMEOUT, 60);
-
     $response = curl_exec($ch);
     $curlError = curl_error($ch);
-    curl_close($ch);
 
     if ($response === false) {
         return ['error' => 'Could not reach API: ' . $curlError];
@@ -49,30 +32,27 @@ function fetchFromApi($params)
         return ['error' => 'Unexpected API response format.'];
     }
 
+    // The API may send back an error message instead of listings
     if (isset($decoded['error']) && is_string($decoded['error'])) {
         return ['error' => $decoded['error']];
     }
 
+    // Normal shape: { "data": [...], "count": number }.
     if (isset($decoded['data']) && is_array($decoded['data'])) {
         if (isset($decoded['count'])) {
             $count = (int) $decoded['count'];
         } else {
             $count = count($decoded['data']);
         }
-
-        return [
-            'data' => $decoded['data'],
-            'count' => $count,
-        ];
+        return ['data' => $decoded['data'], 'count' => $count];
     }
 
+    // Some endpoints return a bare list, an empty array, or a single object.
     if ($decoded === []) {
         return ['data' => [], 'count' => 0];
     }
-
     if (isset($decoded[0])) {
         return ['data' => $decoded, 'count' => count($decoded)];
     }
-
     return ['data' => [$decoded], 'count' => 1];
 }

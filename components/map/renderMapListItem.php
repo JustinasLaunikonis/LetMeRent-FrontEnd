@@ -1,5 +1,7 @@
 <?php
 
+require_once __DIR__ . '/../../includes/listingTags.php';
+
 function renderMapListItem(array $listing, bool $selected, $mapIndex = null): string {
     // Add the selected class when the map page wants this listing highlighted.
     if ($selected) {
@@ -31,7 +33,7 @@ function renderMapListItem(array $listing, bool $selected, $mapIndex = null): st
     }
 
     // Set default values first. Then replace them if the listing has real values.
-    $url = '../detail/detail.html';
+    $url = '../detail/detail.php';
     if (!empty($listing['url'])) {
         $url = htmlspecialchars($listing['url']);
     }
@@ -52,37 +54,7 @@ function renderMapListItem(array $listing, bool $selected, $mapIndex = null): st
         $thumb = '<div class="map-thumb"><img src="' . $image . '" alt="' . $title . '" style="width:100%;height:100%;object-fit:cover;"></div>';
     }
 
-    // Build a list of small tags to show under the title.
-    // The order: city, living area, and rooms are added first.
-    $tags = array();
-    if (!empty($listing['city'])) {
-        array_push($tags, '📍 ' . ucfirst($listing['city']));
-    }
-    if (!empty($listing['living_area'])) {
-        array_push($tags, '📐 ' . $listing['living_area'] . ' m²');
-    }
-    if (!empty($listing['rooms'])) {
-        array_push($tags, '🛏️ ' . $listing['rooms'] . ' rooms');
-    } else if (!empty($listing['property_type'])) {
-        array_push($tags, '🛏️ ' . $listing['property_type']);
-    }
-    if (!empty($listing['furnished'])) {
-        array_push($tags, '🛋️ ' . $listing['furnished']);
-    } else if (!empty($listing['interior'])) {
-        array_push($tags, '🛋️ ' . $listing['interior']);
-    }
-    if (!empty($listing['housemates'])) {
-        array_push($tags, '👥 ' . $listing['housemates']);
-    }
-    if (!empty($listing['energy_label'])) {
-        array_push($tags, '⚡ ' . $listing['energy_label']);
-    }
-    if (!empty($listing['rental_period'])) {
-        array_push($tags, '📋 ' . $listing['rental_period']);
-    }
-    if (!empty($listing['deposit'])) {
-        array_push($tags, '🔑 €' . $listing['deposit'] . ' deposit');
-    }
+    $tags = buildListingTags($listing);
 
     $tagHtml = '';
     // array_slice takes only the first 3 items from the tags array.

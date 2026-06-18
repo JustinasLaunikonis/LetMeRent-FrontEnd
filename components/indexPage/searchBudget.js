@@ -1,4 +1,5 @@
 // Keeps the Max Budget number input and slider showing the same value.
+// The open/close behaviour comes from registerSearchField() (searchFields.js).
 var budgetSearchField = document.getElementById('budget-search-field');
 var budgetCard = document.getElementById('budget-card');
 var maxBudgetDisplay = document.getElementById('max-budget-display');
@@ -22,50 +23,11 @@ if (budgetSearchField && budgetCard && maxBudgetDisplay && maxBudgetInput && max
     maxBudgetDisplay.innerHTML = '&euro;' + displayBudget + ' / mo';
   }
 
-  function showBudgetCard() {
-    var cityCard = document.getElementById('city-card');
-    if (cityCard) {
-      cityCard.classList.remove('show');
-    }
-
-    budgetCard.classList.add('show');
-  }
-
-  function toggleBudgetCard() {
-    if (budgetCard.classList.contains('show')) {
-      hideBudgetCard();
-    } else {
-      showBudgetCard();
-    }
-  }
-
-  function hideBudgetCard() {
-    budgetCard.classList.remove('show');
-  }
-
-  budgetSearchField.addEventListener('click', function (event) {
-    event.stopPropagation();
-    toggleBudgetCard();
-  });
-
-  budgetSearchField.addEventListener('keydown', function (event) {
-    if (event.key === 'Enter') {
-      event.preventDefault();
-      showBudgetCard();
-      maxBudgetInput.focus();
-    }
-
-    if (event.key === 'Escape') {
-      hideBudgetCard();
-    }
-  });
-
-  budgetCard.addEventListener('click', function (event) {
-    event.stopPropagation();
-  });
-
-  document.addEventListener('click', function () {
-    hideBudgetCard();
+  // Open/close behaviour for the budget card.
+  registerSearchField({
+    fieldId: 'budget-search-field',
+    cardId: 'budget-card',
+    inputId: 'max-budget-input'
   });
 
   maxBudgetSlider.addEventListener('input', function () {

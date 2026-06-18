@@ -1,4 +1,6 @@
-// Loads Dutch cities from Geocoded
+// Lets the user pick a city in the search bar.
+// The open/close behaviour comes from registerSearchField() (searchFields.js)
+// this file adds the city autocomplete that talks to PDOK.
 var citySearchField = document.getElementById('city-search-field');
 var cityCard = document.getElementById('city-card');
 var cityDisplay = document.getElementById('city-display');
@@ -6,86 +8,21 @@ var cityInput = document.getElementById('city-input');
 var cityOptionsBox = document.querySelector('.city-options');
 
 if (citySearchField && cityCard && cityDisplay && cityInput && cityOptionsBox) {
-  var allDutchCities = [];
-  var citiesLoaded = false;
-  var citiesLoading = false;
-  var geocodedBaseUrl = 'https://api.geocoded.me';
+  // Wait a moment after the last keyboard press before asking PDOK.
+  var citySearchTimer = null;
+
+  // Each search gets a number. When a reply comes back we only show it if it is
+  // still the newest search, so slow replies cannot overwrite newer results.
+  var citySearchToken = 0;
+
+  // Filled in once the field is registered below.
+  var cityField = null;
 
   function updateCityDisplay() {
     if (cityInput.value === '') {
       cityDisplay.textContent = 'Any city';
     } else {
       cityDisplay.textContent = cityInput.value;
-    }
-  }
-
-  function showCityCard() {
-    var budgetCard = document.getElementById('budget-card');
-    if (budgetCard) {
-      budgetCard.classList.remove('show');
-    }
-
-    cityCard.classList.add('show');
-    loadDutchCities();
-  }
-
-  function toggleCityCard() {
-    if (cityCard.classList.contains('show')) {
-      hideCityCard();
-    } else {
-      showCityCard();
-    }
-  }
-
-  function hideCityCard() {
-    cityCard.classList.remove('show');
-  }
-
-  function getStateCode(state) {
-    if (state.iso2) {
-      return state.iso2;
-    }
-
-    if (state.isoCode) {
-      return state.isoCode;
-    }
-
-    if (state.code) {
-      return state.code;
-    }
-
-    if (state.state_code) {
-      return state.state_code;
-    }
-
-    if (state.stateCode) {
-      return state.stateCode;
-    }
-
-    return '';
-  }
-
-  function getListFromResponse(responseData) {
-    if (Array.isArray(responseData)) {
-      return responseData;
-    }
-
-    if (responseData && Array.isArray(responseData.data)) {
-      return responseData.data;
-    }
-
-    return [];
-  }
-
-  function addCityName(cityNames, city) {
-    var cityName = '';
-
-    if (city.name) {
-      cityName = city.name;
-    }
-
-    if (cityName !== '') {
-      cityNames[cityName] = true;
     }
   }
 
@@ -98,147 +35,88 @@ if (citySearchField && cityCard && cityDisplay && cityInput && cityOptionsBox) {
     cityOptionsBox.appendChild(messageElement);
   }
 
-  function renderCityOptions() {
+  // Show the list of matching cities as clickable buttons.
+  function renderCityOptions(cityNames) {
     cityOptionsBox.innerHTML = '';
 
-    var searchText = cityInput.value.toLowerCase();
-    var shownCount = 0;
-
-    for (var i = 0; i < allDutchCities.length; i++) {
-      var cityName = allDutchCities[i];
-      var cityNameLower = cityName.toLowerCase();
-
-      if (searchText === '' || cityNameLower.indexOf(searchText) !== -1) {
-        var cityButton = document.createElement('button');
-        cityButton.className = 'city-option';
-        cityButton.type = 'button';
-        cityButton.textContent = cityName;
-
-        cityButton.addEventListener('click', function () {
-          cityInput.value = this.textContent;
-          updateCityDisplay();
-          hideCityCard();
-        });
-
-        cityOptionsBox.appendChild(cityButton);
-        shownCount = shownCount + 1;
-      }
-    }
-
-    if (shownCount === 0) {
+    if (cityNames.length === 0) {
       showCityMessage('No cities found');
-    }
-  }
-
-  function saveLoadedCities(cityNames) {
-    allDutchCities = Object.keys(cityNames);
-    allDutchCities.sort();
-    citiesLoaded = true;
-    citiesLoading = false;
-    renderCityOptions();
-  }
-
-  function loadCitiesForStates(states) {
-    var cityNames = {};
-    var requests = [];
-
-    for (var i = 0; i < states.length; i++) {
-      var stateCode = getStateCode(states[i]);
-
-      if (stateCode !== '') {
-        var url = geocodedBaseUrl + '/countries/NL/states/' + encodeURIComponent(stateCode) + '/cities?fields=name';
-
-        var request = fetch(url)
-          .then(function (response) {
-            return response.json();
-          })
-          .then(function (cityResponse) {
-            var cities = getListFromResponse(cityResponse);
-
-            if (Array.isArray(cities)) {
-              for (var j = 0; j < cities.length; j++) {
-                addCityName(cityNames, cities[j]);
-              }
-            }
-          });
-
-        requests.push(request);
-      }
-    }
-
-    Promise.all(requests)
-      .then(function () {
-        saveLoadedCities(cityNames);
-      })
-      .catch(function () {
-        citiesLoading = false;
-        showCityMessage('Could not load cities');
-      });
-  }
-
-  function loadDutchCities() {
-    if (citiesLoaded) {
-      renderCityOptions();
       return;
     }
 
-    if (citiesLoading) {
-      return;
-    }
+    for (var i = 0; i < cityNames.length; i++) {
+      var cityName = cityNames[i];
 
-    citiesLoading = true;
-    showCityMessage('Loading cities...');
+      var cityButton = document.createElement('button');
+      cityButton.className = 'city-option';
+      cityButton.type = 'button';
+      cityButton.textContent = cityName;
 
-    fetch(geocodedBaseUrl + '/countries/NL/states?fields=iso2,code,state_code,name')
-      .then(function (response) {
-        return response.json();
-      })
-      .then(function (stateResponse) {
-        var states = getListFromResponse(stateResponse);
-
-        if (Array.isArray(states)) {
-          loadCitiesForStates(states);
-        } else {
-          citiesLoading = false;
-          showCityMessage('Could not load cities');
+      cityButton.addEventListener('click', function () {
+        cityInput.value = this.textContent;
+        updateCityDisplay();
+        if (cityField) {
+          cityField.hide();
         }
-      })
-      .catch(function () {
-        citiesLoading = false;
-        showCityMessage('Could not load cities');
       });
+
+      cityOptionsBox.appendChild(cityButton);
+    }
   }
 
-  citySearchField.addEventListener('click', function (event) {
-    event.stopPropagation();
-    toggleCityCard();
-  });
+  // Look up cities from PDOK for whatever the user has typed so far.
+  function runCitySearch() {
+    var searchText = cityInput.value.trim();
 
-  citySearchField.addEventListener('keydown', function (event) {
-    if (event.key === 'Enter') {
-      event.preventDefault();
-      showCityCard();
-      cityInput.focus();
+    // Nothing typed yet: search as if the user typed the letter "a",
+    // so the list still shows some cities to pick from.
+    if (searchText === '') {
+      searchText = 'a';
     }
 
-    if (event.key === 'Escape') {
-      hideCityCard();
+    showCityMessage('Searching...');
+
+    // Remember which search this is, so an older reply cannot replace a newer one.
+    citySearchToken = citySearchToken + 1;
+    var thisToken = citySearchToken;
+
+    window.suggestDutchCities(searchText, function (cities) {
+      // A newer search has already started, so ignore this older reply.
+      if (thisToken !== citySearchToken) {
+        return;
+      }
+
+      // null means the lookup failed.
+      if (cities === null) {
+        showCityMessage('Could not load cities');
+        return;
+      }
+
+      renderCityOptions(cities);
+    });
+  }
+
+  // Wait a short moment after typing stops before searching.
+  function scheduleCitySearch() {
+    if (citySearchTimer !== null) {
+      clearTimeout(citySearchTimer);
     }
-  });
 
-  cityCard.addEventListener('click', function (event) {
-    event.stopPropagation();
-  });
+    citySearchTimer = setTimeout(function () {
+      runCitySearch();
+    }, 250);
+  }
 
-  document.addEventListener('click', function () {
-    hideCityCard();
+  // Open/close behaviour, and run a city search each time the card opens.
+  cityField = registerSearchField({
+    fieldId: 'city-search-field',
+    cardId: 'city-card',
+    inputId: 'city-input',
+    onOpen: runCitySearch
   });
 
   cityInput.addEventListener('input', function () {
     updateCityDisplay();
-
-    if (citiesLoaded) {
-      renderCityOptions();
-    }
+    scheduleCitySearch();
   });
 }

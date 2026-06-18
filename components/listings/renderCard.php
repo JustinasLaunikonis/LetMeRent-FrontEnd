@@ -1,20 +1,7 @@
 <?php
 
-// Get a single value out of the listings "features" box.
-// Some websites (like Funda) put a lot of extra features, if none exist return null
-function featureValue(array $listing, $key) {
-    if (!isset($listing['features'])) {
-        return null;
-    }
-    if (!is_array($listing['features'])) {
-        return null;
-    }
-    if (!isset($listing['features'][$key])) {
-        return null;
-    }
-
-    return $listing['features'][$key];
-}
+require_once __DIR__ . '/../../includes/availabilityFormat.php';
+require_once __DIR__ . '/../../includes/listingTags.php';
 
 // returns the HTML for a single listing card.
 // Call this function by passing one listing array
@@ -55,11 +42,19 @@ function renderCard(array $listing) {
         $city = '';
     }
 
-    // Link to the listing
-    if (isset($listing['url'])) {
-        $url = htmlspecialchars($listing['url']);
+    // Link to detail page instead
+    // The detail page finds the listing by its id (or MongoDB _id),
+    $listingId = '';
+    if (isset($listing['id'])) {
+        $listingId = (string) $listing['id'];
+    } else if (isset($listing['_id'])) {
+        $listingId = (string) $listing['_id'];
+    }
+
+    if ($listingId !== '') {
+        $url = 'detail/detail.php?id=' . htmlspecialchars(urlencode($listingId));
     } else {
-        $url = 'detail/detail.html';
+        $url = 'detail/detail.php';
     }
 
     // Use the first photo if available, otherwise show a placeholder drawing
@@ -85,83 +80,18 @@ function renderCard(array $listing) {
         $scrapedAt = null;
     }
 
-    // Build the small detail tags shown on the card
     $tags = '';
-
-    if (!empty($listing['property_type'])) {
-        $tags .= '<span class="card-tag">🛏️ ' . htmlspecialchars($listing['property_type']) . '</span>';
-    } else if (!empty($listing['rooms'])) {
-        $tags .= '<span class="card-tag">🛏️ ' . htmlspecialchars($listing['rooms']) . ' rooms</span>';
-    }
-
-    if (!empty($listing['furnished'])) {
-        $tags .= '<span class="card-tag">🛋️ ' . htmlspecialchars($listing['furnished']) . '</span>';
-    } else if (!empty($listing['interior'])) {
-        $tags .= '<span class="card-tag">🛋️ ' . htmlspecialchars($listing['interior']) . '</span>';
-    }
-
-    if (!empty($listing['living_area'])) {
-        $tags .= '<span class="card-tag">📐 ' . htmlspecialchars($listing['living_area']) . ' m²</span>';
-    }
-
-    if (!empty($listing['housemates'])) {
-        $tags .= '<span class="card-tag">👥 ' . htmlspecialchars($listing['housemates']) . '</span>';
-    }
-
-    if (!empty($listing['energy_label'])) {
-        $tags .= '<span class="card-tag">⚡ ' . htmlspecialchars($listing['energy_label']) . '</span>';
-    }
-
-    if (!empty($listing['rental_period'])) {
-        $tags .= '<span class="card-tag">📋 ' . htmlspecialchars($listing['rental_period']) . '</span>';
-    }
-
-    if (!empty($listing['deposit'])) {
-        $tags .= '<span class="card-tag">🔑 €' . htmlspecialchars($listing['deposit']) . ' deposit</span>';
-    }
-
-    // Number of bathrooms (kept inside features by Funda)
-    $bathrooms = featureValue($listing, 'Number of bath rooms');
-    if (!empty($bathrooms)) {
-        $tags .= '<span class="card-tag">🛁 ' . htmlspecialchars($bathrooms) . ' bath</span>';
-    }
-
-    // Plot size for houses (square meters)
-    if (!empty($listing['plot_size'])) {
-        $tags .= '<span class="card-tag">🌳 ' . htmlspecialchars($listing['plot_size']) . ' m² plot</span>';
-    }
-
-    // Year the building was built
-    $yearBuilt = featureValue($listing, 'Year of construction');
-    if (!empty($yearBuilt)) {
-        $tags .= '<span class="card-tag">🏗️ ' . htmlspecialchars($yearBuilt) . '</span>';
-    }
-
-    // Neighbourhood / area name
-    if (!empty($listing['neighbourhood'])) {
-        $tags .= '<span class="card-tag">🗺️ ' . htmlspecialchars($listing['neighbourhood']) . '</span>';
-    }
-
-    // Current status, example: "Available" or "Sold under reservation"
-    $status = featureValue($listing, 'Status');
-    if (!empty($status)) {
-        $tags .= '<span class="card-tag">✅ ' . htmlspecialchars($status) . '</span>';
-    }
-
-    // What kind of home it is, exampple: "Galleied apartment" or a house type.
-    // This tag can be very long, so we add it LAST on purpose
-    $type = featureValue($listing, 'Type apartment');
-    if (empty($type)) {
-        $type = featureValue($listing, 'Kind of house');
-    }
-    if (!empty($type)) {
-        $tags .= '<span class="card-tag">🏠 ' . htmlspecialchars($type) . '</span>';
+    foreach (buildListingTags($listing) as $tag) {
+        $tags .= '<span class="card-tag">' . htmlspecialchars($tag) . '</span>';
     }
 
     // Availability date shown in the card footer
     $available = '';
     if (!empty($listing['availability'])) {
-        $available = '<span class="card-time">📅 ' . htmlspecialchars($listing['availability']) . '</span>';
+        $availabilityText = formatAvailability($listing['availability']);
+        if ($availabilityText !== '') {
+            $available = '<span class="card-time">📅 ' . htmlspecialchars($availabilityText) . '</span>';
+        }
     }
 
     // Show a "NEW" badge if the listing was scraped in the last 24 hours
@@ -184,14 +114,13 @@ function renderCard(array $listing) {
     // Build and return the full card HTML.
     return '
     <div class="listing-cell">
-    <a class="listing-card" href="' . $url . '" target="_blank" rel="noopener">
+    <a class="listing-card" href="' . $url . '">
       <div class="card-img-wrap">
         ' . $imgHtml . '
         ' . $newTag . '
         <div class="' . $sourceClass . '">
           <p>' . $source . '</p>
         </div>
-        <div class="card-save">🤍</div>
       </div>
 
       <div class="card-body">

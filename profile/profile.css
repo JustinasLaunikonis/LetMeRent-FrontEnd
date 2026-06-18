@@ -1,3 +1,8 @@
+html {
+  overflow-y: scroll;
+  scrollbar-gutter: stable;
+}
+
 .profile-wrap {
   display: grid;
   grid-template-columns: 288px 1fr;
@@ -44,34 +49,13 @@
   color: var(--muted);
 }
 
-.profile-stats {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-  margin-top: 16px;
-}
-
-.profile-stat {
-  padding: 10px;
-  background: var(--surface);
-  border-radius: var(--radius-sm);
-  text-align: center;
-}
-
-.profile-stat .val {
-  font-size: 22px;
-  font-weight: 800;
-  color: var(--blue);
-  letter-spacing: -.02em;
-}
-
-.profile-stat .lbl {
-  margin-top: 2px;
-  font-size: 10px;
+.profile-email {
+  margin-top: 4px;
+  font-size: 12px;
   font-weight: 500;
   color: var(--muted);
-  text-transform: uppercase;
-  letter-spacing: .05em;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 .side-menu {
@@ -154,6 +138,76 @@
   padding: 24px;
 }
 
+.preference-message {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 16px 24px 0;
+  padding: 12px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 600;
+  animation: preference-message-in .2s ease-out;
+  transition: opacity .4s ease, transform .4s ease;
+}
+
+.preference-message--hide {
+  opacity: 0;
+  transform: translateY(-4px);
+  pointer-events: none;
+}
+
+.preference-message p {
+  margin: 0;
+}
+
+.preference-message::before {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  color: white;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.preference-message--success {
+  background: var(--green-bg);
+  border-color: #A7F3D0;
+  color: #059669;
+}
+
+.preference-message--success::before {
+  content: "\2713"; /* check mark */
+  background: var(--green);
+}
+
+.preference-message--error {
+  background: var(--red-bg);
+  border-color: #FECACA;
+  color: #DC2626;
+}
+
+.preference-message--error::before {
+  content: "\2715"; /* cross mark */
+  background: var(--red);
+}
+
+@keyframes preference-message-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .form-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -191,6 +245,111 @@
 .form-input:focus {
   background: white;
   border-color: var(--blue);
+}
+
+.budget-field {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.budget-input-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 10px;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+
+.budget-currency,
+.budget-period {
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.budget-period {
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.budget-number-input {
+  width: 100%;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid transparent;
+  color: var(--ink);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  outline: none;
+}
+
+.budget-number-input:focus {
+  border-bottom-color: var(--blue);
+}
+
+.budget-slider {
+  display: block;
+  width: 100%;
+  height: 4px;
+  accent-color: var(--blue);
+  cursor: pointer;
+}
+
+/* Move-in date field. A styled date input with a "Clear date" button under it that
+   empties the date (so no move-in filter is applied). */
+.move-in-field {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.move-in-input {
+  width: 100%;
+  padding: 10px 14px;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--ink);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  outline: none;
+  transition: border-color .15s;
+}
+
+.move-in-input:focus {
+  background: white;
+  border-color: var(--blue);
+}
+
+.move-in-clear {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: 999px;
+  color: var(--ink-2);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color .15s, background .15s, color .15s;
+}
+
+.move-in-clear:hover {
+  background: var(--blue-light);
+  border-color: var(--blue);
+  color: var(--blue);
 }
 
 .form-select {
@@ -359,38 +518,10 @@
   color: var(--blue);
 }
 
-.slider-track {
-  position: relative;
-  height: 6px;
-  background: var(--border);
-  border-radius: 3px;
-}
-
-.slider-fill {
-  height: 100%;
-  width: 53%;
-  background: var(--blue);
-  border-radius: 3px;
-}
-
-.slider-thumb {
-  position: absolute;
-  top: 50%;
-  left: 53%;
-  transform: translate(-50%, -50%);
-  width: 20px;
-  height: 20px;
-  background: white;
-  border: 2.5px solid var(--blue);
-  border-radius: 50%;
-  box-shadow: 0 2px 8px rgba(21, 88, 167, .3);
-  cursor: pointer;
-}
-
 .slider-ticks {
   display: flex;
   justify-content: space-between;
-  margin-top: 5px;
+  margin-top: 8px;
   font-size: 10px;
   color: var(--muted);
 }
@@ -412,25 +543,21 @@
   font-size: 13px;
   font-weight: 500;
   color: var(--ink);
-  /* Optional: add max-width or flex properties if needed */
 }
 
 .toggle-sub {
-  margin-top: 4px; /* space between title and sub */
+  margin-top: 4px;
   font-size: 12px;
   color:var(--muted);
 }
 
-/* Optional: style the toggle switch for better appearance */
 .toggle {
-  /* Existing toggle styles */
   position: relative;
   width: 50px;
   height: 24px;
   display: inline-block;
 }
 
-/* Hide the default checkbox */
 .toggle input {
   opacity: 0;
   width: 0;
@@ -438,7 +565,6 @@
   position: absolute;
 }
 
-/* Style the slider */
 .toggle-slider {
   position: absolute;
   cursor: pointer;
@@ -470,6 +596,7 @@
 .toggle input:checked + .toggle-slider::before {
   transform: translateX(26px);
 }
+
 .form-footer {
   display: flex;
   justify-content: flex-end;

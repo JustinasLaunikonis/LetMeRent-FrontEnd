@@ -15,6 +15,8 @@ $filterKeys = array(
     'order',
     'energy_label',
     'has',
+    'available_by',
+    'no_living_area',
 );
 
 // Check whether any of those filters is set in the URL.

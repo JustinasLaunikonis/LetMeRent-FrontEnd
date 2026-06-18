@@ -55,7 +55,7 @@
                 name="max_price"
                 min="0"
                 max="5000"
-                step="50"
+                step="1"
                 value="<?= htmlspecialchars((string) $selectedMaxBudget) ?>"
               >
               <span class="budget-period">/ mo</span>
@@ -74,31 +74,71 @@
         </div>
       </div>
 
-      <div class="search-field">
+      <div class="search-field move-in-search-field" id="move-in-search-field" tabindex="0">
         <span class="search-field-icon">&#128197;</span>
-        <div>
+        <div class="move-in-field-body">
           <p class="search-field-label">Move-in</p>
-          <p class="search-field-val">Sep 1, 2025</p>
+          <p class="search-field-val" id="move-in-display"><?= htmlspecialchars($selectedMoveInText) ?></p>
+
+          <div class="move-in-card" id="move-in-card">
+            <label class="move-in-card-label" for="move-in-input">Move in by</label>
+            <input
+              class="move-in-input"
+              id="move-in-input"
+              type="date"
+              name="available_by"
+              value="<?= htmlspecialchars($selectedMoveIn) ?>"
+            >
+            <button class="move-in-clear" id="move-in-clear" type="button">Any date</button>
+          </div>
         </div>
       </div>
 
-      <div class="search-field">
-        <span class="search-field-icon">&#128690;</span>
-        <div>
-          <p class="search-field-label">Max from campus</p>
-          <p class="search-field-val">8 km</p>
+      <div class="search-field campus-search-field" id="campus-search-field" tabindex="0">
+        <span class="search-field-icon">&#127891;</span>
+        <div class="campus-field-body">
+          <p class="search-field-label">Campus</p>
+          <p class="search-field-val" id="campus-display"><?= htmlspecialchars($selectedCampusText) ?></p>
+
+          <div class="campus-card" id="campus-card">
+            <label class="campus-card-label" for="campus-search-input">University / Campus</label>
+            <input
+              class="city-input"
+              id="campus-search-input"
+              type="text"
+              autocomplete="off"
+              placeholder="Search your campus"
+              value="<?= htmlspecialchars($selectedCampus) ?>"
+            >
+            <div class="city-options" id="campus-options"></div>
+
+            <label class="campus-card-label" for="campus-distance-slider">Max distance</label>
+            <div class="campus-distance-row">
+              <span class="campus-distance-name">Within</span>
+              <span class="campus-distance-value" id="campus-distance-value"><?= htmlspecialchars($selectedDistanceText) ?></span>
+            </div>
+            <input
+              class="campus-distance-slider"
+              id="campus-distance-slider"
+              type="range"
+              min="0"
+              max="20"
+              step="1"
+              value="<?= htmlspecialchars($selectedDistanceSlider) ?>"
+              aria-label="Maximum distance from campus in kilometres"
+            >
+          </div>
+
+          <input type="hidden" name="campus" id="campus-name" value="<?= htmlspecialchars($selectedCampus) ?>">
+          <input type="hidden" name="campus_lat" id="campus-lat" value="<?= htmlspecialchars($selectedCampusLat) ?>">
+          <input type="hidden" name="campus_lng" id="campus-lng" value="<?= htmlspecialchars($selectedCampusLng) ?>">
+          <input type="hidden" name="max_distance_km" id="campus-distance" value="<?= htmlspecialchars($selectedDistance) ?>">
         </div>
       </div>
 
       <button class="search-submit" type="submit">Search</button>
     </form>
 
-    <div class="source-pills">
-      <div class="source-pill" data-source="HousingAnywhere">HousingAnywhere</div>
-      <div class="source-pill" data-source="Funda">Funda</div>
-      <div class="source-pill" data-source="Kamernet">Kamernet</div>
-      <div class="source-pill" data-source="Huurwoningen">Huurwoningen</div>
-      <div class="source-pill" data-source="iRentalize">iRentalize</div>
-    </div>
+    <?php include __DIR__ . '/../filters/sourcePills.php'; ?>
   </div>
 </div>
