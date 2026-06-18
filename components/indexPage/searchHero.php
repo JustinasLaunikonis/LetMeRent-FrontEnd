@@ -115,16 +115,16 @@
             <label class="campus-card-label" for="campus-distance-slider">Max distance</label>
             <div class="campus-distance-row">
               <span class="campus-distance-name">Within</span>
-              <span class="campus-distance-value" id="campus-distance-value">Any distance</span>
+              <span class="campus-distance-value" id="campus-distance-value"><?= htmlspecialchars($selectedDistanceText) ?></span>
             </div>
             <input
               class="campus-distance-slider"
               id="campus-distance-slider"
               type="range"
               min="0"
-              max="15"
+              max="20"
               step="1"
-              value="0"
+              value="<?= htmlspecialchars($selectedDistanceSlider) ?>"
               aria-label="Maximum distance from campus in kilometres"
             >
           </div>
