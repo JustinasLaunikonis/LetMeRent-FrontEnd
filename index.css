@@ -881,7 +881,12 @@
   text-transform: uppercase;
 }
 
-/* "Max distance" slider inside the campus card. */
+.campus-card-label[for="campus-distance-slider"] {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
 .campus-distance-row {
   display: flex;
   align-items: center;
