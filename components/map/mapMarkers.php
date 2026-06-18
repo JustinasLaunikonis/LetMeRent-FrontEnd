@@ -1,5 +1,7 @@
 <?php
 
+require_once __DIR__ . '/../../includes/listingTags.php';
+
 function getListingCoordinates(array $listing) {
     // Some API responses use lat/lng, others use latitude/longitude.
     if (isset($listing['lat']) && isset($listing['lng'])) {
@@ -22,21 +24,8 @@ function getListingCoordinates(array $listing) {
     );
 }
 
-// Some listing sources keep extra values inside a nested features array.
-function getMapMarkerFeatureValue(array $listing, string $key) {
-    if (!isset($listing['features']) || !is_array($listing['features'])) {
-        return null;
-    }
-
-    if (!isset($listing['features'][$key])) {
-        return null;
-    }
-
-    return $listing['features'][$key];
-}
-
 function createMapMarker(array $listing, array $coordinates, int $listingIndex, int $markerIndex): array {
-    // This is the data JavaScript needs to create one Google Maps pin.
+    // This is the data JavaScript needs to create one Google Maps pin
     $marker = array();
     $marker['lat'] = $coordinates['lat'];
     $marker['lng'] = $coordinates['lng'];
@@ -47,7 +36,7 @@ function createMapMarker(array $listing, array $coordinates, int $listingIndex, 
         $marker['title'] = 'Rental listing';
     }
 
-    // Keep raw price and display fallback separate for the bottom listing bar.
+    // Keep raw price and display fallback separate for the bottom listing bar
     if (isset($listing['price']) && $listing['price'] !== '') {
         $marker['price'] = $listing['price'];
         $marker['priceLabel'] = 'EUR ' . $listing['price'] . '/mo';
@@ -59,7 +48,18 @@ function createMapMarker(array $listing, array $coordinates, int $listingIndex, 
     if (!empty($listing['url'])) {
         $marker['url'] = $listing['url'];
     } else {
-        $marker['url'] = '../detail/detail.html';
+        $marker['url'] = '../detail/detail.php';
+    }
+
+    // The detail page finds the listing by its id (or MongoDB _id).
+    $listingId = '';
+    if (isset($listing['id'])) {
+        $listingId = (string) $listing['id'];
+    } else if (isset($listing['_id'])) {
+        $listingId = (string) $listing['_id'];
+    }
+    if ($listingId !== '') {
+        $marker['id'] = $listingId;
     }
 
     if (!empty($listing['images']) && is_array($listing['images']) && !empty($listing['images'][0])) {
@@ -68,37 +68,7 @@ function createMapMarker(array $listing, array $coordinates, int $listingIndex, 
         $marker['image'] = '';
     }
 
-    foreach (array('city', 'living_area', 'rooms', 'property_type', 'furnished', 'interior', 'housemates', 'plot_size', 'bathrooms', 'energy_label', 'rental_period', 'deposit', 'availability', 'source', 'neighbourhood') as $field) {
-        if (!empty($listing[$field])) {
-            $marker[$field] = $listing[$field];
-        }
-    }
-
-    // Add feature-based tags that are stored differently by some sources.
-    if (empty($marker['bathrooms'])) {
-        $bathrooms = getMapMarkerFeatureValue($listing, 'Number of bath rooms');
-        if (!empty($bathrooms)) {
-            $marker['bathrooms'] = $bathrooms;
-        }
-    }
-
-    $yearBuilt = getMapMarkerFeatureValue($listing, 'Year of construction');
-    if (!empty($yearBuilt)) {
-        $marker['year_built'] = $yearBuilt;
-    }
-
-    $status = getMapMarkerFeatureValue($listing, 'Status');
-    if (!empty($status)) {
-        $marker['status'] = $status;
-    }
-
-    $homeType = getMapMarkerFeatureValue($listing, 'Type apartment');
-    if (empty($homeType)) {
-        $homeType = getMapMarkerFeatureValue($listing, 'Kind of house');
-    }
-    if (!empty($homeType)) {
-        $marker['home_type'] = $homeType;
-    }
+    $marker['tags'] = buildListingTags($listing);
 
     $marker['listingIndex'] = $listingIndex;
     $marker['mapIndex'] = $markerIndex;

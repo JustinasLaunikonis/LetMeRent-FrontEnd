@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>LetMeRent - Sign up</title>
+    <link rel="icon" type="image/svg+xml" href="../favicon.svg?v=2" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -15,7 +16,7 @@
     <a class="nav-logo" href="../index.php">
       <div class="logo-icon">
         <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-          <!-- Let-Me-Rent Logo -->
+          <!-- LetMeRent Logo -->
           <path d="M2 8L9 2L16 8V16H11V12H7V16H2V8Z" fill="white"/>
         </svg>
       </div>

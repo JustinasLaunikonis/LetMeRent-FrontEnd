@@ -113,37 +113,6 @@ body {
   gap: 10px;
 }
 
-.nav-bell {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 50%;
-  font-size: 16px;
-  cursor: pointer;
-}
-
-.nav-bell::after {
-  content: '3';
-  position: absolute;
-  top: -4px;
-  right: -4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 16px;
-  height: 16px;
-  background: var(--red);
-  border-radius: 50%;
-  color: white;
-  font-size: 9px;
-  font-weight: 700;
-}
-
 .nav-avatar {
   display: flex;
   align-items: center;
@@ -157,6 +126,25 @@ body {
   font-weight: 700;
   cursor: pointer;
   text-decoration: none;
+}
+
+.nav-signin {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 36px;
+  padding: 0 18px;
+  background: linear-gradient(135deg, var(--blue) 0%, var(--blue-mid) 100%);
+  border-radius: 20px;
+  color: white;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.nav-signin:hover {
+  opacity: 0.9;
 }
 
 .badge {
@@ -232,4 +220,22 @@ body {
 .btn-ghost:hover {
   border-color: var(--blue);
   color: var(--blue);
+}
+
+.apply-profile-btn {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--green);
+  background: var(--green-bg);
+  border: 1px solid #A7F3D0;
+  border-radius: 8px;
+  padding: 5px 10px;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all .15s;
+}
+
+.apply-profile-btn:hover {
+  background: var(--green);
+  color: #fff;
 }

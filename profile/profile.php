@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-require_once __DIR__ . '/../sign-up-in/auth_api.php';
+require_once __DIR__ . '/../sign-up-in/authApi.php';
 
 startAuthSession();
 
@@ -187,17 +187,6 @@ function nullableStringListFromPost(string $key, array $defaultValues = []): ?st
     return implode(',', $normalizedValues);
 }
 
-function nullableBoolFromPost(string $key): ?bool
-{
-    $value = nullableStringFromPost($key);
-
-    if ($value === null) {
-        return null;
-    }
-
-    return $value === 'true';
-}
-
 function preferenceValue(array $preferences, string $key, mixed $fallback): mixed
 {
     return array_key_exists($key, $preferences) && $preferences[$key] !== null ? $preferences[$key] : $fallback;
@@ -228,8 +217,7 @@ function normalizePreferences(array $data): array
         'room_type' => 'room_type',
         'roomType' => 'room_type',
         'furnishing' => 'furnishing',
-        'pet_friendly' => 'pet_friendly',
-        'petFriendly' => 'pet_friendly',
+        'enabled' => 'enabled',
     ];
 
     $preferences = [];
@@ -311,17 +299,6 @@ function extractPreferences(array $taskData): array
     return $candidates[count($candidates) - 1]['preferences'];
 }
 
-function boolPreferenceValue(mixed $value): bool
-{
-    if (is_bool($value)) {
-        return $value;
-    }
-
-    $normalized = strtolower(trim((string) $value));
-
-    return in_array($normalized, ['1', 'true', 'yes', 'required'], true);
-}
-
 function selectedAttr(mixed $actual, mixed $expected): string
 {
     return (string) $actual === (string) $expected ? ' selected' : '';
@@ -353,10 +330,21 @@ $preferenceNotice = null;
 $preferenceError = null;
 $preferences = [];
 
+// Whether the "Instant alerts" toggle is on.
+// A chrono task should only be scheduled when the user has turned this toggle on.
+$instantAlertsEnabled = false;
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['form'] ?? '') === 'preferences') {
     if ($email === '') {
         $preferenceError = 'Could not save preferences because your profile email is missing.';
     } else {
+        // The checkbox is only present in the POST data when it is ticked.
+        if (isset($_POST['instant_alerts'])) {
+            $instantAlertsEnabled = true;
+        } else {
+            $instantAlertsEnabled = false;
+        }
+
         $preferencesPayload = [
             'user' => $email,
             'spider' => nullableStringListFromPost('spider', array_keys(spiderLabels())),
@@ -369,15 +357,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['form'] ?? '') === 'prefere
             'max_distance_from_campus' => nullableIntFromPost('max_distance_from_campus'),
             'room_type' => nullableStringFromPost('room_type'),
             'furnishing' => nullableStringFromPost('furnishing'),
-            'pet_friendly' => nullableBoolFromPost('pet_friendly'),
+            'enabled' => $instantAlertsEnabled,
         ];
 
+        // We always save the preferences so they are not lost.
+        // The "enabled" flag decides whether the Chrono service schedules alerts for them.
         $saveResult = callChronoApi('POST', '/chrono/tasks', $preferencesPayload);
 
         if ($saveResult['ok']) {
             $preferences = $preferencesPayload;
             $_SESSION['preferences'] = $preferencesPayload;
-            $preferenceNotice = 'Preferences saved.';
+
+            if ($instantAlertsEnabled) {
+                $preferenceNotice = 'Preferences saved. Instant alerts are on.';
+            } else {
+                $preferenceNotice = 'Preferences saved. Instant alerts are off, so we will not email you.';
+            }
         } else {
             $preferences = $preferencesPayload;
             $preferenceError = $saveResult['error'] ?? 'Could not save preferences.';
@@ -407,6 +402,20 @@ if ($preferences === [] && is_array($_SESSION['preferences'] ?? null)) {
 }
 
 $hasPreferences = $preferences !== [];
+
+// Work out whether the "Instant alerts" toggle should show as on.
+// On a POST we already set this from the submitted form above
+//  For a normal page load we read it back from the saved preferences instead.
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    if ($hasPreferences && array_key_exists('enabled', $preferences)) {
+        $instantAlertsEnabled = (bool) $preferences['enabled'];
+    } elseif ($hasPreferences) {
+        $instantAlertsEnabled = true;
+    } else {
+        // No saved preferences yet, so alerts start off.
+        $instantAlertsEnabled = false;
+    }
+}
 $selectedSpiders = preferenceListValue($preferences, 'spider');
 $spiderLabels = spiderLabels();
 $selectedSpiderLabel = 'Any source';
@@ -426,50 +435,87 @@ if ($selectedSpiders !== []) {
 }
 $selectedCity = preferenceValue($preferences, 'city', '');
 $selectedCampus = preferenceValue($preferences, 'university_campus', '');
+
+// The university is not stored on the user account.
+// It is saved in the search preferences instead.
+// So if the profile did not give us a university, fall back to the campus the user picked in their preferences.
+if ($university === 'University not set' && trim((string) $selectedCampus) !== '') {
+    $university = (string) $selectedCampus;
+}
 $selectedMinBudget = preferenceValue($preferences, 'min_budget', '');
 $selectedMaxBudget = preferenceValue($preferences, 'max_budget', '');
 $selectedMoveInDate = preferenceValue($preferences, 'move_in_date', '');
 $selectedLeaseLength = preferenceValue($preferences, 'min_lease_length', '');
+
+// The "Min lease length" field uses the same combobox UI as University / Campus.
+// These are the choices it shows, and we work out which label matches the saved value.
+$leaseLengthOptions = [
+    ['value' => '12', 'label' => '12 months'],
+    ['value' => '6', 'label' => '6 months'],
+    ['value' => '3', 'label' => '3 months'],
+    ['value' => '0', 'label' => 'Any'],
+];
+
+$selectedLeaseLabel = '';
+foreach ($leaseLengthOptions as $leaseOption) {
+    if ((string) $leaseOption['value'] === (string) $selectedLeaseLength) {
+        $selectedLeaseLabel = $leaseOption['label'];
+    }
+}
+
 $selectedDistance = preferenceValue($preferences, 'max_distance_from_campus', '');
 $selectedRoomType = preferenceValue($preferences, 'room_type', '');
+
+$roomTypeOptions = [
+    ['value' => 'Room', 'label' => 'Room'],
+    ['value' => 'Studio', 'label' => 'Studio'],
+    ['value' => 'Apartment', 'label' => 'Apartment'],
+    ['value' => 'House', 'label' => 'House'],
+];
+
+$selectedRoomTypeLabel = '';
+foreach ($roomTypeOptions as $roomTypeOption) {
+    if ((string) $roomTypeOption['value'] === (string) $selectedRoomType) {
+        $selectedRoomTypeLabel = $roomTypeOption['label'];
+    }
+}
+
 $selectedFurnishing = preferenceValue($preferences, 'furnishing', '');
-$selectedPetFriendlyRaw = preferenceValue($preferences, 'pet_friendly', '');
-$selectedPetFriendly = $selectedPetFriendlyRaw === '' ? '' : (boolPreferenceValue($selectedPetFriendlyRaw) ? 'true' : 'false');
+
+// The "Furnishing" field uses the same combobox UI as Min lease length.
+// The values match the furnishing tag shown on listings (the 🛋️ tag in listingTags.php).
+$furnishingOptions = [
+    ['value' => 'Furnished', 'label' => 'Furnished'],
+    ['value' => 'Unfurnished', 'label' => 'Unfurnished'],
+];
+
+$selectedFurnishingLabel = '';
+foreach ($furnishingOptions as $furnishingOption) {
+    if ((string) $furnishingOption['value'] === (string) $selectedFurnishing) {
+        $selectedFurnishingLabel = $furnishingOption['label'];
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>LetMeRent — Profile & Alerts</title>
+  <title>LetMeRent - Profile & Alerts</title>
+  <link rel="icon" type="image/svg+xml" href="../favicon.svg?v=2">
   <link rel="stylesheet" href="../styles.css">
   <link rel="stylesheet" href="profile.css">
 </head>
 
 <body>
-  <!-- Nav Bar -->
-  <nav class="nav">
-        <a class="nav-logo" href="../index.php">
-      <div class="logo-icon">
-        <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-          <!-- Let-Me-Rent Logo -->
-          <path d="M2 8L9 2L16 8V16H11V12H7V16H2V8Z" fill="white"/>
-        </svg>
-      </div>
-      <p>LetMeRent</p>
-    </a>
-
-    <ul class="nav-links">
-      <li><a href="../index.php">Browse</a></li>
-      <li><a href="../map/map.php">Map View</a></li>
-      <li><a href="profile.php" class="active">My Alerts</a></li>
-    </ul>
-
-    <div class="nav-right">
-      <div class="nav-bell">🔔</div>
-      <a href="profile.php" class="nav-avatar"><?php echo htmlspecialchars($avatarInitials); ?></a>
-    </div>
-  </nav>
+  <?php
+  // Top navbar. <alerts> is the current page. The avatar shows the users initials.
+  $navBase = '../';
+  $navActive = 'alerts';
+  $navProfileHref = 'profile.php';
+  $navAvatar = $avatarInitials;
+  include __DIR__ . '/../includes/nav.php';
+  ?>
 
   <!-- Sidebar -->
   <div class="profile-wrap">
@@ -492,44 +538,12 @@ $selectedPetFriendly = $selectedPetFriendlyRaw === '' ? '' : (boolPreferenceValu
             <p><?php echo htmlspecialchars($email); ?></p>
           </div>
         <?php endif; ?>
-
-        <div class="profile-stats">
-          <div class="profile-stat">
-            <div class="val">47</div>
-            <div class="lbl">Saved</div>
-          </div>
-
-          <div class="profile-stat">
-            <div class="val">8</div>
-            <div class="lbl">Applied</div>
-          </div>
-
-          <div class="profile-stat">
-            <div class="val">3</div>
-            <div class="lbl">Alerts</div>
-          </div>
-
-          <div class="profile-stat">
-            <div class="val">94%</div>
-            <div class="lbl">Top match</div>
-          </div>
-        </div>
       </div>
 
       <div class="side-menu">
         <a class="side-menu-item active" href="profile.php">
           <span class="side-menu-icon">👤</span>
           <p>My Profile</p>
-        </a>
-
-        <a class="side-menu-item" href="profile.php">
-          <span class="side-menu-icon">🔔</span>
-          <p>Alert Settings</p>
-        </a>
-
-        <a class="side-menu-item" href="profile.php">
-          <span class="side-menu-icon">🏠</span>
-          <p>Preferences</p>
         </a>
 
         <a class="side-menu-item" href="../index.php">
@@ -596,20 +610,23 @@ $selectedPetFriendly = $selectedPetFriendlyRaw === '' ? '' : (boolPreferenceValu
             <!-- Uni Selection -->
             <div class="form-group">
               <label class="form-label">University / Campus</label>
-              <select
-                class="form-input form-select"
-                name="university_campus"
-                id="campus-select"
-                data-selected-campus="<?php echo htmlspecialchars((string) $selectedCampus); ?>"
-                aria-busy="true"
-              >
-                <option value=""<?php echo selectedAttr($selectedCampus, ''); ?>></option>
-                <?php if ($selectedCampus !== ''): ?>
-                  <option value="<?php echo htmlspecialchars((string) $selectedCampus); ?>" selected>
-                    <?php echo htmlspecialchars((string) $selectedCampus); ?>
-                  </option>
-                <?php endif; ?>
-              </select>
+              <div class="city-combobox">
+                <input
+                  class="form-input"
+                  type="text"
+                  id="campus-search"
+                  value="<?php echo htmlspecialchars((string) $selectedCampus); ?>"
+                  autocomplete="off"
+                  placeholder="Select a university"
+                  role="combobox"
+                  aria-autocomplete="list"
+                  aria-expanded="false"
+                  aria-controls="campus-options"
+                  aria-busy="true"
+                >
+                <input type="hidden" name="university_campus" id="campus-select" value="<?php echo htmlspecialchars((string) $selectedCampus); ?>">
+                <div class="city-options" id="campus-options" role="listbox"></div>
+              </div>
             </div>
           </div>
 
@@ -632,27 +649,69 @@ $selectedPetFriendly = $selectedPetFriendlyRaw === '' ? '' : (boolPreferenceValu
                 </div>
               </details>
             </div>
-
-            <div class="form-group">
-              <label class="form-label">Pet-friendly</label>
-              <select class="form-input form-select" name="pet_friendly">
-                <option value=""<?php echo selectedAttr($selectedPetFriendly, ''); ?>></option>
-                <option value="true"<?php echo selectedAttr($selectedPetFriendly, 'true'); ?>>Required</option>
-                <option value="false"<?php echo selectedAttr($selectedPetFriendly, 'false'); ?>>Not needed</option>
-              </select>
-            </div>
           </div>
 
           <!-- Budget Selection -->
           <div class="form-row">
             <div class="form-group">
               <label class="form-label">Min budget (€/mo)</label>
-              <input class="form-input" type="number" name="min_budget" min="0" step="50" value="<?php echo htmlspecialchars((string) $selectedMinBudget); ?>">
+              <div class="budget-field">
+                <div class="budget-input-row">
+                  <span class="budget-currency">&euro;</span>
+                  <input
+                    class="budget-number-input"
+                    id="min-budget-input"
+                    type="number"
+                    min="0"
+                    max="5000"
+                    step="1"
+                    value="<?php echo $selectedMinBudget === '' ? '0' : htmlspecialchars((string) $selectedMinBudget); ?>"
+                  >
+                  <span class="budget-period">/ mo</span>
+                </div>
+                <input
+                  class="budget-slider"
+                  id="min-budget-slider"
+                  type="range"
+                  min="0"
+                  max="5000"
+                  step="50"
+                  value="<?php echo $selectedMinBudget === '' ? '0' : htmlspecialchars((string) $selectedMinBudget); ?>"
+                  aria-label="Min budget slider"
+                >
+                <input type="hidden" name="min_budget" id="min-budget-hidden" value="<?php echo htmlspecialchars((string) $selectedMinBudget); ?>">
+              </div>
             </div>
 
             <div class="form-group">
               <label class="form-label">Max budget (€/mo)</label>
-              <input class="form-input" type="number" name="max_budget" min="0" step="50" value="<?php echo htmlspecialchars((string) $selectedMaxBudget); ?>">
+              <div class="budget-field">
+                <div class="budget-input-row">
+                  <span class="budget-currency">&euro;</span>
+                  <input
+                    class="budget-number-input"
+                    id="max-budget-input"
+                    type="number"
+                    name="max_budget"
+                    min="0"
+                    max="5000"
+                    step="1"
+                    placeholder="5000+"
+                    value="<?php echo htmlspecialchars((string) $selectedMaxBudget); ?>"
+                  >
+                  <span class="budget-period">/ mo</span>
+                </div>
+                <input
+                  class="budget-slider"
+                  id="max-budget-slider"
+                  type="range"
+                  min="0"
+                  max="5000"
+                  step="50"
+                  value="<?php echo $selectedMaxBudget === '' ? '5000' : htmlspecialchars((string) $selectedMaxBudget); ?>"
+                  aria-label="Max budget slider"
+                >
+              </div>
             </div>
           </div>
 
@@ -660,19 +719,48 @@ $selectedPetFriendly = $selectedPetFriendlyRaw === '' ? '' : (boolPreferenceValu
           <div class="form-row">
             <div class="form-group">
               <label class="form-label">Move-in date</label>
-              <input class="form-input" type="date" name="move_in_date" value="<?php echo htmlspecialchars((string) $selectedMoveInDate); ?>">
+              <div class="move-in-field">
+                <input
+                  class="move-in-input"
+                  id="move-in-input"
+                  type="date"
+                  name="move_in_date"
+                  value="<?php echo htmlspecialchars((string) $selectedMoveInDate); ?>"
+                >
+                <button class="move-in-clear" id="move-in-clear" type="button">Clear date (any)</button>
+              </div>
             </div>
 
             <!-- Lease Length Selection -->
             <div class="form-group">
               <label class="form-label">Min lease length</label>
-              <select class="form-input form-select" name="min_lease_length">
-                <option value=""<?php echo selectedAttr($selectedLeaseLength, ''); ?>></option>
-                <option value="12"<?php echo selectedAttr($selectedLeaseLength, 12); ?>>12 months</option>
-                <option value="6"<?php echo selectedAttr($selectedLeaseLength, 6); ?>>6 months</option>
-                <option value="3"<?php echo selectedAttr($selectedLeaseLength, 3); ?>>3 months</option>
-                <option value="0"<?php echo selectedAttr($selectedLeaseLength, 0); ?>>Any</option>
-              </select>
+              <!-- Same combobox UI as University / Campus: a box that opens a list of choices. -->
+              <div class="city-combobox">
+                <input
+                  class="form-input"
+                  type="text"
+                  id="lease-search"
+                  value="<?php echo htmlspecialchars($selectedLeaseLabel); ?>"
+                  autocomplete="off"
+                  placeholder="Select lease length"
+                  readonly
+                  role="combobox"
+                  aria-autocomplete="list"
+                  aria-expanded="false"
+                  aria-controls="lease-options"
+                >
+                <input type="hidden" name="min_lease_length" id="lease-select" value="<?php echo htmlspecialchars((string) $selectedLeaseLength); ?>">
+                <div class="city-options" id="lease-options" role="listbox">
+                  <?php foreach ($leaseLengthOptions as $leaseOption): ?>
+                    <button
+                      type="button"
+                      class="city-option"
+                      role="option"
+                      data-value="<?php echo htmlspecialchars($leaseOption['value']); ?>"
+                    ><?php echo htmlspecialchars($leaseOption['label']); ?></button>
+                  <?php endforeach; ?>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -680,14 +768,20 @@ $selectedPetFriendly = $selectedPetFriendlyRaw === '' ? '' : (boolPreferenceValu
           <div class="slider-group">
             <div class="slider-top">
               <div class="slider-label">Max distance from campus</div>
-              <div class="slider-value"><?php echo $selectedDistance === '' ? '' : htmlspecialchars((string) $selectedDistance) . ' km'; ?></div>
+              <div class="slider-value" id="distance-value"><?php echo $selectedDistance === '' ? '20+ km' : htmlspecialchars((string) $selectedDistance) . ' km'; ?></div>
             </div>
-            <input type="hidden" name="max_distance_from_campus" class="slider-input" value="<?php echo htmlspecialchars((string) $selectedDistance); ?>">
 
-            <div class="slider-track">
-              <div class="slider-fill"></div>
-              <div class="slider-thumb"></div>
-            </div>
+            <input
+              class="budget-slider"
+              id="distance-slider"
+              type="range"
+              min="0"
+              max="20"
+              step="1"
+              value="<?php echo $selectedDistance === '' ? '20' : htmlspecialchars((string) $selectedDistance); ?>"
+              aria-label="Max distance from campus slider"
+            >
+            <input type="hidden" name="max_distance_from_campus" id="distance-input" value="<?php echo htmlspecialchars((string) $selectedDistance); ?>">
 
             <div class="slider-ticks">
               <span>0</span>
@@ -698,140 +792,76 @@ $selectedPetFriendly = $selectedPetFriendlyRaw === '' ? '' : (boolPreferenceValu
             </div>
           </div>
 
-          <script>
-            const sliderGroup = document.querySelector('.slider-group');
-            const sliderTrack = sliderGroup.querySelector('.slider-track');
-            const sliderFill = sliderGroup.querySelector('.slider-fill');
-            const sliderThumb = sliderGroup.querySelector('.slider-thumb');
-            const sliderValue = sliderGroup.querySelector('.slider-value');
-            const sliderInput = sliderGroup.querySelector('.slider-input');
-
-            let isDragging = false;
-
-            const min = 0;
-            const max = 20;
-            const step = 1; // optional, for discrete steps
-
-            // Initialize slider
-            function setSliderPosition(percent) {
-              // Clamp percent between 0 and 1
-              percent = Math.max(0, Math.min(1, percent));
-              // Calculate value based on percent
-              const value = Math.round(min + percent * (max - min));
-              // Update fill width
-              sliderFill.style.width = `${percent * 100}%`;
-              // Update thumb position
-              sliderThumb.style.left = `${percent * 100}%`;
-              // Update displayed value
-              sliderValue.textContent = `${value} km`;
-              sliderInput.value = value;
-            }
-
-            function clearSliderPosition() {
-              sliderFill.style.width = '0%';
-              sliderThumb.style.left = '0%';
-              sliderValue.textContent = '';
-              sliderInput.value = '';
-            }
-
-            // Convert mouse/touch position to percentage
-            function getPercentFromEvent(e) {
-              const rect = sliderTrack.getBoundingClientRect();
-              const x = e.clientX !== undefined ? e.clientX : e.touches[0].clientX;
-              const percent = (x - rect.left) / rect.width;
-              return percent;
-            }
-
-            // Mouse down / touch start
-            sliderThumb.addEventListener('mousedown', () => {
-              isDragging = true;
-            });
-            document.addEventListener('mouseup', () => {
-              isDragging = false;
-            });
-            document.addEventListener('mousemove', (e) => {
-              if (isDragging) {
-                const percent = getPercentFromEvent(e);
-                setSliderPosition(percent);
-              }
-            });
-            sliderTrack.addEventListener('click', (e) => {
-              const percent = getPercentFromEvent(e);
-              setSliderPosition(percent);
-            });
-            sliderThumb.addEventListener('touchstart', () => {
-              isDragging = true;
-            });
-            document.addEventListener('touchend', () => {
-              isDragging = false;
-            });
-            document.addEventListener('touchmove', (e) => {
-              if (isDragging) {
-                const percent = getPercentFromEvent(e);
-                setSliderPosition(percent);
-              }
-            });
-
-            // Initialize position
-            <?php if ($selectedDistance === ''): ?>
-              clearSliderPosition();
-            <?php else: ?>
-              setSliderPosition(<?php echo htmlspecialchars((string) max(0, min(1, ((float) $selectedDistance) / 20))); ?>);
-            <?php endif; ?>
-
-          </script>
-          
 
           <!-- Room Type Selection -->
           <div class="form-row">
             <div class="form-group">
               <label class="form-label">Room type</label>
-              <select class="form-input form-select" name="room_type">
-                <option value=""<?php echo selectedAttr($selectedRoomType, ''); ?>></option>
-                <option value="studio_or_room"<?php echo selectedAttr($selectedRoomType, 'studio_or_room'); ?>>Studio or Room</option>
-                <option value="studio"<?php echo selectedAttr($selectedRoomType, 'studio'); ?>>Studio only</option>
-                <option value="room"<?php echo selectedAttr($selectedRoomType, 'room'); ?>>Room (shared)</option>
-                <option value="apartment"<?php echo selectedAttr($selectedRoomType, 'apartment'); ?>>1-bed apartment</option>
-                <option value="any"<?php echo selectedAttr($selectedRoomType, 'any'); ?>>Any</option>
-              </select>
+              <div class="city-combobox">
+                <input
+                  class="form-input"
+                  type="text"
+                  id="room-type-search"
+                  value="<?php echo htmlspecialchars($selectedRoomTypeLabel); ?>"
+                  autocomplete="off"
+                  placeholder="Select room type"
+                  readonly
+                  role="combobox"
+                  aria-autocomplete="list"
+                  aria-expanded="false"
+                  aria-controls="room-type-options"
+                >
+                <input type="hidden" name="room_type" id="room-type-select" value="<?php echo htmlspecialchars((string) $selectedRoomType); ?>">
+                <div class="city-options" id="room-type-options" role="listbox">
+                  <?php foreach ($roomTypeOptions as $roomTypeOption): ?>
+                    <button
+                      type="button"
+                      class="city-option"
+                      role="option"
+                      data-value="<?php echo htmlspecialchars($roomTypeOption['value']); ?>"
+                    ><?php echo htmlspecialchars($roomTypeOption['label']); ?></button>
+                  <?php endforeach; ?>
+                </div>
+              </div>
             </div>
 
             <!-- Furnishing Selection -->
             <div class="form-group">
               <label class="form-label">Furnishing</label>
-              <select class="form-input form-select" name="furnishing">
-                <option value=""<?php echo selectedAttr($selectedFurnishing, ''); ?>></option>
-                <option value="furnished"<?php echo selectedAttr($selectedFurnishing, 'furnished'); ?>>Furnished required</option>
-                <option value="furnished_preferred"<?php echo selectedAttr($selectedFurnishing, 'furnished_preferred'); ?>>Furnished preferred</option>
-                <option value="unfurnished"<?php echo selectedAttr($selectedFurnishing, 'unfurnished'); ?>>Unfurnished only</option>
-                <option value="any"<?php echo selectedAttr($selectedFurnishing, 'any'); ?>>Any</option>
-              </select>
+              <div class="city-combobox">
+                <input
+                  class="form-input"
+                  type="text"
+                  id="furnishing-search"
+                  value="<?php echo htmlspecialchars($selectedFurnishingLabel); ?>"
+                  autocomplete="off"
+                  placeholder="Select furnishing"
+                  readonly
+                  role="combobox"
+                  aria-autocomplete="list"
+                  aria-expanded="false"
+                  aria-controls="furnishing-options"
+                >
+                <input type="hidden" name="furnishing" id="furnishing-select" value="<?php echo htmlspecialchars((string) $selectedFurnishing); ?>">
+                <div class="city-options" id="furnishing-options" role="listbox">
+                  <?php foreach ($furnishingOptions as $furnishingOption): ?>
+                    <button
+                      type="button"
+                      class="city-option"
+                      role="option"
+                      data-value="<?php echo htmlspecialchars($furnishingOption['value']); ?>"
+                    ><?php echo htmlspecialchars($furnishingOption['label']); ?></button>
+                  <?php endforeach; ?>
+                </div>
+              </div>
             </div>
           </div>
-
-        </div>
-
-        <div class="form-footer">
-          <button class="btn-ghost" type="reset">Reset</button>
-          <button class="btn-primary" type="submit">Save preferences</button>
-        </div>
-      </form>
-
-      <!-- Alert Settings -->
-      <div class="form-card">
-        <div class="form-head">
-          <div class="form-head-title">
-            <p>Email Alert Settings</p>
-          </div>
-        </div>
-
-        <div class="form-body">
 
           <!-- Instant Alerts -->
           <div class="toggle-row">
             <div>
               <div class="toggle-title">
-                <p>Instant alerts — new matches</p>
+                <p>Instant alerts - new matches</p>
               </div>
 
               <div class="toggle-sub">
@@ -840,441 +870,26 @@ $selectedPetFriendly = $selectedPetFriendlyRaw === '' ? '' : (boolPreferenceValu
             </div>
 
             <label class="toggle">
-              <input type="checkbox" checked>
+              <?php
+                $instantAlertsChecked = '';
+                if ($instantAlertsEnabled) {
+                    $instantAlertsChecked = ' checked';
+                }
+              ?>
+              <input type="checkbox" name="instant_alerts" value="1"<?php echo $instantAlertsChecked; ?>>
               <span class="toggle-slider"></span>
             </label>
           </div>
-
-          <!-- Daily Digest -->
-          <div class="toggle-row">
-            <div>
-              <div class="toggle-title">
-                <p>Daily digest</p>
-              </div>
-
-              <div class="toggle-sub">
-                <p>Summary of new listings every morning at 8:00</p>
-              </div>
-            </div>
-
-            <label class="toggle">
-              <input type="checkbox" checked>
-              <span class="toggle-slider"></span>
-            </label>
-          </div>
-
-          <!-- Price Drop Alerts -->
-          <div class="toggle-row">
-            <div>
-              <div class="toggle-title">
-                <p>Price drop alerts</p>
-              </div>
-
-              <div class="toggle-sub">
-                <p>Notify when a saved listing drops in price</p>
-              </div>
-            </div>
-
-            <label class="toggle">
-              <input type="checkbox">
-              <span class="toggle-slider"></span>
-            </label>
-          </div>
-
-          <!-- Fraud Warnings -->
-          <div class="toggle-row">
-            <div>
-              <div class="toggle-title">
-                <p>Fraud warnings</p>
-              </div>
-
-              <div class="toggle-sub">
-                <p>Alert when a suspicious listing appears in your area</p>
-              </div>
-            </div>
-
-            <label class="toggle">
-              <input type="checkbox" checked>
-              <span class="toggle-slider"></span>
-            </label>
-          </div>
-
         </div>
 
         <div class="form-footer">
-          <button class="btn-primary">Save alert settings</button>
+          <button class="btn-ghost" type="button" id="reset-preferences">Reset</button>
+          <button class="btn-primary" type="submit">Save preferences</button>
         </div>
-      </div>
+      </form>
     </div>
   </div>
-  <script>
-    (() => {
-      const dropdown = document.querySelector('.source-dropdown');
-
-      if (!dropdown) {
-        return;
-      }
-
-      const label = dropdown.querySelector('.source-dropdown-label');
-      const inputs = [...dropdown.querySelectorAll('input[type="checkbox"]')];
-      const emptyLabel = label?.dataset.emptyLabel || 'Any source';
-
-      const updateLabel = () => {
-        const selectedLabels = inputs
-          .filter((input) => input.checked)
-          .map((input) => input.closest('label')?.textContent.trim())
-          .filter(Boolean);
-
-        label.textContent = selectedLabels.length > 0 ? selectedLabels.join(', ') : emptyLabel;
-      };
-
-      inputs.forEach((input) => {
-        input.addEventListener('change', updateLabel);
-      });
-
-      document.addEventListener('click', (event) => {
-        if (!dropdown.contains(event.target)) {
-          dropdown.open = false;
-        }
-      });
-
-      updateLabel();
-    })();
-
-    (() => {
-      const campusSelect = document.getElementById('campus-select');
-      const citySelect = document.getElementById('city-select');
-      const citySearch = document.getElementById('city-search');
-
-      if (!campusSelect || !citySelect) {
-        return;
-      }
-
-      const selectedCampus = campusSelect.dataset.selectedCampus || '';
-      const fallbackCampuses = [
-        { name: 'Amsterdam University of Applied Sciences', city: 'Amsterdam' },
-        { name: 'ArtEZ University of the Arts', city: 'Arnhem' },
-        { name: 'Avans University of Applied Sciences', city: 'Breda' },
-        { name: 'Breda University of Applied Sciences', city: 'Breda' },
-        { name: 'Codarts Rotterdam', city: 'Rotterdam' },
-        { name: 'Delft University of Technology', city: 'Delft' },
-        { name: 'Design Academy Eindhoven', city: 'Eindhoven' },
-        { name: 'Eindhoven University of Technology', city: 'Eindhoven' },
-        { name: 'Erasmus University Rotterdam', city: 'Rotterdam' },
-        { name: 'Fontys University of Applied Sciences', city: 'Eindhoven' },
-        { name: 'Gerrit Rietveld Academie', city: 'Amsterdam' },
-        { name: 'Hanze University of Applied Sciences', city: 'Groningen' },
-        { name: 'Hotelschool The Hague', city: 'Den Haag' },
-        { name: 'Inholland University of Applied Sciences', city: 'Amsterdam' },
-        { name: 'Leiden University', city: 'Leiden' },
-        { name: 'Maastricht University', city: 'Maastricht' },
-        { name: 'NHL Stenden University of Applied Sciences - Emmen', city: 'Emmen' },
-        { name: 'NHL Stenden University of Applied Sciences', city: 'Leeuwarden' },
-        { name: 'Radboud University', city: 'Nijmegen' },
-        { name: 'Rotterdam University of Applied Sciences', city: 'Rotterdam' },
-        { name: 'Saxion University of Applied Sciences', city: 'Enschede' },
-        { name: 'The Hague University of Applied Sciences', city: 'Den Haag' },
-        { name: 'Tilburg University', city: 'Tilburg' },
-        { name: 'University of Amsterdam', city: 'Amsterdam' },
-        { name: 'University of Groningen', city: 'Groningen' },
-        { name: 'University of Twente', city: 'Enschede' },
-        { name: 'Utrecht University', city: 'Utrecht' },
-        { name: 'Vrije Universiteit Amsterdam', city: 'Amsterdam' },
-        { name: 'Wageningen University & Research', city: 'Wageningen' },
-        { name: 'Windesheim University of Applied Sciences', city: 'Zwolle' },
-        { name: 'Zuyd University of Applied Sciences', city: 'Maastricht' }
-      ];
-      const cityAliases = new Map([
-        ['the hague', 'den haag'],
-        ['den haag', 'den haag'],
-        ["'s-gravenhage", 'den haag'],
-        ['s-gravenhage', 'den haag'],
-        ['s gravenhage', 'den haag']
-      ]);
-      const campusEndpoint = 'https://api.openalex.org/institutions?filter=country_code:NL,type:education&per-page=200&select=display_name,geo';
-
-      let campuses = fallbackCampuses;
-
-      const normalizeCity = (city) => {
-        const normalized = city
-          .toLowerCase()
-          .normalize('NFD')
-          .replace(/[\u0300-\u036f]/g, '')
-          .replace(/\s+/g, ' ')
-          .trim();
-
-        return cityAliases.get(normalized) || normalized;
-      };
-
-      const selectedCityValue = () => citySelect.value || '';
-
-      const uniqueCampuses = (items) => {
-        const campusMap = new Map();
-
-        items.forEach((item) => {
-          const name = (item.name || '').trim();
-          const city = (item.city || '').trim();
-
-          if (name === '') {
-            return;
-          }
-
-          campusMap.set(`${name.toLowerCase()}|${city.toLowerCase()}`, { name, city });
-        });
-
-        return [...campusMap.values()].sort((left, right) => {
-          const citySort = left.city.localeCompare(right.city, 'nl', { sensitivity: 'base' });
-
-          return citySort !== 0 ? citySort : left.name.localeCompare(right.name, 'nl', { sensitivity: 'base' });
-        });
-      };
-
-      const setCampusOptions = () => {
-        const selectedCity = selectedCityValue();
-        const selectedCityKey = normalizeCity(selectedCity);
-        const filteredCampuses = uniqueCampuses(campuses).filter((campus) => {
-          return selectedCity === '' || normalizeCity(campus.city) === selectedCityKey;
-        });
-        let activeCampus = campusSelect.value || selectedCampus;
-        const hasActiveCampus = filteredCampuses.some((campus) => campus.name === activeCampus);
-
-        if (activeCampus !== '' && !hasActiveCampus) {
-          if (selectedCity === '') {
-            filteredCampuses.unshift({ name: activeCampus, city: '' });
-          } else {
-            activeCampus = '';
-          }
-        }
-
-        campusSelect.replaceChildren(new Option('', '', activeCampus === '', activeCampus === ''));
-
-        filteredCampuses.forEach((campus) => {
-          const label = selectedCity === '' && campus.city !== '' ? `${campus.name} - ${campus.city}` : campus.name;
-
-          campusSelect.add(new Option(label, campus.name, false, campus.name === activeCampus));
-        });
-
-        campusSelect.setAttribute('aria-busy', 'false');
-      };
-
-      const loadCampuses = async () => {
-        const response = await fetch(campusEndpoint);
-
-        if (!response.ok) {
-          throw new Error(`OpenAlex campus request failed with ${response.status}`);
-        }
-
-        const data = await response.json();
-        const apiCampuses = (data.results || []).map((institution) => ({
-          name: institution.display_name || '',
-          city: institution.geo?.city || ''
-        }));
-
-        campuses = uniqueCampuses([...fallbackCampuses, ...apiCampuses]);
-        setCampusOptions();
-      };
-
-      citySelect.addEventListener('change', setCampusOptions);
-      setCampusOptions();
-      loadCampuses().catch(setCampusOptions);
-    })();
-
-    (() => {
-      const citySelect = document.getElementById('city-select');
-      const citySearch = document.getElementById('city-search');
-      const cityOptions = document.getElementById('city-options');
-
-      if (!citySelect || !citySearch || !cityOptions) {
-        return;
-      }
-
-      const selectedCity = citySelect.value || '';
-      const fallbackCities = [
-        'Amsterdam',
-        'Rotterdam',
-        'Den Haag',
-        'Utrecht',
-        'Eindhoven',
-        'Emmen',
-        'Groningen',
-        'Tilburg',
-        'Almere',
-        'Breda',
-        'Nijmegen',
-        'Enschede',
-        'Haarlem',
-        'Arnhem',
-        'Amersfoort',
-        'Apeldoorn',
-        'Leiden',
-        'Dordrecht',
-        'Zoetermeer',
-        'Zwolle',
-        'Maastricht'
-      ];
-
-      const endpoint = 'https://api.pdok.nl/bzk/locatieserver/search/v3_1/free';
-      const maxVisibleOptions = 12;
-
-      const naturalSort = (left, right) => left.localeCompare(right, 'nl', { sensitivity: 'base' });
-      let cities = fallbackCities;
-      let activeOptionIndex = -1;
-
-      const closeOptions = () => {
-        cityOptions.classList.remove('show');
-        citySearch.setAttribute('aria-expanded', 'false');
-        activeOptionIndex = -1;
-      };
-
-      const selectCity = (city) => {
-        citySearch.value = city;
-        citySelect.value = city;
-        closeOptions();
-        citySelect.dispatchEvent(new Event('change'));
-      };
-
-      const renderCityOptions = () => {
-        const query = citySearch.value.trim().toLowerCase();
-        const selectedValue = citySelect.value;
-        const matchingCities = cities
-          .filter((city) => query === '' || city.toLowerCase().includes(query))
-          .slice(0, maxVisibleOptions);
-
-        cityOptions.replaceChildren();
-
-        if (matchingCities.length === 0) {
-          closeOptions();
-          return;
-        }
-
-        matchingCities.forEach((city, index) => {
-          const option = document.createElement('button');
-          option.type = 'button';
-          option.className = `city-option${city === selectedValue ? ' active' : ''}`;
-          option.id = `city-option-${index}`;
-          option.setAttribute('role', 'option');
-          option.setAttribute('aria-selected', city === selectedValue ? 'true' : 'false');
-          option.textContent = city;
-          option.addEventListener('mousedown', (event) => {
-            event.preventDefault();
-            selectCity(city);
-          });
-
-          cityOptions.append(option);
-        });
-
-        cityOptions.classList.add('show');
-        citySearch.setAttribute('aria-expanded', 'true');
-      };
-
-      const clearCityIfNotExactMatch = () => {
-        const typedCity = citySearch.value.trim();
-        const exactCity = cities.find((city) => city.toLowerCase() === typedCity.toLowerCase());
-
-        citySelect.value = exactCity || '';
-
-        if (exactCity !== undefined && citySearch.value !== exactCity) {
-          citySearch.value = exactCity;
-        }
-
-        citySelect.dispatchEvent(new Event('change'));
-      };
-
-      const setCityOptions = (loadedCities) => {
-        const uniqueCities = [...new Set(loadedCities.filter(Boolean))].sort(naturalSort);
-
-        if (selectedCity !== '' && !uniqueCities.includes(selectedCity)) {
-          uniqueCities.unshift(selectedCity);
-        }
-
-        cities = uniqueCities;
-        citySearch.setAttribute('aria-busy', 'false');
-        clearCityIfNotExactMatch();
-        citySelect.dispatchEvent(new Event('change'));
-      };
-
-      const fetchCityPage = async (start) => {
-        const params = new URLSearchParams({
-          q: '*',
-          fq: 'type:woonplaats',
-          rows: '100',
-          start: String(start),
-          fl: 'woonplaatsnaam'
-        });
-        const response = await fetch(`${endpoint}?${params.toString()}`);
-
-        if (!response.ok) {
-          throw new Error(`PDOK city request failed with ${response.status}`);
-        }
-
-        return response.json();
-      };
-
-      const loadCities = async () => {
-        const firstPage = await fetchCityPage(0);
-        const total = Number(firstPage?.response?.numFound || 0);
-        const starts = [];
-
-        for (let start = 100; start < total; start += 100) {
-          starts.push(start);
-        }
-
-        const pages = await Promise.all(starts.map(fetchCityPage));
-        const docs = [firstPage, ...pages].flatMap((page) => page?.response?.docs || []);
-
-        setCityOptions(docs.map((doc) => doc.woonplaatsnaam));
-      };
-
-      loadCities().catch(() => {
-        setCityOptions(fallbackCities);
-      });
-
-      citySearch.addEventListener('input', () => {
-        citySelect.value = '';
-        citySelect.dispatchEvent(new Event('change'));
-        renderCityOptions();
-      });
-
-      citySearch.addEventListener('focus', renderCityOptions);
-
-      citySearch.addEventListener('blur', () => {
-        clearCityIfNotExactMatch();
-        window.setTimeout(closeOptions, 120);
-      });
-
-      citySearch.addEventListener('keydown', (event) => {
-        if (event.key === 'ArrowDown') {
-          event.preventDefault();
-          renderCityOptions();
-          const options = [...cityOptions.querySelectorAll('.city-option')];
-          activeOptionIndex = Math.min(activeOptionIndex + 1, options.length - 1);
-          options.forEach((option, index) => {
-            option.classList.toggle('active', index === activeOptionIndex);
-          });
-        } else if (event.key === 'ArrowUp') {
-          event.preventDefault();
-          const options = [...cityOptions.querySelectorAll('.city-option')];
-          activeOptionIndex = Math.max(activeOptionIndex - 1, 0);
-          options.forEach((option, index) => {
-            option.classList.toggle('active', index === activeOptionIndex);
-          });
-        } else if (event.key === 'Enter') {
-          const options = [...cityOptions.querySelectorAll('.city-option')];
-
-          if (activeOptionIndex >= 0 && options[activeOptionIndex]) {
-            event.preventDefault();
-            selectCity(options[activeOptionIndex].textContent);
-          }
-
-          return;
-        } else if (event.key === 'Escape') {
-          closeOptions();
-          return;
-        } else {
-          return;
-        }
-      });
-    })();
-  </script>
+  <script src="../components/indexPage/cityGeoData.js"></script>
+  <script src="profile.js"></script>
 </body>
 </html>

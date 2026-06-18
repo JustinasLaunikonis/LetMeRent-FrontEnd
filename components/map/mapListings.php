@@ -1,4 +1,7 @@
 <?php
+// listings.php builds the same query parameters the browse page uses but the map fetches its own larger result set below.
+// The flag tells listings.php to skip that request.
+$skipListingsFetch = true;
 require __DIR__ . '/../listings/listings.php';
 
 if (!isset($city)) {
@@ -33,64 +36,39 @@ if (!isset($listings)) {
 if (!$apiError) {
     $mapListings = array();
 
-    // If no source filter is selected, fetch all listings in one API request.
+    // If no source filter is selected, fetch every listing.
+    // Ask for 500 first (skip is 0 so we start from the first listing), then ask again for the full amount if there turn out to be more.
     if (empty($sources)) {
-        $mapParams = array();
-        // limit says how many listings to ask for.
-        // skip is 0 because the map should start from the first listing.
-        $mapParams['limit'] = max($totalListings, 500);
+        $mapParams = $baseParams;
+        $mapParams['limit'] = 500;
         $mapParams['skip'] = 0;
-
-        // Only add filters to the API request if user actually selected them.
-        if ($city !== '') {
-            $mapParams['city'] = $city;
-        }
-        if ($min_price !== '') {
-            $mapParams['min_price'] = $min_price;
-        }
-        if ($max_price !== '') {
-            if (is_numeric($max_price)) {
-                if ((int)$max_price < 5000) {
-                    $mapParams['max_price'] = $max_price;
-                }
-            } else {
-                $mapParams['max_price'] = $max_price;
-            }
-        }
 
         $mapResult = fetchFromApi($mapParams);
 
         // If the API returned an error, save it so we can show it on the page.
-        // Otherwise, save the listings from the API.
         if (isset($mapResult['error'])) {
             $apiError = $mapResult['error'];
         } else {
-            $mapListings = $mapResult['data'];
-            $totalListings = $mapResult['count'];
+            // If there are more than 500 listings, ask again for the full amount.
+            if (!empty($mapResult['count']) && $mapResult['count'] > count($mapResult['data'])) {
+                $mapParams['limit'] = $mapResult['count'];
+                $mapResult = fetchFromApi($mapParams);
+            }
+
+            if (isset($mapResult['error'])) {
+                $apiError = $mapResult['error'];
+            } else {
+                $mapListings = $mapResult['data'];
+                $totalListings = $mapResult['count'];
+            }
         }
     } else {
         // If source filters are selected, fetch listings for each source one by one.
         foreach ($sources as $source) {
-            $mapParams = array();
+            $mapParams = $baseParams;
             $mapParams['limit'] = 500;
             $mapParams['skip'] = 0;
             $mapParams['source'] = $source;
-
-            if ($city !== '') {
-                $mapParams['city'] = $city;
-            }
-            if ($min_price !== '') {
-                $mapParams['min_price'] = $min_price;
-            }
-            if ($max_price !== '') {
-                if (is_numeric($max_price)) {
-                    if ((int)$max_price < 5000) {
-                        $mapParams['max_price'] = $max_price;
-                    }
-                } else {
-                    $mapParams['max_price'] = $max_price;
-                }
-            }
 
             $mapResult = fetchFromApi($mapParams);
 

@@ -14,7 +14,6 @@ $tagFilters = array(
     array('key' => 'furnished',  'label' => '🛋️ Furnished'),
     array('key' => 'housemates', 'label' => '👥 Housemates'),
     array('key' => 'plot_size',  'label' => '🌳 Plot'),
-    array('key' => 'bathrooms',  'label' => '🛁 Bathroom'),
 );
 
 // Read the tags that are currently switched on from the URL (?has=a,b,c).
@@ -75,4 +74,31 @@ for ($i = 0; $i < count($tagFilters); $i++) {
     echo '<p>' . htmlspecialchars($label) . '</p>';
     echo '</a>';
 }
+
+// Special chip: show only garages and parking spots.
+//use their own URL flag (?no_living_area=1).
+$garageOn = false;
+if (isset($_GET['no_living_area']) && $_GET['no_living_area'] === '1') {
+    $garageOn = true;
+}
+
+// Build the link. Clicking it turns the flag on, or off when it is already on.
+$garageParams = $_GET;
+unset($garageParams['page']);
+if ($garageOn) {
+    unset($garageParams['no_living_area']);
+} else {
+    $garageParams['no_living_area'] = '1';
+}
+$garageHref = '?' . http_build_query($garageParams);
+
+if ($garageOn) {
+    $garageClass = 'filter-chip active';
+} else {
+    $garageClass = 'filter-chip';
+}
+
+echo '<a class="' . $garageClass . '" href="' . htmlspecialchars($garageHref) . '">';
+echo '<p>🅿️ Garage / Parking</p>';
+echo '</a>';
 ?>

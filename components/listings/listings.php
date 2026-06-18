@@ -1,4 +1,7 @@
 <?php
+// Shared API client (provides fetchFromApi()) and .env reader.
+require_once __DIR__ . '/../../includes/api.php';
+
 $listings      = [];
 $apiError      = null;
 $totalListings = 0;
@@ -52,6 +55,21 @@ if (isset($_GET['energy_label'])) {
     $energy_label = '';
 }
 
+// "Garage / Parking" chip. When switched on (?no_living_area=1) we only show
+// listings that have no living area, which are garages and parking spots.
+if (isset($_GET['no_living_area'])) {
+    $no_living_area = trim($_GET['no_living_area']);
+} else {
+    $no_living_area = '';
+}
+
+// The move-in date the user picked in the search bar (?available_by=2026-09-01).
+if (isset($_GET['available_by'])) {
+    $available_by = trim($_GET['available_by']);
+} else {
+    $available_by = '';
+}
+
 // Read the selected sources from the URL (?source=kamernet,funda)
 // and split them into a list. If nothing is selected, the list stays empty.
 $sources = [];
@@ -65,8 +83,8 @@ if (!empty($_GET['source'])) {
     }
 }
 
-// How many listings to show per page
-$limit = 9;
+// How many listings to show per page (4 columns x 3 rows = 12)
+$limit = 12;
 
 // Which page are we on? Default to page 1.
 if (isset($_GET['page']) && is_numeric($_GET['page']) && (int)$_GET['page'] > 0) {
@@ -88,6 +106,25 @@ if (isset($_GET['sort'])) {
 $order = 'asc';
 if (isset($_GET['order']) && strtolower(trim($_GET['order'])) === 'desc') {
     $order = 'desc';
+}
+
+// Campus distance filter.
+if (isset($_GET['campus_lat'])) {
+    $campus_lat = trim($_GET['campus_lat']);
+} else {
+    $campus_lat = '';
+}
+
+if (isset($_GET['campus_lng'])) {
+    $campus_lng = trim($_GET['campus_lng']);
+} else {
+    $campus_lng = '';
+}
+
+if (isset($_GET['max_distance_km'])) {
+    $max_distance_km = trim($_GET['max_distance_km']);
+} else {
+    $max_distance_km = '';
 }
 
 // -------------------------------------------------------------------------
@@ -141,81 +178,47 @@ if ($energy_label !== '') {
     $baseParams['energy_label'] = $energy_label;
 }
 
+if ($no_living_area !== '') {
+    $baseParams['no_living_area'] = $no_living_area;
+}
+
+if ($available_by !== '') {
+    $baseParams['available_by'] = $available_by;
+}
+
 if ($sort !== '') {
     $baseParams['sort']  = $sort;
     $baseParams['order'] = $order;
 }
 
+// Only send the distance filter when we have all three pieces:
+// the campus  coordinates and the chosen distance.
+if ($campus_lat !== '' && $campus_lng !== '' && $max_distance_km !== '') {
+    $baseParams['campus_lat']      = $campus_lat;
+    $baseParams['campus_lng']      = $campus_lng;
+    $baseParams['max_distance_km'] = $max_distance_km;
+}
+
 // -------------------------------------------------------------------------
-// Function to fetch listings from the API
+// Fetch listings. The API does all filtering, sorting and pagination, across every selected source, in a single request.
 // -------------------------------------------------------------------------
-// Takes an array of parameters then sends a request to the API, and returns the result.
 
-function fetchFromApi(array $params) {
-    // read API base URL from .env file
-    $envPath  = __DIR__ . '/../../.env';
-    $envLines = file($envPath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-    $apiBase  = '';
+if (empty($skipListingsFetch)) {
+    $result = fetchFromApi($baseParams);
 
-    foreach ($envLines as $line) {
-        $parts = explode('=', $line, 2);
-        if (count($parts) === 2 && trim($parts[0]) === 'API_URL') {
-            $apiBase = trim($parts[1]);
-        }
-    }
-
-    $url = $apiBase . '?' . http_build_query($params);
-
-    $ch = curl_init($url);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_TIMEOUT, 60);
-    $response  = curl_exec($ch);
-    $curlError = curl_error($ch);
-    unset($ch);
-
-    if ($curlError) {
-        $result = [];
-        $result['error'] = 'Could not reach API: ' . $curlError;
-        return $result;
-    }
-
-    $decoded = json_decode($response, true);
-
-    if (!isset($decoded['data']) || !is_array($decoded['data'])) {
-        $result = [];
-        $result['error'] = 'Unexpected API response format.';
-        return $result;
-    }
-
-    $result = [];
-    $result['data']  = $decoded['data'];
-
-    if (isset($decoded['count'])) {
-        $result['count'] = $decoded['count'];
+    if (isset($result['error'])) {
+        $apiError = $result['error'];
     } else {
-        $result['count'] = count($decoded['data']);
+        $listings      = $result['data'];
+        $totalListings = $result['count'];
     }
 
-    return $result;
-}
-
-// -------------------------------------------------------------------------
-// Fetch listings. The API does all filtering, sorting and pagination, across
-// every selected source, in a single request.
-// -------------------------------------------------------------------------
-
-$result = fetchFromApi($baseParams);
-
-if (isset($result['error'])) {
-    $apiError = $result['error'];
-} else {
-    $listings      = $result['data'];
-    $totalListings = $result['count'];
-}
-
-// Calculate how many pages exist in total
-if ($totalListings > 0) {
-    $totalPages = (int)ceil($totalListings / $limit);
+    // Calculate how many pages exist in total
+    if ($totalListings > 0) {
+        $totalPages = (int)ceil($totalListings / $limit);
+    } else {
+        $totalPages = 1;
+    }
 } else {
     $totalPages = 1;
 }
