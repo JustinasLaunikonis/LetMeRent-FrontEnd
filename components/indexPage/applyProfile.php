@@ -10,9 +10,10 @@
 require_once __DIR__ . '/../../sign-up-in/authApi.php';
 
 // Ask the Chrono service for the saved tasks (preferences) of one user.
-function applyProfileCallChrono($email)
+// Tasks are saved under the username (see profile.php), so we look them up by username too.
+function applyProfileCallChrono($username)
 {
-    $endpoint = '/chrono/tasks/user/' . rawurlencode($email);
+    $endpoint = '/chrono/tasks/user/' . rawurlencode($username);
     $url = chronoApiBaseUrl() . $endpoint;
 
     $ch = curl_init($url);
@@ -288,15 +289,15 @@ $hasProfileFilters = false;
 $applyProfileHref = '';
 $applyProfileQuery = array();
 
-// Find the logged-in users email from the session.
-$profileEmail = '';
-if (isset($_SESSION['user']) && is_array($_SESSION['user']) && isset($_SESSION['user']['email'])) {
-    $profileEmail = trim((string) $_SESSION['user']['email']);
+// Find the logged-in users username from the session
+$profileUsername = '';
+if (isset($_SESSION['user']) && is_array($_SESSION['user']) && isset($_SESSION['user']['username'])) {
+    $profileUsername = trim((string) $_SESSION['user']['username']);
 }
 
-// Only build the button when someone is logged in.
-if ($profileEmail !== '') {
-    $taskData = applyProfileCallChrono($profileEmail);
+// Only build the button when someone is logged in and we know their username.
+if ($profileUsername !== '') {
+    $taskData = applyProfileCallChrono($profileUsername);
     $preferences = applyProfileExtract($taskData);
     $profileQuery = applyProfileBuildQuery($preferences);
 
