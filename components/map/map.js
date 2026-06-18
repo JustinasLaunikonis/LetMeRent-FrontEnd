@@ -691,26 +691,32 @@ function initLetMeRentMap() {
     const campusLng = Number(campusCircle.lng);
     const campusDistanceKm = Number(campusCircle.distanceKm);
 
-    if (Number.isFinite(campusLat) && Number.isFinite(campusLng) && campusDistanceKm > 0) {
+    // A campus has been selected, so we have a point to mark.
+    if (Number.isFinite(campusLat) && Number.isFinite(campusLng)) {
       campusCenter = { lat: campusLat, lng: campusLng };
 
-      new google.maps.Circle({
-        map,
-        center: campusCenter,
-        radius: campusDistanceKm * 1000,
-        strokeColor: '#1558A7',
-        strokeOpacity: 0.8,
-        strokeWeight: 2,
-        fillColor: '#1558A7',
-        fillOpacity: 0.1,
-        clickable: false
-      });
+      // Only draw the distance circle when there is a real distance limit.
+      // A distance of 0 means "20+ km" (no limit), so we show just the pin.
+      if (campusDistanceKm > 0) {
+        new google.maps.Circle({
+          map,
+          center: campusCenter,
+          radius: campusDistanceKm * 1000,
+          strokeColor: '#1558A7',
+          strokeOpacity: 0.8,
+          strokeWeight: 2,
+          fillColor: '#1558A7',
+          fillOpacity: 0.1,
+          clickable: false
+        });
+      }
 
-      // A dot marking the campus itself, so it is clear what the circle is around.
+      // Drop a pin on the campus itself, so it is clear which campus is selected.
       new google.maps.Marker({
         position: campusCenter,
         map,
         title: campusCircle.name || 'Campus',
+        animation: google.maps.Animation.DROP,
         icon: {
           path: google.maps.SymbolPath.CIRCLE,
           scale: 7,

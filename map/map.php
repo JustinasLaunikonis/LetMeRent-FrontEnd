@@ -74,6 +74,17 @@ $browseHref = '../index.php';
 if (!empty($browseQuery)) {
   $browseHref .= '?' . http_build_query($browseQuery);
 }
+
+// Work out the "Apply profile settings" button. This loads the logged-in user's
+// saved preferences and sets $hasProfileFilters and $applyProfileQuery.
+include __DIR__ . '/../components/indexPage/applyProfile.php';
+
+// The button on this page should reload the map (not the browse page) with the
+// profile filters in the URL.
+$applyProfileMapHref = '';
+if (!empty($hasProfileFilters)) {
+  $applyProfileMapHref = 'map.php?' . http_build_query($applyProfileQuery);
+}
 ?>
 <!DOCTYPE html>
 <html lang="en" class="map-page">
@@ -161,7 +172,12 @@ if (!empty($browseQuery)) {
           </div>
         </form>
 
-        <div class="map-count"><?php echo htmlspecialchars($totalListings); ?> listings <span>- profile applied</span></div>
+        <div class="map-count">
+          <?php echo htmlspecialchars($totalListings); ?> listings
+          <?php if (!empty($hasProfileFilters)) { ?>
+            <a class="apply-profile-btn" href="<?php echo htmlspecialchars($applyProfileMapHref, ENT_QUOTES); ?>">Apply profile settings</a>
+          <?php } ?>
+        </div>
 
         <!-- Button that opens and closes the list of filter options. -->
         <button type="button" class="map-filters-toggle" id="map-filters-toggle">
@@ -342,13 +358,19 @@ if (!empty($browseQuery)) {
       centerQuery: <?php echo json_encode($mapCenterQuery . ', Netherlands'); ?>,
       markers: <?php echo json_encode($mapMarkers); ?>,
       campusCircle: <?php
-        // When the "max distance from campus" filter is on, send the campus
-        // point and distance so map.js can draw a circle around it.
-        if (!empty($distanceFilterActive)) {
+        // When a campus has been selected we send its point so map.js can drop a pin on it.
+        // When there is also a distance limit we send the distance too, so map.js can draw a circle around the campus.
+        // The distance is 0 when the user picked "20+ km" (no limit), which means "pin only, no circle".
+        if ($selectedCampusLat !== '' && $selectedCampusLng !== '') {
+            $campusDistanceKm = 0;
+            if ($selectedDistance !== '' && is_numeric($selectedDistance)) {
+                $campusDistanceKm = (float) $selectedDistance;
+            }
+
             $campusCircleData = array(
                 'lat' => (float) $selectedCampusLat,
                 'lng' => (float) $selectedCampusLng,
-                'distanceKm' => (float) $selectedDistance,
+                'distanceKm' => $campusDistanceKm,
                 'name' => $selectedCampus,
             );
             echo json_encode($campusCircleData);
