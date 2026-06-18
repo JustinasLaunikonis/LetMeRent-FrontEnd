@@ -50,11 +50,14 @@
   function updateDisplay() {
     var name = campusNameHidden.value;
     var distance = distanceHidden.value;
+    var maxKm = Number(distanceSlider.max);
 
     if (name !== '' && distance !== '') {
       campusDisplay.textContent = distance + ' km from campus';
     } else if (name !== '') {
-      campusDisplay.textContent = 'Pick a distance';
+      // A campus is picked but the slider is at the top, so there is no
+      // distance limit. Show the "20+ km" label.
+      campusDisplay.textContent = maxKm + '+ km from campus';
     } else {
       campusDisplay.textContent = 'Any campus';
     }
@@ -69,13 +72,16 @@
     }
   }
 
-  // Show the slider value as text. 0 means "no distance limit".
+  // Show the slider value as text.
+  // The top of the slider (20) means "20+ km", which is no distance limit.
+  // Lower values are a real distance, so 0 shows as "0 km".
   function updateDistanceLabel() {
     var km = Number(distanceSlider.value);
-    if (km > 0) {
-      distanceValue.textContent = km + ' km';
+    var maxKm = Number(distanceSlider.max);
+    if (km >= maxKm) {
+      distanceValue.textContent = maxKm + '+ km';
     } else {
-      distanceValue.textContent = 'Any distance';
+      distanceValue.textContent = km + ' km';
     }
   }
 
@@ -171,7 +177,8 @@
         campusLngHidden.value = '';
         campusSearchInput.value = '';
         distanceHidden.value = '';
-        distanceSlider.value = 0;
+        // Back to the top of the slider, which means "no distance limit".
+        distanceSlider.value = distanceSlider.max;
         updateDistanceLabel();
         refreshDistanceState();
         updateDisplay();
@@ -189,11 +196,13 @@
 
   distanceSlider.addEventListener('input', function () {
     var km = Number(distanceSlider.value);
-    if (km > 0) {
-      distanceHidden.value = km;
-    } else {
-      // 0 on the slider means "no distance limit", so clear the value.
+    var maxKm = Number(distanceSlider.max);
+    if (km >= maxKm) {
+      // The top of the slider (20) means "no distance limit", so clear the value.
       distanceHidden.value = '';
+    } else {
+      // Any lower value is a real distance, including 0 km.
+      distanceHidden.value = km;
     }
     updateDistanceLabel();
     updateDisplay();
@@ -204,10 +213,11 @@
   }
 
   // Set up the starting state from whatever was already in the URL.
+  // An empty distance means "no limit", so the slider sits at the top (20).
   if (distanceHidden.value !== '') {
     distanceSlider.value = distanceHidden.value;
   } else {
-    distanceSlider.value = 0;
+    distanceSlider.value = distanceSlider.max;
   }
   updateDistanceLabel();
   refreshDistanceState();

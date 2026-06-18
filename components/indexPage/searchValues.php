@@ -57,10 +57,21 @@ if (isset($_GET['max_distance_km'])) {
     $selectedDistance = trim($_GET['max_distance_km']);
 }
 
+// The distance slider goes from 0 up to 20.
+// The top of the slider (20) means "20+ km", which is treated as no distance limit, so an empty distance shows as "20+ km".
+if ($selectedDistance === '') {
+    $selectedDistanceSlider = '20';
+    $selectedDistanceText = '20+ km';
+} else {
+    $selectedDistanceSlider = $selectedDistance;
+    $selectedDistanceText = $selectedDistance . ' km';
+}
+
 if ($selectedCampus !== '' && $selectedDistance !== '') {
     $selectedCampusText = $selectedDistance . ' km from campus';
 } else if ($selectedCampus !== '') {
-    $selectedCampusText = 'Pick a distance';
+    // A campus is picked but no distance limit, so show the unlimited label.
+    $selectedCampusText = '20+ km from campus';
 } else {
     $selectedCampusText = 'Any campus';
 }

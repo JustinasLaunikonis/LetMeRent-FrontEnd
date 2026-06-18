@@ -55,6 +55,11 @@ function applyProfileNormalize($data)
         'maxBudget' => 'max_budget',
         'move_in_date' => 'move_in_date',
         'moveInDate' => 'move_in_date',
+        'university_campus' => 'university_campus',
+        'universityCampus' => 'university_campus',
+        'campus' => 'university_campus',
+        'max_distance_from_campus' => 'max_distance_from_campus',
+        'maxDistanceFromCampus' => 'max_distance_from_campus',
     );
 
     $preferences = array();
@@ -173,6 +178,53 @@ function applyProfileSources($preferences)
     return $sources;
 }
 
+// Turn a saved campus name into map coordinates.
+function applyProfileCampusCoords($name)
+{
+    $campuses = array(
+        array('name' => 'Amsterdam University of Applied Sciences', 'lat' => 52.3676, 'lng' => 4.9041),
+        array('name' => 'ArtEZ University of the Arts', 'lat' => 51.9851, 'lng' => 5.8987),
+        array('name' => 'Avans University of Applied Sciences', 'lat' => 51.5719, 'lng' => 4.7683),
+        array('name' => 'Breda University of Applied Sciences', 'lat' => 51.5826, 'lng' => 4.7752),
+        array('name' => 'Codarts Rotterdam', 'lat' => 51.9163, 'lng' => 4.4790),
+        array('name' => 'Delft University of Technology', 'lat' => 52.0022, 'lng' => 4.3736),
+        array('name' => 'Design Academy Eindhoven', 'lat' => 51.4416, 'lng' => 5.4791),
+        array('name' => 'Eindhoven University of Technology', 'lat' => 51.4480, 'lng' => 5.4906),
+        array('name' => 'Erasmus University Rotterdam', 'lat' => 51.9177, 'lng' => 4.5270),
+        array('name' => 'Fontys University of Applied Sciences', 'lat' => 51.4519, 'lng' => 5.4815),
+        array('name' => 'Gerrit Rietveld Academie', 'lat' => 52.3389, 'lng' => 4.8540),
+        array('name' => 'Hanze University of Applied Sciences', 'lat' => 53.2330, 'lng' => 6.5470),
+        array('name' => 'Hotelschool The Hague', 'lat' => 52.0998, 'lng' => 4.2740),
+        array('name' => 'Inholland University of Applied Sciences', 'lat' => 52.3120, 'lng' => 4.9430),
+        array('name' => 'Leiden University', 'lat' => 52.1571, 'lng' => 4.4850),
+        array('name' => 'Maastricht University', 'lat' => 50.8485, 'lng' => 5.6880),
+        array('name' => 'NHL Stenden University of Applied Sciences - Emmen', 'lat' => 52.7770, 'lng' => 6.8990),
+        array('name' => 'NHL Stenden University of Applied Sciences', 'lat' => 53.1960, 'lng' => 5.7960),
+        array('name' => 'Radboud University', 'lat' => 51.8190, 'lng' => 5.8657),
+        array('name' => 'Rotterdam University of Applied Sciences', 'lat' => 51.9170, 'lng' => 4.4840),
+        array('name' => 'Saxion University of Applied Sciences', 'lat' => 52.2215, 'lng' => 6.8937),
+        array('name' => 'The Hague University of Applied Sciences', 'lat' => 52.0660, 'lng' => 4.3250),
+        array('name' => 'Tilburg University', 'lat' => 51.5640, 'lng' => 5.0440),
+        array('name' => 'University of Amsterdam', 'lat' => 52.3560, 'lng' => 4.9560),
+        array('name' => 'University of Groningen', 'lat' => 53.2190, 'lng' => 6.5630),
+        array('name' => 'University of Twente', 'lat' => 52.2390, 'lng' => 6.8560),
+        array('name' => 'Utrecht University', 'lat' => 52.0855, 'lng' => 5.1700),
+        array('name' => 'Vrije Universiteit Amsterdam', 'lat' => 52.3340, 'lng' => 4.8650),
+        array('name' => 'Wageningen University & Research', 'lat' => 51.9870, 'lng' => 5.6650),
+        array('name' => 'Windesheim University of Applied Sciences', 'lat' => 52.4980, 'lng' => 6.0790),
+        array('name' => 'Zuyd University of Applied Sciences', 'lat' => 50.8480, 'lng' => 5.6900),
+    );
+
+    foreach ($campuses as $campus) {
+        if ($campus['name'] === $name) {
+            return array('lat' => $campus['lat'], 'lng' => $campus['lng']);
+        }
+    }
+
+    // Not one of the built-in campuses, so we have no coordinates for it.
+    return null;
+}
+
 // Turn the saved preferences into the search filters the index page understands.
 // We only include the filters that map cleanly onto the search bar.
 function applyProfileBuildQuery($preferences)
@@ -202,6 +254,28 @@ function applyProfileBuildQuery($preferences)
     $sources = applyProfileSources($preferences);
     if (count($sources) > 0) {
         $query['source'] = implode(',', $sources);
+    }
+
+    // Campus + distance. The search bar shows the campus and (when we have a
+    // distance and the campus coordinates) filters listings around it.
+    $campus = applyProfileValue($preferences, 'university_campus', '');
+    $campus = trim((string) $campus);
+    if ($campus !== '') {
+        $query['campus'] = $campus;
+
+        // Look up the campus point so the distance filter can run on this load.
+        $coords = applyProfileCampusCoords($campus);
+        if ($coords !== null) {
+            $query['campus_lat'] = $coords['lat'];
+            $query['campus_lng'] = $coords['lng'];
+        }
+
+        // The distance is empty when the user picked "20+ km" (no distance limit).
+        // In that case we leave max_distance_km out so every listing around the campus is shown.
+        $distance = applyProfileValue($preferences, 'max_distance_from_campus', '');
+        if ($distance !== '' && is_numeric($distance)) {
+            $query['max_distance_km'] = (int) $distance;
+        }
     }
 
     return $query;
