@@ -49,7 +49,7 @@ if (!empty($clearDistanceQuery)) {
     <?php } ?>
 
     <?php if (!empty($distanceFilterActive)) { ?>
-      <a class="filter-chip" href="<?= htmlspecialchars($clearDistanceHref, ENT_QUOTES) ?>">
+      <a class="filter-chip active" href="<?= htmlspecialchars($clearDistanceHref, ENT_QUOTES) ?>">
         Within <?= htmlspecialchars($selectedDistance) ?> km of <?= htmlspecialchars($selectedCampus) ?>
         <span class="filter-chip-x">&times;</span>
       </a>
